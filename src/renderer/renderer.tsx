@@ -1,13 +1,16 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import WindowFrame from "@misc/window/components/WindowFrame";
-import Application from "./components/Application";
+import Providers from "@src/providers";
+import App from "./App";
 
 console.log("[Bunnies] : Renderer execution started");
 
 const app = (
   <WindowFrame title="Bunnies" platform="windows">
-    <Application />
+    <Providers>
+      <App />
+    </Providers>
   </WindowFrame>
 );
 

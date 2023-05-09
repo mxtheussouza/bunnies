@@ -1,0 +1,41 @@
+button {
+    background: var(--button-bgcolor);
+    color: var(--button-color);
+    font-weight: normal;
+    text-shadow: 0px 1px var(--button-shadow-color);
+    font-family: var(--app-font-family);
+    border: var(--button-border);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: space-around;
+    align-items: center;
+    outline: none;
+    min-width: 140px;
+
+    &:hover {
+      background: var(--button-hover-bgcolor);
+    }
+    &:active {
+      background: var(--button-active-bgcolor);
+    }
+    & > span {
+      color: var(--button-badge-color);
+      background-color: var(--button-badge-bgcolor);
+      font-size: 12px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      display: none;
+    }
+
+    img {
+      width: 22px;
+      opacity: 0.8;
+    }
+  }

@@ -40,8 +40,8 @@ Consultar a [visão do produto](docs/00-overview/product-vision.md).
 
 Executar verificações pertinentes ao escopo autorizado e registrar resultados
 reais e limitações. Testes destrutivos somente em brokers isolados provisionados
-pelo harness. Na Etapa 1B, verificar documentos, fontes, rastreabilidade, links e
-diff; não instalar dependências, iniciar containers ou executar build da aplicação.
+pelo harness. A Etapa 2A foi implementada, verificada e aprovada. Não iniciar
+integração RabbitMQ nem a 2B antes de autorização específica.
 A [estratégia de testes](docs/07-testing/test-strategy.md) e o
 [modelo de segurança](docs/08-security/security-model.md) estão aprovados como planos,
 sem homologação. Limites e metas aprovados têm fonte única nos
@@ -67,15 +67,18 @@ fazer push automaticamente. A Etapa 1A foi autorizada na branch existente
 proprietário na resposta “Aprovado”, registrados em `c292b35`.
 A resposta posterior “Autorizado” permitiu a Etapa 1B documental. Após a apresentação,
 “Aprovado” aceitou explicitamente ADRs 0001–0007, MVP, requisitos/limites e conclusão,
-autorizando o commit da 1B. Essa aprovação não autoriza executar a 2A.
+autorizando o commit da 1B. A resposta posterior “Autorizado” aprovou o contrato da 2A, incluindo instalação
+e verificações que geram artefatos locais. Após a apresentação dos resultados,
+“Sim” aprovou a conclusão da 2A e autorizou o commit
+`chore(setup): modernize desktop development foundation`. Isso não autoriza a 2B.
 
 ## Estado e retomada
 
-- Etapa atual: **1B — planejamento, concluído e aprovado**.
-- Última etapa concluída e aprovada: **1B — planejamento e decisões arquiteturais**.
-- Próxima etapa proposta: **2A — fundação técnica**, ainda não autorizada.
-- Próxima ação autorizada: conferir o registro do commit aprovado da 1B e apresentar
-  o contrato da 2A; aguardar autorização específica antes de executá-la.
+- Etapa atual: **2A — fundação técnica, concluída e aprovada**.
+- Última etapa concluída e aprovada: **2A — fundação técnica**.
+- Próxima etapa proposta: **2B — fronteira desktop**, ainda não autorizada.
+- Próxima ação autorizada: registrar/conferir o commit aprovado da 2A e apresentar
+  o contrato proposto da 2B; aguardar autorização própria antes de executá-la.
 
 Ao retomar, ler este arquivo, a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -86,3 +89,8 @@ nem inferir autorização de uma lista de pendências.
 Referências adicionais: [análise do legado](docs/01-audit/legacy-analysis.md),
 [dependências](docs/01-audit/dependency-audit.md) e
 [índice dos módulos](docs/04-modules/module-index.md).
+
+Comandos e regras de tooling: [desenvolvimento](docs/06-development/coding-standards.md).
+Resultados reais e limitações: [evidências da 2A](docs/07-testing/foundation-2a.md).
+Instalação/check/package/smoke local foram verificados em macOS arm64; isso não
+homologa os demais alvos nem fecha os riscos de segurança previstos para a 2B.

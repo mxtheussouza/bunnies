@@ -1,8 +1,8 @@
 # Estratégia de testes
 
 Data: 2026-10-28. Status: **Approved como estratégia de validação**.
-Aceita na conclusão da 1B junto aos requisitos e ADRs. Todos os testes de aplicação
-abaixo são planejados; a Etapa 1B executa somente verificações documentais.
+Aceita na conclusão da 1B junto aos requisitos e ADRs. O catálogo abaixo define a cobertura pretendida; a Etapa 1B executou somente
+verificações documentais. Evidências iniciais da implementação estão no final.
 
 ## Ferramentas e limites
 
@@ -109,3 +109,12 @@ apenas onde a etapa autorizar. O histórico de entrega fica em
 Na 1B não foram criados testes, scripts, containers, imagens ou snapshots de aplicação.
 Os resultados efetivamente executados ficam no registro da etapa; este catálogo
 permanece um plano. [Guia Vitest](https://vitest.dev/guide/).
+
+## Evidências iniciais da Etapa 2A
+
+Foram executados 11 testes de comportamento em dois arquivos (tema/teclado e
+metadados de versão), instalação limpa, typecheck/lint/formatação e smoke do pacote
+macOS arm64. São cobertura inicial e parcial de T-10/T-12; não encerram esses
+cenários, o MVP ou a matriz multiplataforma. Não houve integração com RabbitMQ,
+credenciais, rede/TLS ou operação destrutiva. Consulte as
+[evidências da 2A](foundation-2a.md), incluindo resultados, falhas corrigidas e limites.

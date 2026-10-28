@@ -14,4 +14,6 @@ const app = (
   </WindowFrame>
 );
 
-createRoot(document.getElementById("app")).render(app);
+const root = document.getElementById("app");
+if (!root) throw new Error("Application root is missing");
+createRoot(root).render(app);

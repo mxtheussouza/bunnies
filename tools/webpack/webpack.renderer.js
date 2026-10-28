@@ -18,5 +18,5 @@ module.exports = {
    * Fix: Enable inline-source-map to fix following:
    * Dev tools: unable to load source maps over custom protocol
    */
-  devtool: "inline-source-map",
+  devtool: process.env.NODE_ENV === "development" ? "source-map" : false,
 };

@@ -1,6 +1,6 @@
 # Índice dos módulos
 
-Data: 2026-10-28. Status: responsabilidades e recorte aprovados na 1B; implementação não autorizada.
+Data: 2026-10-28. Status: responsabilidades e recorte aprovados na 1B; implementação dos módulos de produto ainda não autorizada.
 Os oito módulos são responsabilidades do produto, não oito serviços ou camadas.
 A integração RabbitMQ não existe na base auditada.
 
@@ -91,3 +91,6 @@ cada etapa exige seu contrato e autorização próprios.
 Consultar [visão](../00-overview/product-vision.md),
 [avaliação tecnológica](../03-architecture/technology-evaluation.md),
 [roadmap](../05-roadmap/roadmap.md) e [estado atual](../05-roadmap/current-stage.md).
+
+A fundação transversal da 2A recebeu autorização própria e teve sua conclusão aprovada:
+[evidências](../07-testing/foundation-2a.md). Não implementa os oito módulos acima.

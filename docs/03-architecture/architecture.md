@@ -210,3 +210,11 @@ Pontos ainda não comprovados: resolução efetiva das dependências; API do Nod
 embarcado; provider Linux; automação Electron experimental; CA e comportamento por
 SO; confirmação real; formatos/assinatura de distribuição. A
 [estratégia de testes](../07-testing/test-strategy.md) define os gates futuros.
+
+## Estado da fundação após a execução autorizada da 2A
+
+A estrutura existente foi preservada. Foram adicionados testes próximos das unidades,
+configurações na raiz, workflow e smoke em `tools/testing`, conforme contrato.
+Instalação, tipagem/lint, testes e pacote/smoke local foram executados; os demais
+gates desta arquitetura permanecem pendentes. A conclusão da 2A e seu commit foram aprovados com “Sim”.
+Ver [evidências e limitações](../07-testing/foundation-2a.md).

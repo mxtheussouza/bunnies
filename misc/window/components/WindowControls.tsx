@@ -26,19 +26,19 @@ const WindowControls: React.FC<Props> = props => {
         name="minimize"
         onClick={() => context.minimize()}
         path={minimizePath}
-        title={props.tooltips ? "Minimize" : null}
+        title={props.tooltips ? "Minimize" : undefined}
       />
       <ControlButton
         name="maximize"
         onClick={() => context.toggle_maximize()}
         path={maximizePath}
-        title={props.tooltips ? "Maximize" : null}
+        title={props.tooltips ? "Maximize" : undefined}
       />
       <ControlButton
         name="close"
         onClick={() => context.exit()}
         path={closePath}
-        title={props.tooltips ? "Close" : null}
+        title={props.tooltips ? "Close" : undefined}
       />
     </section>
   );

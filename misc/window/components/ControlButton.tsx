@@ -4,7 +4,7 @@ import classNames from "classnames";
 interface IControlButtonProps {
   readonly name: string;
   readonly path: string;
-  readonly title: string;
+  readonly title?: string;
 }
 
 const ControlButton: React.FC<

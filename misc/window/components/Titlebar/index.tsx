@@ -15,11 +15,24 @@ type Props = {
 
 const Titlebar: React.FC<Props> = props => {
   const activeMenuIndex = React.useRef<number | null>(null);
-  const menusRef = titlebarMenus.map(() => React.createRef<HTMLDivElement>());
+  const menusRef = React.useMemo(
+    () => titlebarMenus.map(() => React.createRef<HTMLDivElement>()),
+    [],
+  );
 
   const [menusVisible, setMenusVisible] = React.useState<boolean>(true);
 
   const windowContext = React.useContext(WindowContext);
+
+  const closeActiveMenu = React.useCallback(() => {
+    if (activeMenuIndex.current != null) {
+      menusRef[activeMenuIndex.current].current?.classList.remove("active");
+      menusRef[
+        activeMenuIndex.current
+      ]?.current?.parentElement?.classList.remove("active");
+      activeMenuIndex.current = null;
+    }
+  }, [menusRef]);
 
   React.useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -40,7 +53,7 @@ const Titlebar: React.FC<Props> = props => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [menusVisible, menusRef]);
+  }, [menusVisible, menusRef, closeActiveMenu]);
 
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -63,7 +76,7 @@ const Titlebar: React.FC<Props> = props => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [activeMenuIndex, menusRef]);
+  }, [activeMenuIndex, menusRef, closeActiveMenu]);
 
   function showMenu(index: number, event: React.MouseEvent<HTMLDivElement>) {
     event.stopPropagation();
@@ -93,22 +106,23 @@ const Titlebar: React.FC<Props> = props => {
     }
   }
 
-  function closeActiveMenu() {
-    if (activeMenuIndex.current != null) {
-      menusRef[activeMenuIndex.current].current?.classList.remove("active");
-      menusRef[
-        activeMenuIndex.current
-      ]?.current?.parentElement?.classList.remove("active");
-      activeMenuIndex.current = null;
-    }
-  }
-
   function handleAction(action?: string, value?: string | number) {
     closeActiveMenu();
-    const handleActionContext: Record<string, CallableFunction> = context;
+    const handleActionContext = context;
     if (action) {
-      if (typeof handleActionContext[action] === "function") {
-        handleActionContext[action](value);
+      if (
+        typeof handleActionContext[action as keyof typeof context] ===
+        "function"
+      ) {
+        if (action === "open_url") {
+          if (typeof value === "string") context.open_url(value);
+        } else {
+          const handler =
+            handleActionContext[
+              action as Exclude<keyof typeof context, "open_url">
+            ];
+          handler();
+        }
       } else {
         console.log(`action [${action}] is not available in titlebar context`);
       }

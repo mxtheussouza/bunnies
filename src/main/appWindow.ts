@@ -6,14 +6,12 @@ import { registerTitlebarIpc } from "@misc/window/titlebarIPC";
 declare const APP_WINDOW_WEBPACK_ENTRY: string;
 declare const APP_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
-let appWindow: BrowserWindow;
-
 /**
  * Create Application Window
  * @returns {BrowserWindow} Application Window Instance
  */
 export function createAppWindow(): BrowserWindow {
-  appWindow = new BrowserWindow({
+  const window = new BrowserWindow({
     width: 800,
     height: 600,
     backgroundColor: "#202020",
@@ -33,30 +31,29 @@ export function createAppWindow(): BrowserWindow {
   });
 
   // Load the index.html of the app window.
-  appWindow.loadURL(APP_WINDOW_WEBPACK_ENTRY);
+  window.loadURL(APP_WINDOW_WEBPACK_ENTRY);
 
   // Show window when its ready to
-  appWindow.on("ready-to-show", () => appWindow.show());
+  window.on("ready-to-show", () => window.show());
 
   // Register Inter Process Communication for main process
-  registerMainIPC();
+  registerMainIPC(window);
 
   // Close all windows when main window is closed
-  appWindow.on("close", () => {
-    appWindow = null;
+  window.on("close", () => {
     app.quit();
   });
 
-  return appWindow;
+  return window;
 }
 
 /**
  * Register Inter Process Communication
  */
-function registerMainIPC() {
+function registerMainIPC(window: BrowserWindow) {
   /**
    * Here you can assign IPC related codes for the application window
    * to Communicate asynchronously from the main process to renderer processes.
    */
-  registerTitlebarIpc(appWindow);
+  registerTitlebarIpc(window);
 }

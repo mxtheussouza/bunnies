@@ -2,7 +2,7 @@ import React from "react";
 import ThemeModeProvider from "./ThemeMode";
 
 interface ProviderProps {
-  children: JSX.Element[] | JSX.Element;
+  children: React.ReactNode;
 }
 
 const Providers = ({ children }: ProviderProps) => {

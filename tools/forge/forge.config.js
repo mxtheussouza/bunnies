@@ -1,6 +1,6 @@
 // Forge Configuration
 const path = require("path");
-const rootDir = process.cwd();
+const rootDir = path.resolve(__dirname, "../..");
 
 module.exports = {
   // Packager Config
@@ -13,7 +13,9 @@ module.exports = {
     // Set application copyright
     appCopyright: "Copyright (C) 2023 Matheus Souza, @matheusdearaujo",
     // Set application icon
-    icon: path.resolve("assets/images/appIcon.ico"),
+    ...(process.platform === "win32"
+      ? { icon: path.join(rootDir, "assets/images/appIcon.ico") }
+      : {}),
   },
   // Forge Makers
   makers: [
@@ -35,12 +37,6 @@ module.exports = {
       // The deb target builds .deb packages, which are the standard package format for Debian-based
       // Linux distributions such as Ubuntu.
       name: "@electron-forge/maker-deb",
-      config: {},
-    },
-    {
-      // The RPM target builds .rpm files, which is the standard package format for
-      // RedHat-based Linux distributions such as Fedora.
-      name: "@electron-forge/maker-rpm",
       config: {},
     },
   ],
@@ -66,8 +62,6 @@ module.exports = {
             {
               // Window process name
               name: "app_window",
-              // React Hot Module Replacement (HMR)
-              rhmr: "react-hot-loader/patch",
               // HTML index file template
               html: path.join(rootDir, "src/renderer/index.html"),
               // Renderer
@@ -81,7 +75,8 @@ module.exports = {
           ],
         },
         devServer: {
-          liveReload: false,
+          host: "localhost",
+          liveReload: true,
         },
       },
     },

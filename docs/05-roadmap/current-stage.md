@@ -4,16 +4,16 @@ Atualizado em: 2026-10-28.
 
 | Campo | Estado |
 | --- | --- |
-| Etapa atual | 1B — Planejamento e decisões arquiteturais |
-| Status | Concluída e aprovada; decisões registradas nos sete ADRs Accepted e nesta entrega documental |
-| Última etapa concluída | 1B — Planejamento e decisões arquiteturais |
-| Último commit | Entrega 1B: `docs(architecture): define desktop architecture and requirements`; identificar o SHA com `git log -1 --format='%h %s' -- AGENTS.md docs`. Base anterior: `c292b35b4b75c53695fbef6beab7d573b688d8c0` |
-| Decisões aprovadas | Diretrizes; auditoria 0; conclusão/commit da 1A; sete ADRs Accepted; Electron incremental e matriz candidata; MVP; requisitos/limites/metas e estratégias de testes/segurança; conclusão e commit da 1B |
-| Decisões pendentes | Contrato/autorização da 2A; estrutura física final; design detalhado; infraestrutura de release e autenticações adicionais; alternativas caso gates de implementação falhem |
-| Tarefas concluídas | Reconsulta oficial; 38 requisitos funcionais, 30 não funcionais, 15 critérios de MVP, arquitetura, sete ADRs, 12 cenários de teste e modelo de segurança; revisão e verificações documentais aprovadas |
-| Tarefas pendentes | Apresentar contrato da 2A e obter autorização específica; implementar e verificar os gates nas etapas correspondentes |
-| Problemas conhecidos | Código legado ainda sem integração e com riscos abertos; matriz não instalada/testada; provider Linux e automação experimental exigem gates; metas não medidas |
-| Próxima ação autorizada | Conferir o registro do commit aprovado da 1B e apresentar contrato da 2A; aguardar autorização específica antes de instalar ou alterar código |
+| Etapa atual | 2A — Fundação técnica |
+| Status | Concluída e aprovada pelo proprietário com “Sim”; commit de entrega autorizado |
+| Última etapa concluída | 2A — Fundação técnica |
+| Último commit | Entrega 2A: `chore(setup): modernize desktop development foundation`; obter SHA com `git log -1 --format='%h %s' -- AGENTS.md docs`. Base anterior: `97cd313` |
+| Decisões aprovadas | Diretrizes; auditoria 0; conclusão/commit da 1A; sete ADRs Accepted; Electron incremental e matriz candidata; MVP; requisitos/limites/metas e estratégias de testes/segurança; conclusão e commit da 1B; execução da 2A, incluindo instalações e artefatos locais; conclusão e commit da 2A |
+| Decisões pendentes | Contrato/autorização da 2B; estrutura física final; design detalhado; infraestrutura de release e autenticações adicionais; alternativas caso gates de implementação falhem |
+| Tarefas concluídas | Fundação atualizada; lock limpo; tipagem/lint/11 testes/formatação; CI preparada; início em desenvolvimento e pacote/smoke local; documentação e revisão técnica |
+| Tarefas pendentes | Conferir registro do commit aprovado da 2A; contrato/autorização próprios para a 2B; validação remota e demais SOs/CPUs |
+| Problemas conhecidos | Sem integração RabbitMQ; segurança da 2B pendente; seis entradas low/moderate no tooling; makers e demais alvos não homologados; CI remota não executada; provider Linux e metas não medidos |
+| Próxima ação autorizada | Registrar/conferir commit aprovado da 2A e apresentar contrato proposto da 2B; aguardar autorização específica |
 
 ## Autorização e limites
 
@@ -28,7 +28,10 @@ Após a apresentação da entrega documental, o proprietário respondeu **“Apr
 `c292b35`. Posteriormente, a resposta **“Autorizado”** aprovou o contrato documental
 da 1B. Na revisão seguinte, **“Aprovado”** aceitou explicitamente os ADRs 0001–0007,
 MVP, requisitos/limites, conclusão e commit `docs(architecture): define desktop
-architecture and requirements`. Isso não autoriza executar a 2A.
+architecture and requirements`. A resposta posterior **“Autorizado”** aprovou especificamente o contrato da 2A,
+incluindo instalação de dependências e verificações com artefatos locais. Após a
+apresentação dos resultados, **“Sim”** aprovou a conclusão da 2A e autorizou o commit
+`chore(setup): modernize desktop development foundation`, sem autorizar a 2B.
 
 O proprietário informou **“Nada definido”** quanto a ambientes/CPU/autenticação.
 Windows 11 x64, Ubuntu 24.04 LTS x64, macOS 14 arm64/x64 e RabbitMQ 4.4.0/4.3.6 são
@@ -39,8 +42,10 @@ Branch utilizada: `chore/modernization-app`. O working tree estava limpo antes d
 escrita da 1B, com HEAD `c292b35`. O [contrato](roadmap.md) lista 12 novos documentos e
 sete atualizados na apresentação. A aprovação sincronizou também a visão do produto,
 totalizando oito atualizados; este estado integra o commit aprovado da 1B.
-Nenhuma implementação, instalação, container ou push foi executado. Os arquivos de
-auditoria histórica e o código legado permanecem intactos.
+Na conclusão da 1B não havia implementação ou instalação. Na 2A, a fundação e os
+ajustes mínimos foram implementados conforme contrato. Assets, licença e auditoria
+histórica permanecem intactos. O commit da 2A foi autorizado após sua revisão;
+nenhum broker, container ou push foi executado.
 
 ## Retomada
 
@@ -49,9 +54,11 @@ auditoria histórica e o código legado permanecem intactos.
    [roadmap](roadmap.md) e o [progresso](progress.md).
 2. Verificar branch, HEAD, diff e arquivos não rastreados, preservando alterações.
 3. Conferir eventuais aprovações posteriores à atualização deste estado.
-4. Confirmar o commit documental da 1B pela mensagem acima; se ainda não existir,
-   concluir somente seu registro já aprovado.
-5. Apresentar contrato da 2A e aguardar autorização específica. A decisão aceita de
-   stack não autoriza instalação ou implementação automaticamente.
+4. Conferir o commit aprovado da 2A pela mensagem acima; se ainda não existir,
+   concluir somente esse registro já autorizado, preservando alterações alheias.
+5. Apresentar o contrato proposto da 2B e aguardar autorização específica.
 
 Resultados de verificação e limitações estão no [registro de progresso](progress.md).
+
+Resultados: [evidências da 2A](../07-testing/foundation-2a.md). O teste local usa
+macOS 27.0.1 arm64, sem comprovar o mínimo macOS 14 ou os outros alvos aprovados.

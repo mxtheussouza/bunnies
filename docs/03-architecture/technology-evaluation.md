@@ -310,3 +310,18 @@ O proprietário informou “Nada definido” para ambientes. A
 foram aprovados para implementação/validação em etapas próprias, com [testes](../07-testing/test-strategy.md) e
 [segurança](../08-security/security-model.md) planejados. Não há metas de consumo ou
 compatibilidade comprovadas nesta entrega.
+
+## Validação local da matriz na Etapa 2A
+
+A execução da 2A foi autorizada separadamente após `97cd313`. A matriz necessária
+à fundação foi instalada sem peers forçados e passou por typecheck/lint, 11 testes,
+formatação, empacotamento e smoke em macOS 27.0.1 arm64. Isso valida esse recorte
+local, sem homologar todos os sistemas ou dependências futuras. TypeScript 7,
+AMQP, Zod, extração de CSS para CSP, credenciais e gates da 2B continuam adiados.
+O checker 9.1.0 funcionou com TS 6.0.3 nesse recorte, mas permanece afetado por
+advisory transitivo low. Forge 8 exige main `.webpack/main/index.cjs`.
+
+Removidos loaders nativos/relocators/file-loader sem uso, configurações residuais
+de Hot Loader/Refresh e maker RPM adiado. Sass e Less coexistem enquanto a UI legada
+for preservada. Detalhes das seis entradas de audit low/moderate e limites em
+[evidências da 2A](../07-testing/foundation-2a.md); versões exatas no manifesto/lock.

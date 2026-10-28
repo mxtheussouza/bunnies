@@ -1,7 +1,7 @@
 # Roadmap e contratos de execução
 
-Data: 2026-10-28. Status: Etapas 0, 1A e 1B concluídas e aprovadas; sete ADRs aceitos.
-Etapas de implementação não autorizadas.
+Data: 2026-10-28. Status: Etapas 0, 1A, 1B e 2A concluídas e aprovadas; sete ADRs aceitos.
+Conclusão/commit da 2A aprovados por “Sim”; execução da 2B não autorizada.
 
 ## Sequência proposta
 
@@ -10,7 +10,7 @@ Etapas de implementação não autorizadas.
 | 0 | Auditoria técnica do legado, somente de leitura | Concluída e aprovada pelo proprietário |
 | 1A | Registro documental da auditoria, governança e propostas | Concluída e aprovada; commit `c292b35` |
 | 1B | Stack, matriz tecnológica, arquitetura, MVP e estratégia de testes | Concluída e aprovada; sete ADRs Accepted e commit autorizado |
-| 2A | Ambiente reproduzível, dependências compatíveis, tipagem, lint e CI inicial | Proposta |
+| 2A | Ambiente reproduzível, dependências compatíveis, tipagem, lint e CI inicial | Concluída e aprovada; commit autorizado por “Sim” |
 | 2B | Ciclo desktop, fronteira segura, erros e smoke de empacotamento | Proposta |
 | 3A | Navegação, tokens e componentes para aprovação | Proposta |
 | 3B | Interface base acessível, temas e estados | Proposta |
@@ -172,3 +172,65 @@ criar quando necessário e autorizado:
 Não criar diretórios vazios. Cada documento de módulo conterá objetivo,
 responsabilidades, requisitos, dependências, interfaces, regras, critérios de
 aceitação, testes, status e pendências.
+
+## Contrato autorizado — Etapa 2A
+
+- Objetivo: base reproduzível e verificação da matriz aprovada antes das funcionalidades.
+- Escopo: Node/npm e dependências necessárias; TypeScript, ESLint e Prettier; testes
+  iniciais; CI; compilação, empacotamento e smoke local.
+- Arquivos: `.nvmrc`, manifesto/lock, configurações, `tools`, testes, workflow,
+  ajustes mínimos de compatibilidade em `src`/`misc` e documentação.
+- Organização: manter a estrutura existente; testes de componentes ao lado das
+  unidades, configurações de teste na raiz e smoke em `tools/testing`.
+- Dependências: ADRs e matriz aceitos na 1B. Não instalar bibliotecas futuras sem uso.
+- Riscos: incompatibilidades de APIs/peers e validação limitada ao alvo local.
+- Aceitação: instalação limpa sem peers forçados; typecheck, lint, testes, formatação
+  e empacotamento/smoke local aprovados, com limitações registradas.
+- Resultado: fundação verificável, comandos e evidências documentados.
+- Aprovação: “Autorizado”, em resposta ao contrato apresentado após `97cd313`.
+- Limites: sem 2B, funcionalidades RabbitMQ, redesign, publicação ou commit antes
+  da aprovação de conclusão.
+
+Evidências e limitações da execução: [fundação 2A](../07-testing/foundation-2a.md).
+O contrato da 2B será apresentado após aprovação de conclusão/registro da 2A;
+a preparação da CI não autoriza push nem comprova execução remota.
+
+A resposta posterior **“Sim”** aprovou a conclusão da 2A e autorizou seu commit
+`chore(setup): modernize desktop development foundation`. A proposta abaixo
+não foi autorizada por esse aceite.
+
+## Contrato proposto — Etapa 2B: fronteira segura e ciclo desktop
+
+Status: **Proposed; aguardar autorização explícita**.
+
+| Campo | Proposta para aprovação |
+| --- | --- |
+| Identificador e nome | 2B — Fronteira segura e ciclo desktop |
+| Objetivo | Reduzir a superfície privilegiada do Electron antes de integrar brokers |
+| Justificativa | A 2A validou a fundação local, mas sandbox, IPC, navegação, CSP e ciclo da janela ainda têm achados abertos |
+| Escopo | Main/preload/renderer, contratos desktop, recursos locais e testes de segurança dessa fronteira; preservar identidade e tela legada |
+| Tarefas | Ativar sandbox/context isolation; substituir a ponte legada por métodos tipados mínimos; validar remetente/frame/URL e argumentos; tratar rejeições e erros sem dados privilegiados; restringir navegação/popups/permissões; servir recursos por protocolo local restrito; extrair CSS e aplicar CSP de produção; corrigir ciclo e registro/remoção de IPC; obter plataforma/versão pelo contrato desktop |
+| Módulos afetados | Fundação desktop e componentes comuns; nenhum módulo RabbitMQ implementado |
+| Arquivos previstos | `src/main/app.ts`, `appWindow.ts` e pequenos módulos em `src/main/ipc` e `src/main/security`; `src/preload/index.ts`; `src/shared/desktop.ts`; consumidores em `src/renderer`, `src/common`, `src/typings` e `misc/window`; configurações em `tools`, testes e workflow se necessário; manifesto/lock apenas para dependências usadas da matriz aprovada |
+| Organização física | Mover o entrypoint do preload para `src/preload`; manter a UI em seus diretórios atuais; extrair contratos compartilhados sem Node/React e políticas pequenas testáveis no main; retirar ponte/handlers legados substituídos e resolver o ciclo WindowFrame/Titlebar |
+| Dependências | 2A concluída; ADRs 0001/0003/0007 e requisitos/segurança aceitos; validar ferramentas de schema/extração CSS da matriz antes de instalar somente as necessárias |
+| Riscos | Diferenças do sandbox Electron 45, preload em desenvolvimento, paths/protocolo/ASAR, regressões em menus/atalhos e limitações da automação/OS |
+| Critérios de aceitação | Pacote local renderiza com sandbox ativo, sem Node no renderer e com context isolation; IPC indevido rejeitado; bridge sem acesso genérico a Electron/IPC/URL; recursos fora da raiz/traversal rejeitados; CSP de produção sem inline/eval e sem rede no renderer; navegação/popups/permissões bloqueados; reabertura/encerramento não duplicam handlers; identidade preservada |
+| Estratégia de testes | Unitários de políticas/validação/erros e ciclo; testes reais Electron com perfil isolado para fronteira, bridge, CSP e bloqueios; typecheck/lint/componentes; package e smoke local; registrar cobertura parcial de T-01/T-10/T-12 e limitações por alvo |
+| Resultado esperado | Base desktop com fronteira verificada no alvo disponível, pronta para evoluir em etapas autorizadas |
+| Impacto documental | Atualizar arquitetura/estrutura física, segurança, testes/evidências, comandos, AGENTS e estado/progresso; manter achados históricos preservados |
+
+Links externos serão resolvidos no main por identificadores de destinos fixos, sem
+aceitar URL arbitrária do renderer. Edição deve usar mecanismos nativos adequados,
+sem expor primitivas genéricas; preservar apresentação, sem antecipar o redesign da 3A.
+Não criar APIs de confirmação destrutiva sem casos de uso implementados.
+
+Desenvolvimento permanece restrito ao loopback; exceções necessárias de HMR/CSP não
+alcançam o pacote de produção. Distinguir perfil de automação e artefato distribuível;
+não enfraquecer um release para viabilizar Playwright. Fuses definitivos, assinatura,
+notarização, instaladores, atualização automática e publicação exigem os gates e
+contratos de distribuição próprios, não fazem parte desta proposta.
+
+Não inclui integração RabbitMQ, persistência de credenciais, novos módulos de produto,
+redesign, push ou homologação dos quatro alvos. Novas decisões significativas que
+alterem os ADRs aprovados serão submetidas ao proprietário antes do trabalho dependente.

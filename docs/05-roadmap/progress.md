@@ -152,3 +152,81 @@ essa conferência não equivalem à execução dos testes planejados.
 
 Conferir o registro do commit aprovado e apresentar o contrato da 2A, aguardando
 autorização específica. As decisões aceitas não autorizam implementação automática.
+
+## Etapa 2A — Fundação técnica
+
+Data: 2026-10-28. Base `97cd313`, branch `chore/modernization-app`, limpa antes da
+execução. O proprietário respondeu **“Autorizado”** ao contrato apresentado depois
+do commit da 1B, incluindo instalação de dependências e diagnósticos que geram
+artefatos. Na apresentação, a entrega estava pronta para revisão, sem aprovação de
+conclusão/commit; o aceite posterior está registrado abaixo.
+
+### Entrega implementada
+
+Node 24.22.1/npm 11.19.1, Electron 45.1.0, Forge 8.0.1, React 19.3.1, TS 6.0.3,
+ESLint 10.13.0 e tooling necessário fixados; lockfile regenerado e reproduzido sem
+peers forçados. Scripts explícitos de qualidade, ESLint flat, TypeScript estrito,
+Prettier, Vitest/Testing Library e workflow inicial. Nenhuma biblioteca de integração
+RabbitMQ ou infraestrutura remota foi implementada.
+
+Ajustes mínimos de tipos/nulabilidade/hooks, restauração de tema em StrictMode e
+metadados de versão resilientes; versão do app incluída no bundle. Sass usa `@use`
+no import existente. Mantidos estrutura, aparência e assets. Removidos loaders e
+configurações residuais sem uso, plugins de lint sem peers compatíveis e RPM adiado.
+O packager usa main `.webpack/main/index.cjs`, exigido pelo Forge 8.
+
+### Verificações efetivamente executadas
+
+| Verificação | Resultado |
+| --- | --- |
+| Instalação limpa | `npm ci` status 0, sem peers forçados; scripts transitivos revisados/negados quando desnecessários; nenhum pendente na árvore local |
+| Tipagem/lint/formatação | `npm run check` status 0; TypeScript estrito, ESLint sem warnings e código formatado |
+| Testes | 11 testes em dois arquivos passaram: tema/teclado/StrictMode/storage indisponível e metadados de versão inválidos/ausentes |
+| Desenvolvimento | Preload e renderer iniciaram com perfil temporário; servidor localhost; processos criados pelo diagnóstico encerrados |
+| Pacote e smoke | `npm run package` e `npm run smoke:package` status 0 em macOS 27.0.1 arm64/Electron 45.1.0; versão 1.0.0, renderização, tema após reload e perfil isolado |
+| Revisão de artefato | Captura aberta e conferida; ASAR com 11 entradas, main presente, versão correta e sem arquivos de teste |
+| Audit | Seis entradas no tooling: duas low/quatro moderate; zero high/critical. `--omit=dev` retornou zero; não comprova ausência de risco de runtime |
+| CI | Workflow com sintaxe YAML lida por js-yaml, SHA das actions conferido em releases oficiais e permissões de leitura; execução remota não realizada |
+| Documentação | 27 documentos incluindo README/AGENTS, 173 links locais e 61 tabelas conferidos; sem erros de links, delimitadores ou whitespace |
+| Preservação | Assets, licença e quatro arquivos de auditoria histórica comparados byte a byte com HEAD, intactos; sem commit/push |
+
+Falhas intermediárias corrigidas: ERESOLVE ao reconciliar o lock legado, main do
+Forge agora explícito, comparação de aliases `/var`/`/private/var` no smoke e warning
+Sass. Um diagnóstico de desenvolvimento atingiu o timeout durante preparação do
+binário; a repetição com cache observou preload/renderer. Não se tratou de gate
+aprovado antes dessa confirmação.
+
+### Limitações e revisão técnica
+
+O host macOS 27.0.1 não homologa macOS 14, x64, Windows 11 ou Ubuntu. Nenhum maker,
+instalador, assinatura/notarização, broker, container ou teste de credencial/TLS foi
+executado. A CI ainda depende de envio autorizado e runners disponíveis. O pacote
+é de desenvolvimento, não release para distribuição. Playwright Electron continua
+experimental; não foram implementados fuses de release.
+
+A revisão conferiu fronteiras do escopo, manifesto/lock, comandos e erros, testes
+comportamentais, cleanup do próprio perfil temporário, ASAR e preservação da
+identidade/histórico. A 2B ainda precisa resolver sandbox, IPC, navegação, CSP e ciclo
+desktop; não alegar que atualizar dependências fecha esses riscos. Advisories de
+deepmerge/uuid e warnings dos makers estão registrados, sem downgrade automático
+ou override que burle a árvore.
+
+Detalhes reproduzíveis: [evidências da 2A](../07-testing/foundation-2a.md) e
+[comandos/convenções](../06-development/coding-standards.md).
+
+### Próxima ação
+
+O proprietário respondeu **“Sim”** à pergunta explícita sobre aprovar a conclusão
+da 2A e autorizar `chore(setup): modernize desktop development foundation`.
+O aceite inclui a entrega apresentada e suas limitações registradas; não homologa
+os outros alvos nem resolve os controles pendentes da 2B. A sincronização da
+aprovação modifica somente documentação, preservando o código já verificado.
+
+Registrar/conferir o commit aprovado e apresentar o contrato proposto da 2B, que
+permanece sem autorização. O registro integra o próprio commit da 2A; obter seu SHA
+com `git log -1 --format='%h %s' -- AGENTS.md docs`. Nenhum push foi realizado.
+
+Conferência da aprovação: 27 documentos, 173 links locais e 62 tabelas consistentes
+(inclui o contrato proposto da 2B); whitespace, lock/manifesto e preservação de assets,
+licença e auditoria histórica verificados. Nenhuma alteração adicional de código
+foi feita ao registrar o aceite; os testes da apresentação não foram repetidos.

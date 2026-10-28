@@ -3,7 +3,7 @@ import React from "react";
 import "./styles.scss";
 
 interface CardProps {
-  children: JSX.Element[] | JSX.Element;
+  children: React.ReactNode;
 }
 
 const Card: React.FC<CardProps> = ({ children }) => {

@@ -6,7 +6,7 @@ interface ThemeModeInterface {
 }
 
 interface ThemeModeProviderProps {
-  children: JSX.Element[] | JSX.Element;
+  children: React.ReactNode;
 }
 
 export const ThemeModeContext = React.createContext<ThemeModeInterface>({
@@ -15,33 +15,32 @@ export const ThemeModeContext = React.createContext<ThemeModeInterface>({
 } as ThemeModeInterface);
 
 const ThemeModeProvider = ({ children }: ThemeModeProviderProps) => {
-  const [darkTheme, setDarkTheme] = React.useState<boolean>(true);
-
-  React.useEffect(() => {
-    const useDarkTheme = parseInt(localStorage.getItem("dark-mode"));
-
-    if (isNaN(useDarkTheme) || useDarkTheme === 1) {
-      setDarkTheme(true);
-    } else {
-      setDarkTheme(false);
+  const [darkTheme, setDarkTheme] = React.useState<boolean>(() => {
+    try {
+      return localStorage.getItem("dark-mode") !== "0";
+    } catch {
+      return true;
     }
-  }, []);
+  });
 
   /**
    * On Dark theme change
    */
   React.useEffect(() => {
+    try {
+      localStorage.setItem("dark-mode", darkTheme ? "1" : "0");
+    } catch {
+      // Theme still works for this session when storage is unavailable.
+    }
     if (darkTheme) {
-      localStorage.setItem("dark-mode", "1");
       document.body.classList.add("dark-mode");
     } else {
-      localStorage.setItem("dark-mode", "0");
       document.body.classList.remove("dark-mode");
     }
   }, [darkTheme]);
 
   function toggleTheme() {
-    setDarkTheme(!darkTheme);
+    setDarkTheme(current => !current);
   }
 
   return (

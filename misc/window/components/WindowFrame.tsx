@@ -21,7 +21,8 @@ const WindowFrame: React.FC<Props> = props => {
   const itsRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    const { parentElement } = itsRef.current;
+    const parentElement = itsRef.current?.parentElement;
+    if (!parentElement) return;
 
     parentElement.classList.add("has-electron-window");
     parentElement.classList.add("has-border");
@@ -30,7 +31,7 @@ const WindowFrame: React.FC<Props> = props => {
     if (props.borderColor) {
       parentElement.style.borderColor = props.borderColor;
     }
-  }, []);
+  }, [props.borderColor]);
 
   return (
     <WindowContext.Provider value={{ platform: props.platform }}>

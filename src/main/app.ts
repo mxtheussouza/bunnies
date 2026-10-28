@@ -1,8 +1,12 @@
-import { app, dialog, Menu, protocol, session } from "electron";
+import { app, dialog, Menu, protocol, safeStorage, session } from "electron";
 import squirrelStartup from "electron-squirrel-startup";
 import { resolve } from "node:path";
 import { createAppWindow, getAppWindow, rendererEntry } from "./appWindow";
 import { registerDesktopIpc } from "./ipc/desktop";
+import { registerProfilesIpc } from "./ipc/profiles";
+import { ProfileRepository } from "./profiles/repository";
+import { ProfileService } from "./profiles/service";
+import { SecretProtection } from "./security/secretProtection";
 import { APP_SCHEME } from "./security/desktopPolicy";
 import { createResourceHandler } from "./security/resources";
 import { restrictSession } from "./security/session";
@@ -34,7 +38,22 @@ if (squirrelStartup) {
         );
       }
       const dispose = registerDesktopIpc(getAppWindow, entry);
-      app.once("will-quit", dispose);
+      // No platform has completed provider/reopen/rotation/release gates yet.
+      // This adapter fails closed without probing or prompting the user keychain.
+      const profiles = new ProfileService(
+        new ProfileRepository(app.getPath("userData")),
+        new SecretProtection(safeStorage),
+      );
+      const disposeProfiles = registerProfilesIpc(
+        getAppWindow,
+        entry,
+        profiles,
+      );
+      app.once("will-quit", () => {
+        dispose();
+        disposeProfiles();
+        profiles.dispose();
+      });
       Menu.setApplicationMenu(
         Menu.buildFromTemplate([
           ...(process.platform === "darwin"

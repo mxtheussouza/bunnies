@@ -94,3 +94,15 @@ Check com 82 testes e package/smoke locais em macOS arm64; logos existentes usad
 sem alteração. Isso não homologa os demais sistemas nem conclui o MVP. A interação
 do menu nativo de tema por teclado precisa de revisão manual. Ver
 [evidências da 3B](../07-testing/interface-3b.md).
+
+## Perfis locais — incremento 4A.1
+
+Execução autorizada por “Autorizo”, após `eb535d7`. Conexões permite cadastrar,
+listar, selecionar, editar e remover perfis locais reais. Nome, ambiente,
+endpoints HTTPS/AMQPS e usuário persistem no main; senha pode ficar em memória
+somente durante a execução. A opção de salvar senha protegida permanece desligada
+até comprovação por alvo. Salvar/selecionar não testa nem ativa conexão.
+
+Sem integração RabbitMQ, CA customizada ou sessão nesta subetapa. M01 e MVP ainda
+não completos. Contrato: [Connection Manager](../04-modules/01-connection-manager.md).
+A entrega e suas limitações serão submetidas à aprovação de conclusão antes de commit.

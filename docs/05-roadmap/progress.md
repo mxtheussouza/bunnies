@@ -553,3 +553,54 @@ hashes dos 33 arquivos de código/ferramentas da entrega preservados, assim como
 locais válidos e 87 tabelas consistentes; whitespace conferido. Contrato da 4A.1
 com todos os campos, status Proposed e execução não autorizada. Nenhuma nova
 implementação ou repetição de teste funcional na sincronização deste aceite.
+
+## 4A.1 — execução autorizada
+
+O proprietário respondeu **“Autorizo”** após a proposta apresentada em `eb535d7`.
+Git limpo na branch `chore/modernization-app`; sem criar branch ou fazer push.
+Autorizados CRUD de perfis locais, JSON versionado/limitado/atômico, proteção
+condicionada com alternativa em memória, IPC específico, interface e testes.
+Não autorizados rede/brokers, novas dependências, 4A.2 ou commit sem aceite final.
+
+### 4A.1 — entrega implementada para revisão
+
+CRUD local real de perfis no main, JSON v1 com limites 50/2 MiB, revisões/lock e
+escrita atômica; senha transitória em memória, keep/replace/remove explícitos e
+preservação após falha. Adapter safeStorage assíncrono condicionado a provas; nenhum
+alvo habilitado para persistência e nenhum acesso ao cofre real. Ciphertext existente
+é preservado, sem devolução ao renderer. Sem nova dependência, cliente ou rede RabbitMQ.
+
+Ponte ampliada de oito para 12 métodos nomeados, com canal de perfis e autoridade
+janela/frame/URL/DTO. Confirmação nativa de remoção local com Cancelar padrão e
+revalidação. UI lista/resumo/formulário substitui o estado vazio; produção explícita,
+sem sessão automática, labels/foco, descarte e temas/zoom preservados.
+
+Check passou: 130 testes em 17 arquivos, typecheck, lint e formatação. Package,
+smoke base e smoke de perfis passaram em macOS 27.0.1 arm64. Reinício completo
+preservou metadados e descartou senha. Sentinelas ausentes em disco/DTO/storage/pacote;
+arquivo inválido preservado. 60 contrastes base mantidos; capturas revisadas em
+claro/escuro e zoom 200%. ASAR 774315 bytes, SHA-256
+`f5085b0648745ed5285bdc1eb4a6285a4b5818c04d108d0852d49b0c45fa9acb`.
+
+Limitações mantidas: provider real/rotação/reopen/release sem prova; memória é a
+alternativa autorizada. Diálogo nativo visual só simulado no main, revisão manual
+pendente; seletor nativo de tema, leitores de tela e demais SOs/CPUs não homologados.
+Stale lock não é apagado automaticamente; lock cooperativo não é CAS para editor
+externo arbitrário; sem garantia contra perda de energia/zeroização de strings.
+
+[M01](../04-modules/01-connection-manager.md), [evidências](../07-testing/profiles-4a1.md),
+arquitetura/segurança/testes/desenvolvimento/produto/módulos e estado sincronizados.
+Pronto para solicitar aprovação de conclusão da 4A.1 e do commit
+`feat(connections): implement local profiles and transient credentials`.
+Nenhum commit/push executado; 4A.2 não iniciada e depende de contrato/autorização próprios.
+
+Conferência final: 33 documentos Markdown, 233 links locais válidos e 92 tabelas consistentes; whitespace verificado. Recorte de 41 arquivos (22 existentes/19 novos); 26 arquivos protegidos conferidos byte a byte com HEAD. Index vazio, HEAD `eb535d7`; sem commit ou push.
+
+### 4A.1 — conclusão aprovada
+
+O proprietário respondeu **“Aprovado!”**, autorizando conclusão e commit
+`feat(connections): implement local profiles and transient credentials`.
+Conferidos os hashes dos 41 arquivos apresentados antes da sincronização do aceite;
+sem implementação adicional na 4A.1. Resultados/checksum apresentados mantidos,
+sem repetir testes funcionais por mudança documental. A mesma mensagem autoriza
+uma Task separada de histórico vivo/guia/Ajuda; não autoriza 4A.2 ou push.

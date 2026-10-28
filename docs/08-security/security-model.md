@@ -168,3 +168,33 @@ para as etapas dos módulos; não foram homologados pela 2B. A automação e a i
 local usam um artefato de teste, sem comprovar fuses de release, SOs não executados
 ou diálogos nativos. A conclusão da 2B foi posteriormente aprovada por “Aprovado”, com as limitações
 registradas; isso não homologa os demais controles ou autoriza a 3A.
+
+## Incremento local da 4A.1
+
+Execução autorizada por “Autorizo”. SEC-05/08/09 recebem controles locais parciais,
+sem homologação de provider real, transportes ou release. Metadados são JSON
+limitado/versionado; senhas em memória somente no main. Quatro novas operações
+explícitas em `bunnies:profiles` preservam janela/frame/URL fixa e validação estrita.
+A confirmação de remoção é nativa e contextual, com Cancelar padrão e revalidação;
+não remove recursos remotos. Nenhum caminho de arquivo ou flag confirmed cruza a ponte.
+
+Senha nova passa transitoriamente no IPC e é descartada no formulário após envio
+ou tentativa de fechar. Não há leitura de segredo pela UI. O adapter assíncrono
+safeStorage não recebe evidências no produto, mantendo persistência desabilitada
+para todos os alvos. Não consultar backend síncrono para liberar o assíncrono;
+não provocar inicialização/prompt de keychain sem necessidade. Fakes de provider
+não equivalem a testes do SO. Não foi utilizado cofre real nesta execução.
+
+Arquivo desconhecido/corrompido ou UTF-8 inválido não é sobrescrito. Gravação usa
+revisões, lock exclusivo cooperativo, temporário privado, fsync do arquivo e rename;
+conflito/falha é explícito. Lock de outra operação é preservado. A fila no main
+aceita até 16 operações. Campos limitados e schema raso restringem o processamento
+após o clone IPC; não limitam o clone interno do Electron. Controles de rede,
+TLS/CA e reconexão continuam futuros.
+
+Limites: sem zeroização garantida de strings JS, CAS contra editor externo que
+ignore lock, recuperação automática de stale lock, durabilidade contra perda de
+energia ou homologação de ACL Windows. Fechar janela macOS mantém processo/senhas
+até sair do app. Diálogo nativo visual ainda exige revisão manual por SO.
+[Contrato M01](../04-modules/01-connection-manager.md) e
+[evidências/limitações](../07-testing/profiles-4a1.md).

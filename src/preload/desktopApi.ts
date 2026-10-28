@@ -1,4 +1,10 @@
 import {
+  profileErrorMessages,
+  type ProfileRequest,
+  type ProfileResult,
+  type ProfilesApi,
+} from "../shared/profiles";
+import {
   desktopErrorMessages,
   type DesktopApi,
   type DesktopRequest,
@@ -7,6 +13,7 @@ import {
 
 export function createDesktopApi(
   invoke: (request: DesktopRequest) => Promise<unknown>,
+  invokeProfiles: (request: ProfileRequest) => Promise<unknown>,
 ): DesktopApi {
   async function call<T = undefined>(
     request: DesktopRequest,
@@ -24,7 +31,31 @@ export function createDesktopApi(
       };
     }
   }
+  async function profileCall<T>(
+    request: ProfileRequest,
+  ): Promise<ProfileResult<T>> {
+    try {
+      return (await invokeProfiles(request)) as ProfileResult<T>;
+    } catch {
+      return {
+        ok: false,
+        requestId: "transport",
+        error: {
+          code: "UNAVAILABLE",
+          message: profileErrorMessages.UNAVAILABLE,
+        },
+      };
+    }
+  }
+  const profiles: ProfilesApi = {
+    listProfiles: () => profileCall({ command: "listProfiles" }),
+    saveProfile: input => profileCall({ command: "saveProfile", input }),
+    removeProfile: input => profileCall({ command: "removeProfile", input }),
+    getSecretProtectionStatus: () =>
+      profileCall({ command: "getSecretProtectionStatus" }),
+  };
   return Object.freeze({
+    ...profiles,
     getInfo: () => call({ command: "info" }),
     close: () => call({ command: "close" }),
     quit: () => call({ command: "quit" }),

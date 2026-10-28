@@ -88,11 +88,12 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **3B concluída e aprovada; proposta da 4A.1 em apresentação**.
-- Última etapa concluída e aprovada: **3B — interface base desktop**.
-- Próxima etapa proposta: **4A.1 — perfis locais e proteção de credenciais**, não autorizada.
-- Próxima ação autorizada: conferir o registro do commit aprovado da 3B e apresentar
-  o contrato da 4A.1 no roadmap; aguardar autorização própria antes de implementar.
+- Etapa atual: **4A.1 concluída e aprovada; commit autorizado**.
+- Última etapa concluída e aprovada: **4A.1 — perfis locais e credenciais transitórias**.
+- Etapa autorizada: **4A.1 — perfis locais e proteção de credenciais**.
+- Próxima ação autorizada: registrar o commit aprovado da 4A.1; a Task adicional
+  de histórico vivo/guia/Ajuda recebeu autorização própria na mesma mensagem.
+  A 4A.2 não está autorizada.
 
 Ao retomar, ler este arquivo, a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -132,10 +133,36 @@ a autorização próprios da 3B. Dados fictícios permanecem restritos a documen
 A 3B foi autorizada por “Sim”. Interface base em `src/renderer/shell`, `pages` e
 `components`; tema em `src/providers/ThemeMode.tsx` e CSS externo --bn-. Só o enum
 de preferência vai ao storage do renderer; nunca perfis, credenciais ou payloads.
-Preservar a URL fixa e a ponte de oito métodos. Shell inicial sem sessão; não
+Na 3B, preservaram-se URL fixa e ponte de oito métodos; a ampliação 4A.1 está
+descrita abaixo. Shell inicial sem sessão; não
 instalar fixtures de broker como dados de produto. [Resultados e limites da 3B](docs/07-testing/interface-3b.md).
 82 testes e package/smoke locais passaram; não homologa outros SOs/CPUs ou WCAG.
 Teclado do menu nativo de tema ainda exige revisão manual; o aceite da conclusão
-não homologa essa interação. Commit da 3B autorizado por “Aprovado”; nenhuma
-integração RabbitMQ ou etapa 4A iniciada. A proposta de dividir a 4A em 4A.1/4A.2
-fica no roadmap, sem autorizar código, novos DTOs/IPC ou acesso ao cofre nesta entrega.
+não homologa essa interação. No encerramento da 3B, seu commit foi autorizado por
+“Aprovado”, sem implementação 4A naquele aceite. A autorização posterior da 4A.1
+e seu recorte vigente estão descritos abaixo.
+
+## Autorização vigente — 4A.1
+
+Após a proposta registrada em `eb535d7`, o proprietário respondeu **“Autorizo”**.
+Está autorizada a execução do contrato 4A.1 no roadmap: perfis locais, JSON,
+segredo em memória/proteção condicionada e IPC nomeado, com testes isolados.
+A ponte de oito métodos pode receber as operações explícitas previstas nesse
+contrato, mantendo as proteções 2B. Não conectar a brokers, instalar dependências,
+avançar à 4A.2 ou realizar commit sem aprovação de conclusão.
+
+Implementação 4A.1: `src/main/profiles` mantém JSON/revisões/fila e senha transitória;
+`src/shared/profiles.ts` define DTOs; `bunnies:profiles` tem handler próprio com a
+mesma autoridade 2B. A ponte agora tem **12 métodos explícitos**, quatro de perfis
+mais oito desktop. A instrução histórica de preservar oito métodos na 3B foi
+ampliada pelo contrato autorizado da 4A.1; nunca expor invoke/send genéricos.
+`Connections.tsx`/`ProfileForm.tsx` substituem o estado vazio; selecionar não ativa
+sessão. Gate de safeStorage permanece fechado em todos os alvos. Não habilitar por
+UI/CLI nem inferir proteção assíncrona de backend síncrono. [M01](docs/04-modules/01-connection-manager.md)
+e [evidências 4A.1](docs/07-testing/profiles-4a1.md). Após package, executar o smoke
+base e `node tools/testing/profiles.cjs` sequencialmente, usando somente dados temporários.
+
+O proprietário respondeu **“Aprovado!”** após a apresentação da 4A.1, aprovando
+sua conclusão e o commit `feat(connections): implement local profiles and transient credentials`.
+Mantêm-se os gates/limitações apresentados; não autoriza a 4A.2. A solicitação
+adicional de histórico vivo e documentação/Ajuda terá entrega própria.

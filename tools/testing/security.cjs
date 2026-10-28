@@ -40,9 +40,13 @@ module.exports = async function verifySecurity(application, page) {
     [
       "close",
       "getInfo",
+      "getSecretProtectionStatus",
+      "listProfiles",
       "minimize",
       "openLink",
       "quit",
+      "removeProfile",
+      "saveProfile",
       "showEditMenu",
       "toggleMaximize",
       "view",
@@ -261,6 +265,12 @@ module.exports = async function verifySecurity(application, page) {
   const denied = await foreign.evaluate(() => window.bunnies.close());
   assert.equal(denied.ok, false);
   assert.equal(denied.error.code, "FORBIDDEN");
+
+  const profilesDenied = await foreign.evaluate(() =>
+    window.bunnies.listProfiles(),
+  );
+  assert.equal(profilesDenied.ok, false);
+  assert.equal(profilesDenied.error.code, "FORBIDDEN");
 
   let current = page;
   for (let index = 0; index < 2; index++) {

@@ -2,7 +2,7 @@
 
 Data: 2026-10-28. Status: Etapas 0, 1A, 1B, 2A, 2B, 3A e 3B concluídas e aprovadas;
 sete ADRs e D3A-01–08 aceitos. Conclusão/commit da 3B aprovados por “Aprovado”.
-Subdivisão da 4A e contrato da 4A.1 propostos abaixo, sem autorização de execução.
+4A.1 concluída e aprovada por “Aprovado!”; commit autorizado. 4A.2 sem autorização.
 
 ## Sequência proposta
 
@@ -15,7 +15,8 @@ Subdivisão da 4A e contrato da 4A.1 propostos abaixo, sem autorização de exec
 | 2B | Ciclo desktop, fronteira segura, erros e smoke de empacotamento | Concluída e aprovada; commit autorizado |
 | 3A | Navegação, tokens e componentes para aprovação | Concluída e aprovada; D3A-01–08 Accepted e commit autorizado |
 | 3B | Interface base acessível, temas e estados | Concluída e aprovada; commit autorizado por “Aprovado” |
-| 4A | Perfis, proteção de credenciais e testes de conectividade | Divisão proposta em 4A.1 local e 4A.2 conectividade/sessão, com aceites próprios |
+| 4A.1 | Perfis locais e proteção condicionada de credenciais | Concluída e aprovada; commit autorizado |
+| 4A.2 | Testes HTTPS/AMQPS, CA customizada e ciclo de sessão | Proposta; contrato e autorização próprios pendentes |
 | 4B | Management API, capacidades e consultas de leitura | Proposta |
 | 5 | Filas e proteção das operações destrutivas | Proposta |
 | 6 | Exchanges e bindings | Proposta |
@@ -373,9 +374,9 @@ Entrega autorizada da 3B: [evidências, capturas locais e limitações](../07-te
 Check com 82 testes e package/smoke locais passaram; revisar também a pendência
 de interação do menu nativo de tema por teclado, mantida após o aceite da conclusão.
 
-## Contrato proposto — Etapa 4A.1: perfis locais e proteção de credenciais
+## Contrato autorizado — Etapa 4A.1: perfis locais e proteção de credenciais
 
-Status: **Proposed; execução não autorizada**. Recomenda-se dividir a 4A para
+Status: **4A.1 concluída e aprovada; execução autorizada por “Autorizo”, após eb535d7**. Dividir a 4A para
 revisar persistência/segredos antes de acrescentar rede. 4A.1 entrega os perfis
 locais; 4A.2 tratará testes separados HTTPS/AMQPS, CA customizada e ciclo de sessão
 em contrato próprio. Nenhum aceite da 3B autoriza essas subetapas.
@@ -471,6 +472,14 @@ mensagens ou habilitar TLS inseguro nesta subetapa. CA, sessões/reconexão, con
 administrativas e métricas continuam nas etapas próprias. Não inclui assinatura,
 instalador, publicação, push ou aprovação de conclusão/commit por antecipação.
 
-**Aguardar autorização explícita do proprietário para executar a 4A.1.** Se o
+**Executar somente a 4A.1 autorizada; conclusão/commit dependem de novo aceite.** Se o
 provider não puder ser comprovado com a API disponível, entregar memória e a
 limitação prevista no ADR; qualquer alternativa arquitetural exige decisão própria.
+
+### Entrega da 4A.1 aprovada
+
+[M01 local](../04-modules/01-connection-manager.md) implementado, com
+[evidências](../07-testing/profiles-4a1.md). Proteção persistente permanece desligada
+em todos os alvos, conforme alternativa aprovada; não houve acesso ao cofre real.
+Conclusão e commit aprovados por “Aprovado!”. A 4A.2 continua dependente de contrato e
+autorização próprios, sem execução automática após o aceite desta entrega.

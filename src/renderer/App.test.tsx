@@ -13,6 +13,14 @@ afterEach(() => {
 describe("desktop error feedback", () => {
   it("displays a dismissible generic message when a desktop action fails", async () => {
     vi.stubGlobal("bunnies", {
+      listProfiles: async () => ({
+        ok: true,
+        value: { revision: "absent", profiles: [] },
+      }),
+      getSecretProtectionStatus: async () => ({
+        ok: true,
+        value: { persistence: "disabled", reason: "unverified" },
+      }),
       getInfo: async () => ({ ok: true, value: { version: "1.0.0" } }),
     });
     render(

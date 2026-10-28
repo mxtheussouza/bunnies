@@ -2,7 +2,7 @@ import React from "react";
 import NavigationSidebar, { type LocalPage } from "./NavigationSidebar";
 import SessionContextBar from "./SessionContextBar";
 import IconButton from "../components/IconButton";
-import ConnectionsEmpty from "../pages/ConnectionsEmpty";
+import Connections from "../pages/Connections";
 import About from "../pages/About";
 import "./shell.scss";
 
@@ -28,6 +28,7 @@ export default function ApplicationShell({
           "input, textarea, select, [contenteditable]:not([contenteditable='false'])",
         );
       if (
+        document.querySelector(".profile-dialog[open]") ||
         event.repeat ||
         editing ||
         event.altKey ||
@@ -121,7 +122,7 @@ export default function ApplicationShell({
                   : "Uma experiência desktop para trabalhar com RabbitMQ."}
               </p>
             </div>
-            {page === "connections" ? <ConnectionsEmpty /> : <About />}
+            {page === "connections" ? <Connections /> : <About />}
           </main>
           <footer className="workspace-footer">
             <span className="offline-dot" aria-hidden="true" />

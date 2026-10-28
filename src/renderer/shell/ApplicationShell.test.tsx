@@ -11,6 +11,14 @@ beforeEach(() => {
   getInfo.mockResolvedValue({ ok: true, value: { version: "1.2.3" } });
   vi.stubGlobal("bunnies", {
     getInfo,
+    listProfiles: vi.fn().mockResolvedValue({
+      ok: true,
+      value: { revision: "absent", profiles: [] },
+    }),
+    getSecretProtectionStatus: vi.fn().mockResolvedValue({
+      ok: true,
+      value: { persistence: "disabled", reason: "unverified" },
+    }),
     openLink: vi.fn().mockResolvedValue({ ok: true }),
   });
 });
@@ -48,13 +56,15 @@ describe("offline application shell", () => {
       expect(location.href).toBe(url);
     },
   );
-  it("starts honestly without profiles, broker data or requests", () => {
+  it("starts honestly without profiles or broker data, with only local profile IPC", async () => {
     renderApp();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
       "Conexões",
     );
     expect(
-      screen.getByRole("heading", { name: "Nenhuma conexão configurada" }),
+      await screen.findByRole("heading", {
+        name: "Nenhuma conexão configurada",
+      }),
     ).toBeTruthy();
     expect(screen.getByText("HTTPS não iniciado")).toBeTruthy();
     expect(screen.getByText("AMQPS não iniciado")).toBeTruthy();
@@ -64,7 +74,7 @@ describe("offline application shell", () => {
       ).toBe("true");
     expect(getInfo).not.toHaveBeenCalled();
     expect(screen.queryByRole("table")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Nova conexão" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Testar conexão" })).toBeNull();
   });
   it("keeps unavailable destinations in context without changing the URL", async () => {
     renderApp();

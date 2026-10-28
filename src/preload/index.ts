@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
+import { PROFILES_CHANNEL } from "../shared/profiles";
 import { DESKTOP_CHANNEL } from "../shared/desktop";
 import { createDesktopApi } from "./desktopApi";
 
@@ -9,6 +10,9 @@ if (process.isMainFrame) {
   }
   contextBridge.exposeInMainWorld(
     "bunnies",
-    createDesktopApi(request => ipcRenderer.invoke(DESKTOP_CHANNEL, request)),
+    createDesktopApi(
+      request => ipcRenderer.invoke(DESKTOP_CHANNEL, request),
+      request => ipcRenderer.invoke(PROFILES_CHANNEL, request),
+    ),
   );
 }

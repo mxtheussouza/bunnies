@@ -5,6 +5,7 @@ import "./styles.scss";
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "quiet";
   loading?: boolean;
+  ref?: React.Ref<HTMLButtonElement>;
 };
 
 const Button: React.FC<ButtonProps> = ({

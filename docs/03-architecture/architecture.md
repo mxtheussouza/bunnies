@@ -312,3 +312,41 @@ dimensões iniciais para 1200 × 800; preload/shared/políticas, protocolo e CSP
 Evidências locais, check/package/smoke, revisão visual e limites estão em
 [interface 3B](../07-testing/interface-3b.md). Layout/teclado do alvo local não
 homologam os demais SOs, tecnologias assistivas ou os módulos de produto.
+
+## Perfis locais implementados na 4A.1
+
+Execução autorizada por “Autorizo” após `eb535d7`; conclusão/commit aprovados posteriormente por “Aprovado!”. A página `Connections.tsx` substitui
+`ConnectionsEmpty.tsx`; `ProfileForm.tsx` usa dialog HTML, labels explícitos e
+confirmação de descarte. Navegação continua em memória e sem sessão de broker.
+
+```mermaid
+flowchart LR
+    UI[Conexões: lista/resumo/formulário] --> P[Preload: quatro métodos de perfis]
+    P --> I[Main: janela/frame/URL/DTO]
+    I --> S[ProfileService: fila limitada e revisão]
+    S --> R[ProfileRepository: JSON atômico]
+    S --> M[Senha transitória em memória]
+    S --> G[SecretProtection: gate fechado no produto]
+```
+
+Código por responsabilidade, sem novas camadas/bibliotecas:
+
+- `src/shared/profiles.ts`: DTOs/códigos/limites e quatro métodos nomeados;
+  DesktopApi estende ProfilesApi, preservando as oito operações desktop.
+- `src/main/ipc/profiles.ts`: handler estático `bunnies:profiles`, usando a mesma
+  verificação de origem da 2B e diálogo nativo de remoção local.
+- `src/main/profiles`: validação, erro tipado, arquivo e serviço serializado.
+- `src/main/security/secretProtection.ts`: porta assíncrona safeStorage condicionada
+  a evidências internas; nenhuma plataforma habilitada no composition root.
+- `src/main/app.ts`: compõe o serviço, registra/remover handlers uma vez e descarta
+  referências de senha ao encerrar; nenhum transporte de broker.
+- `src/renderer/pages/Connections.tsx`, `ProfileForm.tsx` e `profiles.scss`: UI real
+  de perfis; testes junto das unidades. O shell bloqueia atalhos de navegação enquanto
+  o formulário modal está aberto e mantém contexto de sessão vazio.
+
+O schema v1, conflitos/locks, flags de segredo e limites estão no
+[contrato implementado do M01](../04-modules/01-connection-manager.md).
+A restauração/rotação do adapter foi testada com fakes; não foi habilitada no produto
+nem ligada a transportes inexistentes. Não há provider real comprovado, senha
+persistida em texto puro, API genérica ou alteração das políticas CSP/protocolo/sandbox.
+Resultados: [4A.1](../07-testing/profiles-4a1.md).

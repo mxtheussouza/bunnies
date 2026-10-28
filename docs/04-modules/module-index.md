@@ -1,13 +1,13 @@
 # Índice dos módulos
 
-Data: 2026-10-28. Status: responsabilidades e recorte aprovados na 1B; implementação dos módulos de produto ainda não autorizada.
+Data: 2026-10-28. Status: responsabilidades/recorte aprovados na 1B; CRUD local M01 aprovado na 4A.1. Demais casos de uso dependem de contratos próprios.
 Os oito módulos são responsabilidades do produto, não oito serviços ou camadas.
 A integração RabbitMQ não existe na base auditada.
 
 ## Responsabilidades, dependências e contratos
 
-Os nomes de operações abaixo descrevem interfaces candidatas; não são APIs
-implementadas. A direção de dependência será definida por contratos de sessão,
+Os nomes de operações abaixo descrevem interfaces candidatas. As quatro APIs
+locais de M01 implementadas na 4A.1 estão em seu documento especializado. A direção de dependência será definida por contratos de sessão,
 recurso e capacidades, evitando imports entre componentes de telas.
 
 | ID e módulo | Objetivo / responsabilidades | Dependências conceituais | Interfaces candidatas |
@@ -49,7 +49,7 @@ operação destrutiva só podem usar brokers/recursos isolados e reproduzíveis.
 
 | Módulo | Status | Documento especializado planejado | Pendências específicas |
 | --- | --- | --- | --- |
-| M01 | Casos de uso planejados; shell vazio na 3B | `01-connection-manager.md` | Schema de perfil; proteção por SO; autenticações; timeout/reconexão |
+| M01 | CRUD local 4A.1 aprovado; sem rede/sessão | [Connection Manager](01-connection-manager.md) | Aprovação final; provider real; CA/autenticação; timeout/reconexão |
 | M02 | Planejado; não implementado | `02-dashboard.md` | Conjunto de métricas; fonte, atualização e layout |
 | M03 | Planejado; não implementado | `03-queue-management.md` | Catálogo de argumentos/tipos; confirmações e conflitos |
 | M04 | Planejado; não implementado | `04-exchange-management.md` | Tipos/plugins; identidade de binding; restrições de recursos |
@@ -118,3 +118,9 @@ estão Accepted; documentos individuais dos módulos serão criados nos contrato
 correspondentes. A implementação da 3B recebeu autorização própria por “Sim” e
 entregou shell, temas, Conexões vazia e Sobre, com conclusão/commit aprovados por
 “Aprovado”, sem casos de uso de broker. Ver [evidências da interface](../07-testing/interface-3b.md).
+
+M01 ganhou contrato especializado e implementação local na 4A.1, autorizada por
+“Autorizo”: CRUD/JSON, credenciais transitórias e proteção condicionada, IPC e UI.
+Não declara M01/MVP completos; todos os providers reais continuam sem habilitação.
+[Resultados e limitações](../07-testing/profiles-4a1.md). Os outros sete documentos
+individuais continuam planejados e não foram criados sem necessidade/autorização.

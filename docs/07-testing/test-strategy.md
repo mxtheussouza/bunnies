@@ -176,3 +176,17 @@ emulado no runtime. Nenhuma configuração real do usuário é alterada pelo smo
 Execuções, falhas intermediárias corrigidas, capturas, checksum e pendências por SO:
 [interface 3B](interface-3b.md). CI remota, tecnologias assistivas, benchmark,
 instaladores e confirmação real de broker continuam pendentes dos contratos próprios.
+
+## Perfis locais — 4A.1
+
+Recorte autorizado por “Autorizo”, após `eb535d7`. T-01/02/09/10 recebem validação
+local de DTO/arquivo/segredo/UI, sem broker ou TLS. Unitários/integração usam fakes,
+diretórios temporários e senhas sintéticas. Provider seguro no teste não habilita
+persistência real. T-12 inclui smoke do executável com reinício completo, descarte
+de senha e negativas 2B/3B preservadas com a allowlist específica ampliada.
+
+Executar check, package, smoke:package e `node tools/testing/profiles.cjs` de modo
+sequencial. Não usar o userData real nem brokers externos. Revisão visual dos
+formulários/resumos nos dois temas e zoom não certifica WCAG. Menu de tema e
+confirmação nativa visual requerem revisão manual por alvo. Resultados efetivos,
+checksum e pendências: [evidências 4A.1](profiles-4a1.md).

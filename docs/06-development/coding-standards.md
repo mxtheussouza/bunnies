@@ -101,3 +101,17 @@ executadas. A captura a 200% usa o harness privilegiado, sem novo comando da pon
 Para alterar cores, sincronizar tokens aceitos e CSS mediante o fluxo de aprovação;
 não usar style inline ou enfraquecer a CSP. Semântica/teclado de controles nativos
 continuam sujeitos à validação por SO. Ver [interface 3B](../07-testing/interface-3b.md).
+
+Na 4A.1, perfis ficam no main (`profiles`), DTOs em shared e a ponte recebe somente
+quatro operações específicas adicionais. Não alterar políticas de isolamento para
+testar. `profiles.json` é versionado e limitado; não editar configurações reais do
+usuário em testes. Senhas nunca retornam do main. O gate de persistência está fechado
+em todos os alvos; nenhuma preferência, argumento CLI ou DTO pode habilitá-lo.
+
+Após package, executar também `node tools/testing/profiles.cjs`. O harness cria
+userData temporário, encerra/reabre o executável e limpa apenas seus dados. Produz
+`out/profiles-4a1-results.json` e capturas ignoradas. Respostas da confirmação
+nativa são simuladas exclusivamente no main pelo harness, sem API de teste no
+produto; isso não homologa o diálogo visual do SO. Não rodar os dois smokes em
+paralelo, pois foco de janelas pode interferir nas verificações.
+Ver [M01](../04-modules/01-connection-manager.md) e [4A.1](../07-testing/profiles-4a1.md).

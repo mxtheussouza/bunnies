@@ -49,14 +49,14 @@ operação destrutiva só podem usar brokers/recursos isolados e reproduzíveis.
 
 | Módulo | Status | Documento especializado planejado | Pendências específicas |
 | --- | --- | --- | --- |
-| M01 | Planejado; não implementado | `01-connection-manager.md` | Schema de perfil; proteção por SO; autenticações; timeout/reconexão |
+| M01 | Casos de uso planejados; shell vazio na 3B | `01-connection-manager.md` | Schema de perfil; proteção por SO; autenticações; timeout/reconexão |
 | M02 | Planejado; não implementado | `02-dashboard.md` | Conjunto de métricas; fonte, atualização e layout |
 | M03 | Planejado; não implementado | `03-queue-management.md` | Catálogo de argumentos/tipos; confirmações e conflitos |
 | M04 | Planejado; não implementado | `04-exchange-management.md` | Tipos/plugins; identidade de binding; restrições de recursos |
 | M05 | Planejado; não implementado | `05-message-management.md` | Propriedades/headers; limites; confirms e semântica de resultado |
 | M06 | Planejado; não implementado | `06-administration.md` | Matriz de permissão/capacidade e recorte pós-MVP |
 | M07 | Planejado; não implementado | `07-monitoring.md` | Frequência, backoff, retenção em memória e diagnóstico |
-| M08 | Planejado; não implementado | `08-productivity-tools.md` | Atalhos mínimos; privacidade e prioridade das ferramentas posteriores |
+| M08 | Temas/teclado base na 3B; demais ferramentas planejadas | `08-productivity-tools.md` | Homologação por SO; privacidade e prioridade das ferramentas posteriores |
 
 Os oito documentos especializados não foram criados na 1A ou 1B; o planejamento
 atual detalha requisitos e contratos transversais. Serão criados quando necessário e autorizado; cada
@@ -115,4 +115,6 @@ Referências de revisão: [navegação](../03-architecture/navigation.md),
 [design system](../03-architecture/design-system.md) e
 [mockups](../03-architecture/ui-proposals/README.md). As decisões D3A-01–08
 estão Accepted; documentos individuais dos módulos serão criados nos contratos
-correspondentes. O aceite do design não autoriza a implementação da 3B.
+correspondentes. A implementação da 3B recebeu autorização própria por “Sim” e
+entregou shell, temas, Conexões vazia e Sobre, com conclusão/commit aprovados por
+“Aprovado”, sem casos de uso de broker. Ver [evidências da interface](../07-testing/interface-3b.md).

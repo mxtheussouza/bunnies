@@ -219,4 +219,18 @@ antes dos casos de uso correspondentes. Design não autoriza novos comandos IPC.
 Conexões reais/cofre continuam em 4A; Management em 4B; filas, exchanges, mensagens
 e monitoramento nas suas etapas. Submeter o contrato físico/testes da 3B após
 aprovação da direção visual e conclusão/commit da 3A. Esse aceite já foi recebido;
-o contrato da 3B está no [roadmap](../05-roadmap/roadmap.md), ainda sem autorização de execução.
+o contrato da 3B está no [roadmap](../05-roadmap/roadmap.md) e recebeu autorização
+própria por “Sim”.
+
+## Estado implementado na 3B
+
+Shell/contexto sem sessão, Conexões vazia, Sobre e temas foram implementados e
+aprovados na conclusão da 3B por “Aprovado”. Quatro destinos de broker continuam bloqueados com razão acessível;
+não há perfis de demonstração na execução normal. Navegação e controle para pular
+conteúdo preservam a URL. Cmd/Ctrl+5 acessa Conexões fora de edição; os outros
+atalhos de destinos ainda indisponíveis não foram registrados.
+
+O painel compacto usa dialog HTML com contenção de foco e Escape/retorno ao gatilho.
+Isso não implementa confirmações destrutivas do main. Os fluxos de broker acima
+continuam requisitos aprovados para as próximas etapas. Ver
+[evidências e limites](../07-testing/interface-3b.md); conclusão/commit da 3B aprovados.

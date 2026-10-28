@@ -65,7 +65,7 @@ validação nos requisitos não funcionais. Não existem benchmarks ou homologa�
 Stack, arquitetura, matriz candidata, MVP, armazenamento e estratégias de segurança,
 testes e distribuição foram aceitos. A organização desktop foi implementada na 2B.
 O design da 3A também foi aprovado, sem implementação. Permanecem pendentes a
-autorização de execução da 3B, os módulos de produto, infraestrutura de release,
+autorização das subetapas da 4A, os módulos de produto, infraestrutura de release,
 autenticação adicional e validação efetiva da compatibilidade. Consultar a
 [avaliação tecnológica](../03-architecture/technology-evaluation.md) e o
 [roadmap](../05-roadmap/roadmap.md).
@@ -76,7 +76,21 @@ Com execução autorizada por “Autorizo”, a avaliação considerou a marca l
 registrada em 39234fa. A direção recomendada usa neutros e acentos semânticos
 laranja, sem alterar logos, com contexto fixo de ambiente/conexão/vhost e cinco
 destinos principais. A resposta posterior **“Aprovado”** aceitou D3A-01–08 e a
-conclusão/commit da 3A. O design está **Accepted**, com implementação ainda pendente. Ver
+conclusão/commit da 3A. O design está **Accepted**, com implementação parcial na 3B. Ver
 [navegação](../03-architecture/navigation.md),
 [design system](../03-architecture/design-system.md) e
 [mockups](../03-architecture/ui-proposals/README.md).
+
+## Interface base aprovada na 3B
+
+O proprietário autorizou o contrato próprio por “Sim”. O shell, os temas e a
+navegação local estão implementados, com Conexões vazia e Sobre. Contexto sem
+sessão e endpoints separados não simulam broker conectado. Cadastro de perfis e
+operações RabbitMQ continuam indisponíveis, conforme o recorte desta entrega.
+A resposta posterior “Aprovado” aceitou sua conclusão e autorizou o commit da 3B,
+mantendo as limitações registradas e a necessidade de autorização própria da 4A.
+
+Check com 82 testes e package/smoke locais em macOS arm64; logos existentes usados
+sem alteração. Isso não homologa os demais sistemas nem conclui o MVP. A interação
+do menu nativo de tema por teclado precisa de revisão manual. Ver
+[evidências da 3B](../07-testing/interface-3b.md).

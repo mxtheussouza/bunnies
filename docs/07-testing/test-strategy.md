@@ -158,3 +158,21 @@ Mockups fixos não exercitam fluxo, foco ou reflow. Contraste de tokens não cer
 a aplicação. Confirmação destrutiva continua exigindo T-06/T-10 nas etapas dos
 casos de uso, com main/nativo/contexto real; a imagem não substitui esse teste.
 Resultados e limitações da 3A constam em [progresso](../05-roadmap/progress.md).
+
+## Verificação executada da interface — Etapa 3B
+
+Contrato autorizado por “Sim”. Check com 82 testes em 11 arquivos, package e smoke
+do artefato local passaram no macOS 27.0.1 arm64. Conclusão/commit aprovados por
+“Aprovado”, sem homologar as pendências manuais ou outros SOs. T-10 exercitado parcialmente com
+temas/preferência, navegação, nomes/foco/teclado, dialog compacto, redimensionamento,
+zoom 200%, Sobre e feedback de erro. T-01/T-12 preservam os gates da 2B no smoke,
+incluindo janela estrangeira e duas recriações. Não são testes de módulos RabbitMQ.
+
+Contraste de 48 pares de tokens do CSS e 12 estados de botões em fixtures do
+harness; não equivale a todos os estados/controles nem a certificação WCAG.
+Storage indisponível e listeners são testados em jsdom; sinal de tema do SO é
+emulado no runtime. Nenhuma configuração real do usuário é alterada pelo smoke.
+
+Execuções, falhas intermediárias corrigidas, capturas, checksum e pendências por SO:
+[interface 3B](interface-3b.md). CI remota, tecnologias assistivas, benchmark,
+instaladores e confirmação real de broker continuam pendentes dos contratos próprios.

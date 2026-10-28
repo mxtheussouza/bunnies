@@ -1,33 +1,21 @@
 import React from "react";
-import classNames from "classnames";
 
-interface IControlButtonProps {
-  readonly name: string;
-  readonly path: string;
-  readonly title?: string;
-}
-
-const ControlButton: React.FC<
-  IControlButtonProps & React.HTMLAttributes<HTMLDivElement>
-> = props => {
-  const { name, path, title, ...rest } = props;
-  const { onClick } = rest;
-
-  const className = classNames("control", name);
-
+type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  name: string;
+  path: string;
+  label: string;
+};
+export default function ControlButton({ name, path, label, ...props }: Props) {
   return (
-    <div
-      aria-label={name}
-      className={className}
-      onClick={onClick}
-      title={title}
-      {...rest}
+    <button
+      {...props}
+      type="button"
+      aria-label={label}
+      className={`control ${name}`}
     >
-      <svg aria-hidden="true" version="1.1" width="10" height="10">
+      <svg aria-hidden="true" width="10" height="10" viewBox="0 0 10 10">
         <path fill="currentColor" d={path} />
       </svg>
-    </div>
+    </button>
   );
-};
-
-export default ControlButton;
+}

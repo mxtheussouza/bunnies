@@ -1,8 +1,8 @@
 # Roadmap e contratos de execução
 
-Data: 2026-10-28. Status: Etapas 0, 1A, 1B, 2A, 2B e 3A concluídas e aprovadas;
-sete ADRs e D3A-01–08 aceitos. Conclusão/commit da 3A aprovados por “Aprovado”.
-A execução da 3B depende de autorização própria do contrato abaixo.
+Data: 2026-10-28. Status: Etapas 0, 1A, 1B, 2A, 2B, 3A e 3B concluídas e aprovadas;
+sete ADRs e D3A-01–08 aceitos. Conclusão/commit da 3B aprovados por “Aprovado”.
+Subdivisão da 4A e contrato da 4A.1 propostos abaixo, sem autorização de execução.
 
 ## Sequência proposta
 
@@ -14,8 +14,8 @@ A execução da 3B depende de autorização própria do contrato abaixo.
 | 2A | Ambiente reproduzível, dependências compatíveis, tipagem, lint e CI inicial | Concluída e aprovada; commit autorizado por “Sim” |
 | 2B | Ciclo desktop, fronteira segura, erros e smoke de empacotamento | Concluída e aprovada; commit autorizado |
 | 3A | Navegação, tokens e componentes para aprovação | Concluída e aprovada; D3A-01–08 Accepted e commit autorizado |
-| 3B | Interface base acessível, temas e estados | Contrato proposto abaixo; execução não autorizada |
-| 4A | Perfis, proteção de credenciais e testes de conectividade | Proposta |
+| 3B | Interface base acessível, temas e estados | Concluída e aprovada; commit autorizado por “Aprovado” |
+| 4A | Perfis, proteção de credenciais e testes de conectividade | Divisão proposta em 4A.1 local e 4A.2 conectividade/sessão, com aceites próprios |
 | 4B | Management API, capacidades e consultas de leitura | Proposta |
 | 5 | Filas e proteção das operações destrutivas | Proposta |
 | 6 | Exchanges e bindings | Proposta |
@@ -277,11 +277,11 @@ A execução autorizada da 3A gerou [navegação](../03-architecture/navigation.
 o commit `docs(design): define desktop navigation and design system`.
 O recorte recomendado da 3B não constitui autorização de implementação.
 
-## Contrato proposto — Etapa 3B: interface base desktop
+## Contrato autorizado — Etapa 3B: interface base desktop
 
-Status: **Proposed; execução não autorizada**. Preparado como próxima proposta após
-o aceite da 3A. Aprovar este contrato autoriza somente o escopo descrito, mantendo
-aprovação de conclusão/commit e autorização da 4A separadas.
+Status: **Concluída e aprovada**. Execução autorizada por “Sim” após `c215004`;
+conclusão e commit posteriormente aprovados por “Aprovado”. A autorização da 4A
+continua separada.
 
 | Campo | Proposta para autorização |
 | --- | --- |
@@ -364,4 +364,113 @@ publicação ou push. Não exige nova stack, dependência ou ADR.
 
 Uma decisão significativa fora desse recorte deverá ser apresentada antes do
 trabalho dependente. A aprovação da 3A só autoriza registrar sua entrega e
-apresentar este contrato; **aguardar autorização explícita para executar a 3B**.
+apresentar este contrato. A resposta posterior **“Sim”** autorizou a execução da
+3B. A resposta posterior **“Aprovado”**, após a apresentação dos resultados e
+limitações, aprovou sua conclusão e autorizou o commit
+`feat(desktop): implement application shell and themes`. Não autoriza executar a 4A.
+
+Entrega autorizada da 3B: [evidências, capturas locais e limitações](../07-testing/interface-3b.md).
+Check com 82 testes e package/smoke locais passaram; revisar também a pendência
+de interação do menu nativo de tema por teclado, mantida após o aceite da conclusão.
+
+## Contrato proposto — Etapa 4A.1: perfis locais e proteção de credenciais
+
+Status: **Proposed; execução não autorizada**. Recomenda-se dividir a 4A para
+revisar persistência/segredos antes de acrescentar rede. 4A.1 entrega os perfis
+locais; 4A.2 tratará testes separados HTTPS/AMQPS, CA customizada e ciclo de sessão
+em contrato próprio. Nenhum aceite da 3B autoriza essas subetapas.
+
+| Campo | Proposta para autorização |
+| --- | --- |
+| Identificador e nome | 4A.1 — Perfis locais e proteção de credenciais |
+| Objetivo | Cadastrar, editar, listar e remover perfis reais, com armazenamento local limitado e segredo em memória ou protegido pelo SO quando comprovado |
+| Justificativa | A interface base está pronta, mas não existem perfis, persistência no main ou proteção de senha; separar rede permite revisar essa fronteira com uma entrega menor |
+| Escopo | M01 local: formulário/lista/resumo de perfil, nome/ambiente/endpoints HTTPS e AMQPS/usuário/modo de segredo, JSON versionado e proteção condicionada; sem conexão a brokers |
+| Tarefas | Documentar M01 e DTOs/schema; validar entradas no main; implementar leitura/escrita atômica limitada; separar metadados/ciphertext/segredo em memória; integrar API assíncrona candidata do SO com gate de provider; ampliar IPC por operações nomeadas; substituir o estado vazio por CRUD local e revisar estados/foco/erros; testar e registrar evidências |
+| Módulos afetados | M01 Connection Manager, configuração/segredos/IPC no núcleo e apresentação Conexões; shell/temas preservados |
+| Arquivos previstos | Novos módulos pequenos em src/main/profiles e adapter em src/main/security; handler em src/main/ipc; src/main/app.ts para composição/cleanup; contratos em src/shared/profiles.ts; extensão explícita de src/preload/desktopApi.ts e src/shared/desktop.ts; páginas/formulário/primitivas necessárias em src/renderer; testes próximos das unidades e tools/testing; documentos descritos abaixo |
+| Dependências | 3B concluída e commitada; ADRs 0001/0003/0004 e requisitos/MVP aceitos; Electron/Node já instalados; nenhuma lib de broker, schema, banco ou UI nova prevista |
+| Riscos | Provider fraco/indisponível, prompts do SO e assinatura macOS; vazamento por DTO/log/erro; arquivo corrompido, falha de escrita ou conflito; senha antiga repovoada no formulário; confundir perfil salvo com sessão ativa |
+| Critérios de aceitação | Os oito critérios abaixo atendidos, limites respeitados e limitações por SO registradas; persistência de senha nunca habilitada apenas para completar a entrega |
+| Estratégia de testes | Unitários de validação/segredos/erros; integração de arquivo em diretório temporário e fakes de provider; componentes por comportamento/teclado; testes IPC e negativas de segurança; npm run check, package/smoke local com perfil isolado; provider real somente do aplicativo com segredo sintético e quando o ambiente permitir |
+| Resultado esperado | Gerenciador de perfis locais funcional, sem rede; proteção de senha habilitada somente nos alvos comprovados, com alternativa em memória e diagnóstico claro |
+| Impacto documental | Criar docs/04-modules/01-connection-manager.md e evidências da 4A.1; atualizar arquitetura/DTOs, segurança, testes, desenvolvimento, produto/módulos, AGENTS e roadmap/estado/progresso; não declarar M01/MVP completos |
+
+### Organização e limites
+
+- Núcleo mantém perfis, segredo e acesso a disco. Renderer recebe somente resumos
+  sanitizados e informação de existência/disponibilidade do segredo; nunca senha
+  recuperada, ciphertext, erro bruto do SO ou acesso genérico a arquivos.
+- Operações candidatas da ponte: listar/salvar/remover perfil e consultar estado da
+  proteção. Novos DTOs/handlers nomeados ficam sujeitos à validação da janela,
+  frame, URL fixa, shape e tamanho; métodos desktop existentes são preservados.
+  Atualizar a allowlist finita e os testes de superfície ao adicionar os métodos,
+  sem invoke/send genéricos ou relaxamento de CSP/sandbox.
+- Perfil tem ID atribuído pelo main, nome, ambiente, endpoints independentes e
+  usuário. Validar protocolos https/amqps e proibir credenciais embutidas nas URLs;
+  nome/identidade do perfil não autoriza selecionar implicitamente uma sessão.
+  Selecionar ou salvar perfil não gera rede nem muda contexto para “conectado”.
+- JSON com schemaVersion em diretório de dados do aplicativo; limites NFR-020
+  (50 perfis e 2 MiB) e NFR-016 para IPC. Escritas serializadas e atômicas, com
+  erro explícito em conflito/falha; versão desconhecida ou corrupção preservadas,
+  sem reset, migração destrutiva ou sobrescrita silenciosa. Testes usam apenas
+  diretórios temporários, sem editar configuração real do usuário.
+- Senha nova pode passar pelo formulário/IPC para substituir; manter/remover são
+  ações explícitas. Descartar campos transitórios após envio/fechamento, sem
+  prometer zeroização de strings JavaScript. Não armazenar em localStorage,
+  URLs, argumentos de processo, logs ou arquivo em texto puro.
+- Modo em memória sempre disponível; reter apenas no main durante a execução,
+  descartando ao substituir/remover/encerrar o aplicativo. UI distingue senha
+  disponível nesta execução e senha protegida salva, sem recuperar seu conteúdo.
+- Usar safeStorage assíncrono como candidato do ADR-0004. Disponibilidade isolada
+  não comprova provider seguro; informação do backend síncrono não prova o
+  assíncrono. Fallback fraco, estado desconhecido, erro ou proteção não validada
+  mantêm persistência desligada, com modo em memória. Nenhuma criptografia própria,
+  opção de texto puro ou integração alternativa sem proposta específica.
+- Antes de habilitar persistência por alvo, registrar evidência de provider,
+  reabertura, indisponibilidade e rotação; tratar falha sem apagar ciphertext.
+  Gate macOS assinado e demais SOs permanecem, mesmo que o round-trip local passe.
+  Teste local não acessa entradas de terceiros do cofre ou altera preferências do SO.
+- Formulário segue D3A, com labels/erros associados, foco, cancelamento/descarte de
+  alterações e produção textual/simbólica. Remover perfil exige confirmação
+  contextual no main e esclarece que não remove recursos do broker.
+- CA customizada e seleção nativa do certificado ficam na 4A.2, junto da validação
+  TLS real. A 4A.1 não promete teste de confiança, autenticação ou disponibilidade
+  dos endpoints. Testar/Ativar não ficam operacionais antes de seus casos de uso.
+
+### Critérios verificáveis da 4A.1
+
+1. CRUD local de perfis reais, limites/IDs/validação verificados e lista preservada
+   após reiniciar; nenhum request ao broker ao abrir, selecionar ou salvar.
+2. Falhas de leitura/escrita, versão desconhecida/corrupção e conflitos não causam
+   perda silenciosa de arquivo ou sucesso aparente; operações locais continuam assíncronas.
+3. Fakes cobrem provider seguro/inseguro/ausente, falha temporária, decriptação e
+   rotação. Memória funciona quando persistência não é comprovada; segredo salvo
+   nunca retorna ao renderer. Gate real e resultados por alvo documentados.
+4. Inspeção de disco/DTOs/erros com sentinelas sintéticas não encontra senha em
+   texto puro, logs, respostas da ponte ou storage do renderer. Nenhuma credencial real em fixture.
+5. Manter/substituir/remover segredo, cancelamento de edição e exclusão de perfil
+   têm resultados coerentes, sem apagar a configuração após erro do provider.
+6. UI distingue perfil salvo, selecionado e ausência de sessão; keyboard/foco,
+   campos password, estados e confirmação local revisados nos dois temas e zoom.
+   Pendência manual do seletor nativo herdada da 3B continua rastreada.
+7. IPC novo rejeita origem/DTO/tamanho indevidos; asserções de segurança 2B/3B
+   permanecem com allowlist explícita ampliada, sem APIs genéricas ou rede no renderer.
+8. Check/package/smoke locais e revisão técnica/documental concluídos, com alvos
+   efetivamente executados e gates pendentes registrados para aprovação de conclusão.
+
+### Fontes verificadas e autorização
+
+Em 2026-10-28, a documentação oficial e os tipos do Electron 45.1.0 instalado
+confirmam a API assíncrona candidata; a documentação distingue os providers e o
+fallback Linux. Essa consulta não verifica o provider do host e não acessa o cofre.
+[Referência safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage).
+
+Não instalar dependências, integrar AMQP/HTTP, abrir brokers, consumir/publicar
+mensagens ou habilitar TLS inseguro nesta subetapa. CA, sessões/reconexão, consultas
+administrativas e métricas continuam nas etapas próprias. Não inclui assinatura,
+instalador, publicação, push ou aprovação de conclusão/commit por antecipação.
+
+**Aguardar autorização explícita do proprietário para executar a 4A.1.** Se o
+provider não puder ser comprovado com a API disponível, entregar memória e a
+limitação prevista no ADR; qualquer alternativa arquitetural exige decisão própria.

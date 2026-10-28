@@ -53,3 +53,9 @@ D3A-01–08 foram aprovados. Os arquivos visuais preservam a apresentação orig
 inclusive o rótulo “proposta”, como evidência do que foi revisado. A implementação
 da 3B exige o contrato do [roadmap](../../05-roadmap/roadmap.md) e autorização
 própria; publicar, instalar dependências ou editar assets não fazem parte desta entrega.
+
+O contrato da 3B recebeu autorização própria por “Sim”. A interface base foi
+implementada, verificada localmente e aprovada por “Aprovado” na conclusão da 3B:
+[evidências reais](../../07-testing/interface-3b.md).
+Estes SVGs/PNGs continuam sendo a proposta original da 3A, sem alteração para
+simular capturas ou funcionalidades de broker na 3B.

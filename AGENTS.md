@@ -47,6 +47,12 @@ seu commit foram posteriormente aprovados por “Aprovado”. A resposta “Auto
 aprovou executar a 3A documental/visual; não alterar código, dependências ou assets.
 A resposta posterior “Aprovado” aceitou D3A-01–08, a conclusão da 3A e seu commit;
 não autorizou executar a 3B.
+A resposta seguinte “Sim” autorizou executar o contrato da 3B apresentado após
+`c215004`, incluindo verificações e artefatos locais. Não autoriza conclusão/commit
+da 3B nem a execução da 4A.
+A resposta posterior “Aprovado” aceitou a conclusão da 3B e autorizou seu commit
+`feat(desktop): implement application shell and themes`, mantendo as limitações
+registradas. Não autoriza executar a 4A ou suas subetapas.
 A [estratégia de testes](docs/07-testing/test-strategy.md) e o
 [modelo de segurança](docs/08-security/security-model.md) estão aprovados como planos,
 sem homologação. Limites e metas aprovados têm fonte única nos
@@ -82,11 +88,11 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **3A concluída e aprovada; contrato da 3B em apresentação**.
-- Última etapa concluída e aprovada: **3A — navegação e design system**.
-- Próxima etapa proposta: **3B — interface base**, ainda não autorizada.
-- Próxima ação autorizada: conferir o registro do commit aprovado da 3A e apresentar o
-  contrato da 3B no roadmap; aguardar autorização própria antes de implementar.
+- Etapa atual: **3B concluída e aprovada; proposta da 4A.1 em apresentação**.
+- Última etapa concluída e aprovada: **3B — interface base desktop**.
+- Próxima etapa proposta: **4A.1 — perfis locais e proteção de credenciais**, não autorizada.
+- Próxima ação autorizada: conferir o registro do commit aprovado da 3B e apresentar
+  o contrato da 4A.1 no roadmap; aguardar autorização própria antes de implementar.
 
 Ao retomar, ler este arquivo, a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -122,3 +128,14 @@ Design aprovado na 3A: [navegação](docs/03-architecture/navigation.md),
 [mockups/verificações](docs/03-architecture/ui-proposals/README.md). D3A-01–08 estão
 Accepted; isso não implementa o design. Aplicar tokens/layouts exige o contrato e
 a autorização próprios da 3B. Dados fictícios permanecem restritos a documentação/testes.
+
+A 3B foi autorizada por “Sim”. Interface base em `src/renderer/shell`, `pages` e
+`components`; tema em `src/providers/ThemeMode.tsx` e CSS externo --bn-. Só o enum
+de preferência vai ao storage do renderer; nunca perfis, credenciais ou payloads.
+Preservar a URL fixa e a ponte de oito métodos. Shell inicial sem sessão; não
+instalar fixtures de broker como dados de produto. [Resultados e limites da 3B](docs/07-testing/interface-3b.md).
+82 testes e package/smoke locais passaram; não homologa outros SOs/CPUs ou WCAG.
+Teclado do menu nativo de tema ainda exige revisão manual; o aceite da conclusão
+não homologa essa interação. Commit da 3B autorizado por “Aprovado”; nenhuma
+integração RabbitMQ ou etapa 4A iniciada. A proposta de dividir a 4A em 4A.1/4A.2
+fica no roadmap, sem autorizar código, novos DTOs/IPC ou acesso ao cofre nesta entrega.

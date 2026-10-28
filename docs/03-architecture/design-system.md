@@ -208,3 +208,22 @@ A resposta **“Aprovado”**, após apresentação dos mockups, aceitou explici
 D3A-01–08 e a conclusão/commit da 3A. O recorte da 3B está aprovado como direção;
 seu contrato físico e sua execução ainda exigem autorização própria. Os SVGs/PNGs
 preservam os rótulos da apresentação original como evidência estática, sem homologação runtime.
+
+## Implementação parcial na 3B
+
+Execução autorizada por “Sim”; conclusão e commit aprovados depois por “Aprovado”
+com as limitações registradas. Tokens foram materializados
+em `src/renderer/styles/Theme.scss` com prefixo --bn-, sem import de documentação
+no runtime. Button/Card modernizados; IconButton, StatusMessage, EmptyState e
+ícones geométricos de UI acrescentados, sem alterar a marca. O shell usa cinco
+destinos, contexto fixo, temas e estados sem sessão. Sobre usa o PNG extenso existente.
+
+O controle de pular conteúdo é button semântico que foca main sem inserir hash na
+URL validada; menus da barra também usam buttons, com Tab/Enter/Escape. O painel
+compacto usa dialog HTML; não substitui confirmação privilegiada de broker.
+Tabelas, campos de broker, drawers complexos e demais padrões acima não foram
+implementados por antecipação. Fixtures de componentes só existem nos testes.
+
+60 pares de contraste verificados no runtime local: 48 pares dos tokens computados
+e 12 estados de botões. Layout/zoom/foco revistos no alvo local; isso não certifica
+acessibilidade ou os demais sistemas. Ver [evidências da 3B](../07-testing/interface-3b.md).

@@ -1,31 +1,6 @@
-.card-teaser {
-  position: relative;
-  display: flex;
-  line-height: 25px;
-  font-size: 14px;
-  margin-bottom: 2em;
-  color: gray;
-  width: 63%;
-  margin: 0 auto;
-  margin-bottom: 3rem;
-  text-align: left;
-  padding-left: 1rem;
-  background: #191919;
-  padding-top: 1rem;
-  padding-bottom: 10px;
-  padding-right: 1rem;
-  border-radius: 0 0 8px 8px;
-  box-shadow: 0 8px 10px 0px #00000003;
-}
-
-.card-teaser:after {
-  content: "";
-  position: absolute;
-  top: 0;
-  width: calc(100% + 40px);
-  height: 2px;
-  background: var(--app-accent-color);
-  left: -20px;
-  box-shadow: 0 10px 20px #000000e3;
+.card {
+  background: var(--bn-surface);
+  border: 1px solid var(--bn-separator);
   border-radius: 8px;
+  min-width: 0;
 }

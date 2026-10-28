@@ -89,11 +89,11 @@ module.exports = async function verifySecurity(application, page) {
   const css = await page.evaluate(() => ({
     background: getComputedStyle(document.body).backgroundColor,
     linked: !!document.querySelector('link[rel="stylesheet"]'),
-    logo: document.querySelector(".item-icon").naturalWidth,
+    logo: document.querySelector(".brand-symbol").naturalWidth,
   }));
   assert.equal(css.linked, true);
   assert.ok(css.logo > 0);
-  assert.equal(css.background, "rgb(241, 240, 240)");
+  assert.equal(css.background, "rgb(246, 247, 249)");
   const injected = await page.evaluate(() => {
     const before = getComputedStyle(document.body).outlineWidth;
     const script = document.createElement("script");
@@ -214,7 +214,7 @@ module.exports = async function verifySecurity(application, page) {
 
   // Resynchronize Playwright after deliberately canceled navigations.
   await page.reload({ waitUntil: "domcontentloaded" });
-  await page.getByRole("heading", { name: "Bunnies", exact: true }).waitFor();
+  await page.getByRole("heading", { name: "Conexões", exact: true }).waitFor();
 
   await page.evaluate(() => {
     const input = document.createElement("textarea");
@@ -275,7 +275,7 @@ module.exports = async function verifySecurity(application, page) {
     });
     current = await opened;
     await current
-      .getByRole("heading", { name: "Bunnies", exact: true })
+      .getByRole("heading", { name: "Conexões", exact: true })
       .waitFor();
     assert.equal(
       (await current.evaluate(() => window.bunnies.getInfo())).ok,

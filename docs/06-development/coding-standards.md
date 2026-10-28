@@ -1,6 +1,6 @@
 # Desenvolvimento e convenções
 
-Atualizado na Etapa 2B, 2026-10-28. Stack aprovada no [ADR-0001](../03-architecture/adr/0001-desktop-stack.md).
+Atualizado na Etapa 3B, 2026-10-28. Stack aprovada no [ADR-0001](../03-architecture/adr/0001-desktop-stack.md).
 
 ## Ambiente e comandos
 
@@ -43,7 +43,8 @@ e `.webpack/`, ignorados pelo Git.
   são equivalentes a tipagem/testes. `skipLibCheck` limita a checagem das declarações
   de terceiros, sem dispensar os smokes de compatibilidade.
 - Organização desktop implementada: main, preload e shared separados conforme
-  contrato da 2B; UI legada permanece em renderer/misc. Testes próximos das unidades.
+  contrato da 2B; interface base em renderer/shell, pages e components, com chrome
+  em misc/window. Testes próximos das unidades, incluindo o chrome no renderer.
 - Não importar main/Node/transporte no renderer ou Node/main no preload. Lint
   restringe esses imports. Contratos shared não importam Node/Electron/React.
 - A validação obrigatória de IPC ocorre no main (janela/frame/URL/DTO), além de tipos.
@@ -87,3 +88,16 @@ introduzir polyfills Node para contornar isolamento. CSS de produção é extra�
 por mini-css-extract-plugin 2.10.2; exceções inline de estilo só no desenvolvimento.
 
 Evidências e limites: [fronteira 2B](../07-testing/desktop-boundary-2b.md).
+
+Na 3B, o smoke verifica temas Sistema/Claro/Escuro, migração de preferência em perfil
+isolado, destinos indisponíveis, URL invariável, painel/foco/atalho, controles reais,
+layout menor e zoom 200%. Lê os tokens computados e usa fixtures temporárias de
+estilo para medir contraste; essas fixtures não são telas de demonstração do produto.
+Não acrescentar APIs para permitir inspeção de teste no renderer.
+
+Após package, `npm run smoke:package` produz `out/ui-3b-results.json` e capturas
+locais ignoradas; medições e versões devem ser registradas como efetivamente
+executadas. A captura a 200% usa o harness privilegiado, sem novo comando da ponte.
+Para alterar cores, sincronizar tokens aceitos e CSS mediante o fluxo de aprovação;
+não usar style inline ou enfraquecer a CSP. Semântica/teclado de controles nativos
+continuam sujeitos à validação por SO. Ver [interface 3B](../07-testing/interface-3b.md).

@@ -16,7 +16,8 @@ const minimizePath = "M 0,5 10,5 10,6 0,6 Z";
 
 const WindowControls: React.FC<Props> = props => {
   return (
-    <section
+    <div
+      aria-label="Controles da janela"
       className={classNames(
         "window-titlebar-controls",
         `type-${props.platform === "darwin" ? "mac" : "windows"}`,
@@ -24,23 +25,26 @@ const WindowControls: React.FC<Props> = props => {
     >
       <ControlButton
         name="minimize"
+        label="Minimizar"
         onClick={() => runDesktop(() => window.bunnies.minimize())}
         path={minimizePath}
-        title={props.tooltips ? "Minimize" : undefined}
+        title={props.tooltips ? "Minimizar" : undefined}
       />
       <ControlButton
         name="maximize"
+        label="Maximizar ou restaurar"
         onClick={() => runDesktop(() => window.bunnies.toggleMaximize())}
         path={maximizePath}
-        title={props.tooltips ? "Maximize" : undefined}
+        title={props.tooltips ? "Maximizar ou restaurar" : undefined}
       />
       <ControlButton
         name="close"
+        label="Fechar janela"
         onClick={() => runDesktop(() => window.bunnies.close())}
         path={closePath}
-        title={props.tooltips ? "Close" : undefined}
+        title={props.tooltips ? "Fechar janela" : undefined}
       />
-    </section>
+    </div>
   );
 };
 

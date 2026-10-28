@@ -434,3 +434,122 @@ consistentes; oito decisões D3A Accepted, contrato 3B com todos os campos e sta
 Proposed, 48 contrastes e cinco pares SVG/PNG conferidos. Os três JSONs passaram
 no Prettier; whitespace validado. O recorte permanece sete documentos existentes
 e 16 artefatos novos, com hashes dos outros 91 arquivos versionados preservados.
+
+## Etapa 3B — Interface base desktop
+
+Data: 2026-10-28. Contrato autorizado por **“Sim”**, após o commit `c215004` e
+apresentação da proposta. Git inicialmente limpo, branch `chore/modernization-app`.
+Status inicial: execução em andamento; conclusão/commit e etapa 4A não autorizados.
+Escopo: shell, temas, pequenas primitivas, estados sem sessão e verificações locais.
+Sem nova dependência, integração RabbitMQ, mudança de marca ou nova API privilegiada.
+
+### Entrega da execução autorizada
+
+Status final: **concluída e aprovada** por “Aprovado”, após a apresentação abaixo.
+Shell com cinco
+destinos, contexto fixo sem sessão e estados HTTPS/AMQPS não iniciados; Conexões
+vazia e Sobre com versão real/link fixo do autor. Quatro destinos de broker
+aria-disabled com razão, sem perfis/contadores sintéticos na execução normal.
+
+Tokens D3A em CSS externo; temas Sistema/Claro/Escuro e migração da chave dark-mode
+0/1 na mesma origem para bunnies.theme-preference. Valor novo válido prevalece;
+sem preferência válida, Sistema. Falha de storage mantém uso em memória; listener
+do SO removido ao mudar modo/desmontar. Não há persistência de perfil/segredo/payload.
+
+Button/Card modernizados, IconButton/StatusMessage/EmptyState e ícones geométricos
+pequenos; sem biblioteca UI nova ou edição dos logos. Menus/controles de janela
+semânticos em PT-BR. Sidebar compacta e dialog HTML com foco contido/Escape/retorno,
+controle de pular conteúdo e Cmd/Ctrl+5 fora de edição, preservando a URL fixa.
+O dialog do shell não substitui confirmação privilegiada do main.
+
+### Verificações executadas
+
+| Verificação | Resultado |
+| --- | --- |
+| npm run check | Status 0: TypeScript estrito, lint sem warnings, 82 testes em 11 arquivos e Prettier |
+| npm run package | Status 0, macOS arm64; CSS extraído, preload separado |
+| npm run smoke:package | Status 0 final, executável empacotado com perfil temporário próprio e cleanup |
+| Preferência | Sinal de tema do SO emulado; Claro/Escuro persistem em reload; migração real 0/1 no perfil temporário; inválidos/storage indisponível e listeners no jsdom |
+| Navegação/teclado | Sobre/Conexões e Cmd/Ctrl+5, URL invariável, heading com foco; Tab/Shift+Tab/Escape no painel, retorno ao gatilho e menus acessíveis |
+| Geometria | Capturas revistas em 1440 × 900, 1024 × 700 e 800 × 600; sidebar 224/64 px; zoom Chromium 2 e acesso por rolagem sem overflow horizontal do documento |
+| Desktop | Botões reais de minimizar/maximizar; close/reabrir duas vezes; regiões drag/no-drag e edição/zoom preservados |
+| Contraste | 60 pares: 48 tokens do CSS computado e 12 estados default/disabled de botões; todos atendem seus limiares sem arredondamento |
+| Segurança 2B | Asserções preservadas e executadas, incluindo sandbox/context isolation, oito métodos, CSP, recursos, rede/nav/permissões e janela estrangeira |
+| Escopo | Assets, manifesto/lock, preload/shared e políticas preservados; main/appWindow só muda dimensões iniciais; sem nova API ou integração RabbitMQ |
+
+Host macOS 27.0.1/arm64 (Apple M1, 8 GiB), Node 24.22.1/npm 11.19.1,
+Electron 45.1.0/Forge 8.0.1. ASAR 752078 bytes, SHA-256
+c79eebc775e29e92dbc365153f214f0f66a4337fae69ee072637597e885731be.
+Resultados/capturas em out, ignorados; detalhes no documento de evidências.
+
+### Revisão técnica, falhas e limites
+
+Corrigidos imports/opções de queries dos novos testes e globals do harness no lint.
+Smoke passou a consultar select por papel/nome acessível e normalizar caixa de hex;
+nenhuma regra/limiar de segurança foi relaxada. Os testes de atalhos apontaram close
+em dialog já fechado; o handler agora verifica open. Revisão corrigiu traços do
+ícone de tema e hover do destino ativo. Disabled/primary usa superfície neutra legível.
+
+Captura CDP no zoom recortava a superfície física; harness usa captura nativa e
+aguarda fechamento/dois frames. Tentativas de selecionar no menu nativo com
+setas/Enter não efetivaram mudança e atingiram timeout; foco/rolagem e seleção do
+valor foram verificados por selectOption. A interação de teclado desse menu fica
+explicitamente pendente de revisão manual por SO. Processos/perfis dos testes foram
+encerrados/limpos; nenhuma configuração real do host ou broker foi alterada.
+
+Sem homologação dos outros SOs/CPUs, leitor de tela/WCAG, p95, CI remota, makers,
+assinatura/notarização ou atualização automática. A matriz e avisos de dependências
+anteriores não foram reavaliados. Sem perfis/cofre, clientes HTTP/AMQP, operações
+RabbitMQ ou fixtures instaladas como sessão real. Demais padrões da 3A continuam
+planejados para os casos de uso, sem tabelas/formulários complexos antecipados.
+
+Evidências: [interface 3B](../07-testing/interface-3b.md). Documentação de arquitetura,
+design/navegação, produto/módulos, desenvolvimento/testes e AGENTS sincronizada.
+
+Conferência final: 32 documentos Markdown, 221 links locais válidos e 86 tabelas
+consistentes. Diff com 32 arquivos existentes alterados e 14 novos dentro do
+contrato; 30 arquivos protegidos mantêm seus hashes. Mockups/dados da 3A preservados
+(somente README ganhou o vínculo às evidências). ASAR com oito arquivos, sem
+testes/documentação, preload requer apenas electron. HEAD c215004 e index vazio.
+
+### Solicitação de aprovação apresentada
+
+Apresentar resultados e a limitação do menu nativo de tema por teclado para aprovação
+de conclusão da 3B e do commit sugerido
+`feat(desktop): implement application shell and themes`.
+Somente após esse aceite registrar o commit e apresentar contrato próprio da 4A;
+não executar perfis/conectividade automaticamente. Nenhum commit ou push nesta entrega.
+
+### Aprovação e proposta seguinte
+
+O proprietário respondeu **“Aprovado”** à pergunta explícita sobre conclusão da
+3B e o commit `feat(desktop): implement application shell and themes`, após a
+apresentação dos resultados e da limitação manual do seletor de tema. Aprovação
+registrada em evidências, arquitetura/design, produto, instruções e estado. A
+pendência do seletor e a homologação dos demais SOs permanecem; não foram resolvidas
+por documentação ou por esse aceite.
+
+Preparado no [roadmap](roadmap.md) o contrato **Proposed** da **4A.1 — Perfis locais
+e proteção de credenciais**, propondo dividir a 4A para revisar CRUD/JSON/segredos
+sem rede antes dos testes de conectividade/sessão da 4A.2. O contrato da 4A.1 cobre
+gates de provider, alternativa em memória, novos DTOs/IPC nomeados e testes isolados;
+CA customizada e broker ficam fora desse primeiro incremento.
+
+Consulta somente de leitura à documentação oficial de safeStorage e aos tipos do
+Electron 45.1.0 instalado confirmou as APIs candidatas. Nenhum cofre, provider,
+credencial, configuração do SO ou broker foi acessado para preparar o contrato.
+Não foi criada implementação, DTO ou dependência da 4A.1.
+
+A sincronização do aceite altera somente documentação; fontes e ferramentas da
+entrega apresentada foram registradas antes desses ajustes para conferir seus
+hashes. Testes da aplicação não foram repetidos por mudança documental; resultados
+e checksum continuam os efetivamente obtidos na apresentação. O commit de entrega
+inclui este registro e o contrato seguinte; consultar o hash em `git log -1`.
+Nenhum push solicitado ou executado.
+
+Conferência do aceite da 3B: os 46 arquivos continuam no recorte apresentado;
+hashes dos 33 arquivos de código/ferramentas da entrega preservados, assim como
+30 arquivos protegidos da base e o ASAR testado. 32 documentos Markdown, 222 links
+locais válidos e 87 tabelas consistentes; whitespace conferido. Contrato da 4A.1
+com todos os campos, status Proposed e execução não autorizada. Nenhuma nova
+implementação ou repetição de teste funcional na sincronização deste aceite.

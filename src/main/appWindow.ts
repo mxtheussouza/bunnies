@@ -18,8 +18,8 @@ export function createAppWindow(): BrowserWindow {
   }
   const entry = rendererEntry();
   const window = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1200,
+    height: 800,
     backgroundColor: "#202020",
     show: false,
     autoHideMenuBar: true,

@@ -269,3 +269,46 @@ novamente. Ainda não existiam perfis ou credenciais a migrar.
 A conclusão da 2B e seu commit foram aprovados por “Aprovado”; [resultados reais](../07-testing/desktop-boundary-2b.md).
 Não confundir estes controles locais com homologação dos quatro alvos, integração
 segura de broker ou proteção de artefato de release com fuses/assinatura.
+
+## Interface base implementada na Etapa 3B
+
+O contrato da 3B foi autorizado por “Sim” após `c215004`. Conclusão e commit
+posteriormente aprovados por “Aprovado”. Estrutura física incremental:
+
+```text
+src/renderer/
+  App.tsx                         # feedback sanitizado e composição do shell
+  shell/
+    ApplicationShell.tsx          # navegação local, foco, painel compacto
+    NavigationSidebar.tsx         # destinos, bloqueios e preferência de tema
+    SessionContextBar.tsx         # estado sem sessão, HTTPS/AMQPS separados
+    shell.scss                    # layout/reflow e estilo dos dois destinos locais
+  pages/
+    ConnectionsEmpty.tsx          # ausência real de perfis e recursos indisponíveis
+    About.tsx                     # metadados reais e link fixo do autor
+  components/                     # Button, IconButton, Card, StatusMessage, EmptyState, Icon
+  styles/Theme.scss               # tokens D3A em CSS externo
+src/providers/ThemeMode.tsx        # preferência enum, migração e sinal do SO
+misc/window/                      # barra/controles/menus semânticos PT-BR
+```
+
+Testes continuam junto das unidades; testes do chrome desktop ficam no renderer
+para integração com o include existente do Vitest. Não houve troca de bundler,
+roteador, biblioteca visual ou nova camada de domínio. A UI usa estado em memória
+e não altera a URL do documento, incluindo ao pular para o conteúdo.
+
+Preferência não sensível `bunnies.theme-preference`: system/light/dark em storage
+do renderer. Na ausência de valor novo válido, ler dark-mode 0/1 da mesma origem;
+caso contrário, Sistema. Falha de storage mantém uso em memória. Somente Sistema
+acompanha prefers-color-scheme, com cleanup do listener. Não há segredo, payload,
+perfil ou configuração de broker nesse storage. A limitação de origem file da 2B
+permanece; não se criou uma migração de dados do usuário entre origens.
+
+O dialog HTML do painel compacto fornece contenção de foco dentro do Chromium.
+Não é uma confirmação administrativa nem nova API da ponte. Operações reais de
+broker e confirmação nativa contextual continuam futuras. Main mudou somente as
+dimensões iniciais para 1200 × 800; preload/shared/políticas, protocolo e CSP mantidos.
+
+Evidências locais, check/package/smoke, revisão visual e limites estão em
+[interface 3B](../07-testing/interface-3b.md). Layout/teclado do alvo local não
+homologam os demais SOs, tecnologias assistivas ou os módulos de produto.

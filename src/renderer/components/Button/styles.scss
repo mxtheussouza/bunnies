@@ -1,41 +1,62 @@
-button {
-  background: var(--button-bgcolor);
-  color: var(--button-color);
-  font-weight: normal;
-  text-shadow: 0px 1px var(--button-shadow-color);
-  font-family: var(--app-font-family);
-  border: var(--button-border);
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  cursor: pointer;
+.button {
+  position: relative;
   display: inline-flex;
-  justify-content: space-around;
   align-items: center;
-  outline: none;
-  min-width: 140px;
-
-  &:hover {
-    background: var(--button-hover-bgcolor);
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 7px 16px;
+  border: 1px solid var(--bn-border);
+  border-radius: 8px;
+  background: var(--bn-surface);
+  color: var(--bn-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  &:hover:not(:disabled) {
+    background: var(--bn-alternate);
   }
-  &:active {
-    background: var(--button-active-bgcolor);
+  &:disabled {
+    cursor: not-allowed;
+    color: var(--bn-muted);
+    background: var(--bn-alternate);
+    border-color: var(--bn-border);
   }
-  & > span {
-    color: var(--button-badge-color);
-    background-color: var(--button-badge-bgcolor);
-    font-size: 12px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    display: none;
+}
+.button--primary {
+  color: var(--bn-on-accent);
+  background: var(--bn-accent);
+  border-color: var(--bn-accent);
+  &:hover:not(:disabled) {
+    background: var(--bn-accent-hover);
+    border-color: var(--bn-accent-hover);
   }
-
-  img {
-    width: 22px;
-    opacity: 0.8;
+}
+.button--quiet {
+  border-color: transparent;
+  background: transparent;
+}
+.icon-button {
+  width: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 5px;
+}
+.button-spinner {
+  position: absolute;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: button-spin 1s linear infinite;
+}
+@keyframes button-spin {
+  to {
+    transform: rotate(360deg);
   }
 }

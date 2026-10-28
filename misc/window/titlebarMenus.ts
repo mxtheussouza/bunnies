@@ -16,34 +16,34 @@ export type TitlebarMenu = {
 
 const titlebarMenus: TitlebarMenu[] = [
   {
-    name: "File",
+    name: "Arquivo",
     items: [
       {
-        name: "Exit",
+        name: "Sair",
         action: () => runDesktop(() => window.bunnies.quit()),
       },
     ],
   },
   {
-    name: "Edit",
+    name: "Editar",
     action: () => runDesktop(() => window.bunnies.showEditMenu()),
     items: [],
   },
   {
-    name: "View",
+    name: "Visualizar",
     items: [
       {
-        name: "Reload",
+        name: "Recarregar",
         action: () => runDesktop(() => window.bunnies.view("reload")),
         shortcut: "Ctrl+R",
       },
       {
-        name: "Force Reload",
+        name: "Forçar recarga",
         action: () => runDesktop(() => window.bunnies.view("forceReload")),
         shortcut: "Ctrl+Shift+R",
       },
       {
-        name: "Toggle Developer Tools",
+        name: "Ferramentas de desenvolvimento",
         developmentOnly: true,
         action: () => runDesktop(() => window.bunnies.view("toggleDevTools")),
         shortcut: "Ctrl+Shift+I",
@@ -52,17 +52,17 @@ const titlebarMenus: TitlebarMenu[] = [
         name: "__",
       },
       {
-        name: "Actual Size",
+        name: "Tamanho real",
         action: () => runDesktop(() => window.bunnies.view("resetZoom")),
         shortcut: "Ctrl+0",
       },
       {
-        name: "Zoom In",
+        name: "Aumentar zoom",
         action: () => runDesktop(() => window.bunnies.view("zoomIn")),
         shortcut: "Ctrl++",
       },
       {
-        name: "Zoom Out",
+        name: "Diminuir zoom",
         action: () => runDesktop(() => window.bunnies.view("zoomOut")),
         shortcut: "Ctrl+-",
       },
@@ -70,29 +70,29 @@ const titlebarMenus: TitlebarMenu[] = [
         name: "__",
       },
       {
-        name: "Toggle Fullscreen",
+        name: "Alternar tela cheia",
         action: () => runDesktop(() => window.bunnies.view("toggleFullscreen")),
         shortcut: "F11",
       },
     ],
   },
   {
-    name: "Window",
+    name: "Janela",
     items: [
       {
-        name: "Minimize",
+        name: "Minimizar",
         action: () => runDesktop(() => window.bunnies.minimize()),
         shortcut: "Ctrl+M",
       },
       {
-        name: "Close",
+        name: "Fechar janela",
         action: () => runDesktop(() => window.bunnies.close()),
         shortcut: "Ctrl+W",
       },
     ],
   },
   {
-    name: "Author",
+    name: "Autor",
     items: [
       {
         name: "Matheus Souza",

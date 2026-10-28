@@ -1,8 +1,9 @@
-# Escopo do MVP proposto
+# Escopo do MVP
 
-Data: 2026-10-28. Status: **proposta, não aprovada como escopo de implementação**.
-A Etapa 1A autoriza registrar este recorte. Nenhuma funcionalidade RabbitMQ está
-implementada no legado. A aprovação definitiva cabe à Etapa 1B.
+Data: 2026-10-28. Status: **Approved como recorte do produto**.
+Recorte registrado na Etapa 1A e detalhado/aceito explicitamente na conclusão da 1B,
+junto aos sete ADRs e requisitos/limites. Nenhuma funcionalidade RabbitMQ está
+implementada no legado. Cada etapa de implementação exige autorização própria.
 
 ## Objetivo e limites
 
@@ -11,9 +12,11 @@ disponíveis, administrar topologia básica e publicar mensagens com segurança.
 Múltiplos perfis poderão ser cadastrados; o recorte propõe uma sessão ativa por vez.
 Cada perfil terá identidade de ambiente e endpoints administrativo/AMQP separados.
 
-Plataformas: Windows, Linux e macOS, com versões mínimas e CPUs ainda a definir.
-RabbitMQ 4.4.x e 4.3.x são alvos de homologação propostos, não suporte comprovado.
-Consultar [avaliação tecnológica](../03-architecture/technology-evaluation.md).
+O proprietário informou que não há ambientes definidos. A
+[matriz de referência](non-functional-requirements.md) propõe Windows 11 x64,
+Ubuntu 24.04 LTS x64, macOS 14 arm64/x64 e patches RabbitMQ 4.4.0/4.3.6. O MVP
+proposto usa HTTPS/AMQPS e usuário/senha, com CA customizada. Não há suporte
+comprovado; consultar a [avaliação](../03-architecture/technology-evaluation.md).
 
 ## Classificação funcional
 
@@ -34,12 +37,18 @@ Uma fila existente não pode ter propriedades incompatíveis alteradas como uma
 edição simples. O conjunto de argumentos de criação precisa de catálogo por versão,
 validação e aprovação antes da implementação.
 
+O detalhamento da 1B propõe criação de filas duráveis, não exclusivas e sem
+auto-delete; argumentos limitados ao catálogo da
+[arquitetura](../03-architecture/architecture.md). O recorte de bindings inclui
+exchange→queue e exchange→exchange quando suportados. Remoção de binding também
+recebe confirmação contextual. Tema inclui preferência de seguir o sistema.
+
 Propriedades de mensagem essenciais candidatas: content type, persistência,
 identificadores de mensagem/correlação e headers tipados. O contrato da etapa de
 mensagens definirá o conjunto final e limites; não implica suportar todas as
 extensões AMQP no MVP.
 
-## Critérios de aceitação propostos
+## Critérios de aceitação
 
 Todos os critérios abaixo são futuros e não executados.
 
@@ -104,10 +113,39 @@ Aplicação web, SaaS, backend hospedado próprio e abstrações criadas exclusi
 para uma versão web estão fora de escopo. Não há autorização de updater, assinatura
 ou publicação sem requisitos e infraestrutura definidos.
 
-Validar antes da aprovação do MVP: versões/CPUs dos sistemas, brokers reais,
-autenticação corporativa/mTLS, proxies, tamanho e volume de recursos, limites de
-payload e metas de desempenho. Caso sejam essenciais, ajustar o recorte com o
-proprietário; esta lista de pendências não autoriza novas funcionalidades.
+Na implementação, validar a matriz/limites aprovados e investigar ambientes reais
+quando definidos: autenticação corporativa/mTLS, proxies, tamanho e volume de
+recursos. Se surgirem necessidades essenciais fora do recorte aprovado, apresentar
+ajuste ao proprietário; esta lista não autoriza novas funcionalidades.
 
 Responsabilidades e dependências: [índice dos módulos](../04-modules/module-index.md).
 Sequência e aprovação: [roadmap](../05-roadmap/roadmap.md).
+
+## Rastreabilidade da Etapa 1B
+
+Os [requisitos funcionais](functional-requirements.md) detalham FR-001–030 para o
+MVP e FR-031–038 para etapas posteriores. Os
+[requisitos não funcionais](non-functional-requirements.md) definem NFR-001–030,
+incluindo limites, qualidade e matriz candidata. Foram aprovados para guiar a
+implementação e os testes; não representam funcionalidades ou homologações concluídas.
+
+| Critério | Requisitos funcionais principais | Cenários planejados |
+| --- | --- | --- |
+| MVP-C01 | FR-001, FR-002 | T-02, T-09 |
+| MVP-C02 | FR-003, FR-028 | T-04 |
+| MVP-C03 | FR-004, FR-005, FR-027, FR-029 | T-05 |
+| MVP-D01 | FR-006, FR-021, FR-026 | T-03, T-08, T-10 |
+| MVP-Q01 | FR-007, FR-008 | T-03 |
+| MVP-Q02 | FR-009 | T-06 |
+| MVP-Q03 | FR-010, FR-011, FR-025 | T-06, T-10 |
+| MVP-E01 | FR-012, FR-013, FR-014 | T-06 |
+| MVP-M01 | FR-015, FR-016 | T-07 |
+| MVP-M02 | FR-017, FR-018 | T-07 |
+| MVP-A01 | FR-019, FR-020 | T-03, T-04 |
+| MVP-O01 | FR-021, FR-022 | T-08 |
+| MVP-P01 | FR-023, FR-024 | T-10 |
+| MVP-S01 | FR-002, FR-026, FR-028, FR-030 | T-01, T-04, T-09, T-10 |
+| MVP-R01 | NFR-001, NFR-028, NFR-029 | T-12 |
+
+Os cenários estão definidos na [estratégia de testes](../07-testing/test-strategy.md).
+Nenhum desses testes foi executado na 1B; os resultados documentais ficam no progresso.

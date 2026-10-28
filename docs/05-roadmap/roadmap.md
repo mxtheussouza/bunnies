@@ -1,15 +1,15 @@
 # Roadmap e contratos de execução
 
-Data: 2026-10-28. Status: somente as Etapas 0 e 1A receberam autorização de execução;
-ambas tiveram sua conclusão aprovada. As demais etapas são propostas.
+Data: 2026-10-28. Status: Etapas 0, 1A e 1B concluídas e aprovadas; sete ADRs aceitos.
+Etapas de implementação não autorizadas.
 
 ## Sequência proposta
 
 | Etapa | Entrega verificável | Situação |
 | --- | --- | --- |
 | 0 | Auditoria técnica do legado, somente de leitura | Concluída e aprovada pelo proprietário |
-| 1A | Registro documental da auditoria, governança e propostas | Concluída e aprovada; commit autorizado |
-| 1B | Stack, matriz tecnológica, arquitetura, MVP e estratégia de testes | Não autorizada |
+| 1A | Registro documental da auditoria, governança e propostas | Concluída e aprovada; commit `c292b35` |
+| 1B | Stack, matriz tecnológica, arquitetura, MVP e estratégia de testes | Concluída e aprovada; sete ADRs Accepted e commit autorizado |
 | 2A | Ambiente reproduzível, dependências compatíveis, tipagem, lint e CI inicial | Proposta |
 | 2B | Ciclo desktop, fronteira segura, erros e smoke de empacotamento | Proposta |
 | 3A | Navegação, tokens e componentes para aprovação | Proposta |
@@ -87,7 +87,60 @@ Contrato e aprovação → implementação → verificações → revisão técn
 Silêncio não é aprovação. Descobrir uma decisão significativa não prevista exige
 interromper o trabalho dependente e apresentar a decisão.
 
-## Próxima etapa proposta — 1B
+## Contrato aprovado — Etapa 1B
+
+A resposta **“Autorizado”** aprovou executar o contrato apresentado após o commit da
+1A. O proprietário respondeu **“Nada definido”** à consulta sobre ambientes, CPUs e
+autenticação. A matriz de referência e os valores de qualidade são propostas do
+planejamento, sem requisito externo presumido.
+
+| Campo | Conteúdo autorizado |
+| --- | --- |
+| Identificador e nome | 1B — Planejamento e decisões arquiteturais |
+| Objetivo e justificativa | Especificações verificáveis antes da implementação |
+| Escopo e tarefas | Detalhar requisitos, MVP, alternativas/matriz, arquitetura, segurança e testes; preparar sete ADRs Proposed; revalidar fontes e revisar documentos |
+| Módulos afetados | Os oito módulos, somente no planejamento e contratos |
+| Arquivos previstos | Os 12 novos e sete atualizados listados abaixo |
+| Dependências | Etapas 0/1A concluídas; commit `c292b35`; autorização específica da 1B |
+| Riscos | Incompatibilidade de tooling, ambiente não definido, metas não medidas e confusão entre proposta e decisão |
+| Critérios de aceitação | Requisitos rastreáveis; limites claros; alternativas fundamentadas; decisões e gates pendentes explícitos; código e auditoria histórica preservados |
+| Verificações | Fontes oficiais/metadados; revisão técnica; links, tabelas, IDs, rastreabilidade, status ADR e diff; sem instalar/executar aplicação |
+| Resultado esperado | Pacote de planejamento para aprovação das decisões e conclusão |
+| Impacto documental | Arquitetura/requisitos/testes/segurança propostos e estado sincronizado |
+
+Novos arquivos:
+
+1. [functional-requirements.md](../02-requirements/functional-requirements.md).
+2. [non-functional-requirements.md](../02-requirements/non-functional-requirements.md).
+3. [architecture.md](../03-architecture/architecture.md), conceitual, inicialmente Proposed e posteriormente aceita.
+4. [ADR-0001](../03-architecture/adr/0001-desktop-stack.md).
+5. [ADR-0002](../03-architecture/adr/0002-rabbitmq-transports.md).
+6. [ADR-0003](../03-architecture/adr/0003-desktop-security-boundary.md).
+7. [ADR-0004](../03-architecture/adr/0004-local-settings-and-secrets.md).
+8. [ADR-0005](../03-architecture/adr/0005-compatibility-matrix.md).
+9. [ADR-0006](../03-architecture/adr/0006-message-inspection.md).
+10. [ADR-0007](../03-architecture/adr/0007-desktop-distribution.md).
+11. [test-strategy.md](../07-testing/test-strategy.md).
+12. [security-model.md](../08-security/security-model.md).
+
+Atualizados: `AGENTS.md`, `mvp-scope.md`, `technology-evaluation.md`, `module-index.md`,
+`roadmap.md`, `current-stage.md` e `progress.md`. Os quatro documentos de auditoria
+histórica e os 53 arquivos legados permanecem intactos.
+
+Após a apresentação, o proprietário respondeu **“Aprovado”** ao pedido explícito de
+aceite dos ADRs 0001–0007, MVP, requisitos/limites, conclusão e commit da 1B.
+Os ADRs foram convertidos para Accepted e as referências de estado sincronizadas,
+incluindo `product-vision.md`. O registro final inclui 12 novos arquivos e oito
+atualizados, sem alterar código ou auditoria histórica. A 2A continua sem autorização.
+
+## Próxima etapa proposta — 2A
+
+Com as decisões da 1B aprovadas, apresentar contrato de fundação: resolver a matriz
+sem peers forçados, atualizar ferramentas/lockfile, separar tipagem, estabelecer
+lint/testes iniciais e CI. Com a stack aprovada, detalhar mudanças físicas de código
+nos contratos correspondentes. Nenhuma dessas tarefas está autorizada pela 1B.
+
+## Condições do planejamento
 
 Elaborar e submeter decisões sobre Electron/Tauri, combinação suportada de versões,
 contratos, persistência, segurança, testes, compatibilidade e MVP. Registrar ADRs
@@ -100,13 +153,15 @@ para migrar framework, atualizar pacotes ou gerar infraestrutura nesta etapa.
 
 ## Evolução documental planejada
 
-Além dos arquivos desta entrega, criar quando necessário e autorizado:
+Os requisitos, a arquitetura, os ADRs, testes e segurança indicados para a 1B foram
+materializados e aprovados nesta entrega. Demais documentos permanecem planejados;
+criar quando necessário e autorizado:
 
 | Momento proposto | Documento e finalidade |
 | --- | --- |
 | 1B | `docs/02-requirements/functional-requirements.md`: requisitos rastreáveis |
 | 1B | `docs/02-requirements/non-functional-requirements.md`: metas e restrições verificáveis |
-| 1B | `docs/03-architecture/architecture.md`: arquitetura após decisões de stack |
+| 1B | `docs/03-architecture/architecture.md`: arquitetura conceitual aceita; estrutura física no contrato de implementação |
 | 1B e decisões posteriores | `docs/03-architecture/adr/`: registros de decisão |
 | Planejamento dos módulos | `docs/04-modules/01-connection-manager.md` a `08-productivity-tools.md`, conforme índice |
 | Fundação | `docs/06-development/coding-standards.md`: padrões e comandos validados |

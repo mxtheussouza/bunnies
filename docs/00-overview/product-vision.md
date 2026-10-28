@@ -1,7 +1,8 @@
 # Visão do produto
 
-Data: 2026-10-28. Status: visão registrada a partir das diretrizes do proprietário;
-o recorte de MVP e a solução técnica permanecem propostos.
+Data: 2026-10-28. Status: visão alinhada às diretrizes do proprietário; MVP, requisitos
+e decisões arquiteturais aprovados explicitamente na conclusão da Etapa 1B.
+O aceite não representa funcionalidades implementadas ou compatibilidade homologada.
 
 ## Identidade e objetivo
 
@@ -32,8 +33,8 @@ uma versão utilizável do produto. A execução não foi homologada.
 - Publicar mensagens e compreender confirmação, roteamento e falhas.
 - Diagnosticar problemas sem induzir operações acidentais em produção.
 
-O [escopo de MVP](../02-requirements/mvp-scope.md) classifica funcionalidades. A
-aprovação da documentação não aprova esse recorte de produto.
+O [escopo de MVP](../02-requirements/mvp-scope.md) classifica funcionalidades. Seu
+aceite explícito na 1B aprovou o recorte; execução depende de autorização por etapa.
 
 ## Limites estabelecidos pelo proprietário
 
@@ -53,13 +54,14 @@ teclado e foco visível e explicar carregamento, erros e estados vazios. Produç
 ser identificada por texto e símbolo, além de cor. Ações destrutivas devem mostrar
 conexão, vhost, recurso e efeito.
 
-As metas quantitativas de desempenho, acessibilidade, escala, sistemas mínimos e
-arquiteturas de CPU ainda precisam ser definidas. Não existem benchmarks atuais.
+Metas quantitativas, limites e matriz de referência foram aprovados como alvos de
+validação nos requisitos não funcionais. Não existem benchmarks ou homologações atuais.
 
 ## Decisões pendentes
 
-Stack e versões compatíveis; arquitetura e contratos; MVP definitivo; matriz de
-brokers e sistemas operacionais; autenticação adicional; design system detalhado;
-estratégia de armazenamento, testes e distribuição. Consultar a
+Stack, arquitetura, matriz candidata, MVP, armazenamento e estratégias de segurança,
+testes e distribuição foram aceitos. Permanecem pendentes a estrutura física final,
+design system detalhado, infraestrutura de release, autenticação adicional e a
+validação efetiva dos mecanismos e da compatibilidade. Consultar a
 [avaliação tecnológica](../03-architecture/technology-evaluation.md) e o
 [roadmap](../05-roadmap/roadmap.md).

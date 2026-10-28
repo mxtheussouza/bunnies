@@ -1,7 +1,8 @@
 # Roadmap e contratos de execução
 
-Data: 2026-10-28. Status: Etapas 0, 1A, 1B, 2A e 2B concluídas e aprovadas; sete ADRs aceitos.
-Conclusão/commit da 2B aprovados por “Aprovado”; execução da 3A não autorizada.
+Data: 2026-10-28. Status: Etapas 0, 1A, 1B, 2A, 2B e 3A concluídas e aprovadas;
+sete ADRs e D3A-01–08 aceitos. Conclusão/commit da 3A aprovados por “Aprovado”.
+A execução da 3B depende de autorização própria do contrato abaixo.
 
 ## Sequência proposta
 
@@ -12,8 +13,8 @@ Conclusão/commit da 2B aprovados por “Aprovado”; execução da 3A não auto
 | 1B | Stack, matriz tecnológica, arquitetura, MVP e estratégia de testes | Concluída e aprovada; sete ADRs Accepted e commit autorizado |
 | 2A | Ambiente reproduzível, dependências compatíveis, tipagem, lint e CI inicial | Concluída e aprovada; commit autorizado por “Sim” |
 | 2B | Ciclo desktop, fronteira segura, erros e smoke de empacotamento | Concluída e aprovada; commit autorizado |
-| 3A | Navegação, tokens e componentes para aprovação | Proposta |
-| 3B | Interface base acessível, temas e estados | Proposta |
+| 3A | Navegação, tokens e componentes para aprovação | Concluída e aprovada; D3A-01–08 Accepted e commit autorizado |
+| 3B | Interface base acessível, temas e estados | Contrato proposto abaixo; execução não autorizada |
 | 4A | Perfis, proteção de credenciais e testes de conectividade | Proposta |
 | 4B | Management API, capacidades e consultas de leitura | Proposta |
 | 5 | Filas e proteção das operações destrutivas | Proposta |
@@ -242,9 +243,10 @@ O proprietário respondeu “Aprovado” à conclusão e ao commit da 2B. Isso n
 a execução da 3A. Alterações locais posteriores em assets foram preservadas fora
 do commit da 2B, conforme estado atual.
 
-## Contrato proposto — Etapa 3A: navegação e design system
+## Contrato autorizado — Etapa 3A: navegação e design system
 
-Status: **Proposed; aguardar autorização explícita**.
+Status: **Execução autorizada** por “Autorizo”, após a conclusão da 2B.
+Decisões D3A-01–08, conclusão e commit posteriormente aprovados por “Aprovado”.
 
 | Campo | Proposta para aprovação |
 | --- | --- |
@@ -267,3 +269,99 @@ assets locais ao commit da 2B nem inicia telas funcionais. A inspeção e os moc
 podem usar os recursos como referência, sem substituir a identidade automaticamente.
 Mockups são artefatos de proposta desktop, sem servidor, produto web ou nova stack.
 A implementação da 3B e qualquer publicação exigem contratos/autorizações próprios.
+
+A execução autorizada da 3A gerou [navegação](../03-architecture/navigation.md),
+[design system](../03-architecture/design-system.md) e
+[mockups estáticos](../03-architecture/ui-proposals/README.md). A resposta
+**“Aprovado”**, após sua apresentação, aceitou D3A-01–08 e autorizou a conclusão e
+o commit `docs(design): define desktop navigation and design system`.
+O recorte recomendado da 3B não constitui autorização de implementação.
+
+## Contrato proposto — Etapa 3B: interface base desktop
+
+Status: **Proposed; execução não autorizada**. Preparado como próxima proposta após
+o aceite da 3A. Aprovar este contrato autoriza somente o escopo descrito, mantendo
+aprovação de conclusão/commit e autorização da 4A separadas.
+
+| Campo | Proposta para autorização |
+| --- | --- |
+| Identificador e nome | 3B — Interface base desktop, temas e estados sem sessão |
+| Objetivo | Substituir o boilerplate pela base visual aprovada, utilizável por teclado e sem simular conexão RabbitMQ |
+| Justificativa | A 3A definiu o design; o renderer ainda apresenta a tela legada, tema binário e menus em inglês |
+| Escopo | Shell React, navegação local, contexto sem sessão, Conexões vazia, Sobre, temas, pequenas primitivas e adaptação visual da barra da janela |
+| Tarefas | Aplicar tokens em Sass/CSS externo; implementar sidebar completa/compacta, painel acessível e contexto fixo; iniciar em Conexões; explicar destinos indisponíveis; implementar Sistema/Claro/Escuro e preservar escolha anterior; modernizar Button/Card e criar IconButton/StatusMessage/EmptyState; manter edição/controles nativos; atualizar testes e smoke |
+| Módulos afetados | Fundação visual transversal; apresentação vazia de M01 e preferências/teclado de M08; sem casos de uso de broker |
+| Arquivos previstos | Entrypoints/estilos/testes em src/renderer; componentes existentes Button/Card e novas primitivas em src/renderer/components; src/renderer/shell e src/renderer/pages; ThemeMode/provider/hooks e testes relacionados em src/providers e src/common; misc/window para rótulos/semântica/estilos; src/main/appWindow.ts somente dimensões iniciais; tools/testing/smoke.cjs e seletores em security.cjs; documentação descrita abaixo |
+| Dependências | 3A concluída e commitada; D3A-01–08, ADRs e requisitos aceitos; ferramentas já instaladas da 2A/2B; nenhuma dependência ou biblioteca UI nova prevista |
+| Riscos | Perder preferência de tema, conflitos de atalhos/edição, barra de janela sem área de arraste, foco perdido no modo compacto, overflow com zoom, relaxar segurança para estilização ou dar aparência operacional a recursos ausentes |
+| Critérios de aceitação | Os nove critérios abaixo atendidos; interface sem sessão honesta; sem regressão da fronteira 2B; código/documentação prontos para revisão |
+| Estratégia de testes | Unitários de preferência/migração e eventos do SO; componentes por comportamento acessível/teclado/estados; npm run check; package e smoke Electron local com perfil temporário e suíte de segurança preservada; inspeção visual/zoom e registro dos alvos realmente executados |
+| Resultado esperado | Interface base com identidade aprovada, temas persistentes e controles desktop funcionais, pronta para receber M01 na 4A |
+| Impacto documental | Atualizar arquitetura física, design/navegação quanto ao que foi implementado, desenvolvimento, estratégia/evidências de teste, AGENTS e roadmap/estado/progresso; registrar limitações sem declarar módulos prontos |
+
+### Organização e limites físicos
+
+- Manter `src/main`, `src/preload` e `src/shared` como fronteira aprovada. A única
+  alteração prevista no main é abrir a janela em 1200 × 800, em vez dos atuais
+  800 × 600; não alterar webPreferences, protocolo, CSP ou a API privilegiada.
+- Criar `src/renderer/shell` apenas para shell/sidebar/contexto e seus estilos e
+  testes; `src/renderer/pages` para Conexões vazia e Sobre. Os nomes exatos dos
+  arquivos podem seguir a composição mais simples dentro desses limites.
+- Reutilizar `src/providers/ThemeMode.tsx` e os componentes existentes; separar
+  helpers puros de preferência quando isso facilitar a verificação. Não mover a
+  aplicação inteira ou criar camadas de domínio sem regras concretas.
+- Persistir somente o enum de tema em chave própria do renderer; migrar `dark-mode`
+  `0`/`1` da mesma origem para Claro/Escuro quando não houver preferência nova válida.
+  Sem preferência válida, usar Sistema e observar `prefers-color-scheme`; escolha
+  manual não é sobrescrita por mudança do SO. Se storage falhar, manter uso em memória.
+  A mudança histórica de origem file para bunnies não pode ser recuperada por isso.
+- Sidebar: Visão geral, Filas, Exchanges, Publicar e Conexões; Conexões é inicial.
+  Sem sessão, os quatro destinos de broker explicam sua indisponibilidade e não
+  abrem telas com dados sintéticos. Tema e Sobre continuam disponíveis. Navegação
+  local não altera a URL fixa, nem usa router/servidor/deep links.
+- Primitivas deste incremento: Button, IconButton, Card, StatusMessage e EmptyState.
+  Tabelas de dados, formulários de broker, drawers complexos e confirmações
+  destrutivas reais ficam nas etapas dos casos de uso; não fabricar CTAs funcionais.
+- Preservar logos e seus bytes. Usar imports dos assets existentes, fontes locais
+  e CSS externo compatível com a CSP; nenhum estilo inline/eval para contornar bloqueios.
+- Traduzir rótulos próprios do shell/menus para PT-BR sem alterar roles/atalhos
+  nativos. Sobre mostra versão real e o destino fixo do autor já permitido na ponte.
+  Não criar acesso direto a clipboard, arquivo, rede ou nova ação IPC.
+- Adaptar os seletores do smoke/security à nova UI sem retirar nenhuma asserção
+  da segurança 2B. Fixtures de estados existem apenas nos testes, sem sessão falsa
+  na aplicação. Não instalar pacotes nem editar manifesto/lock neste contrato.
+
+### Critérios verificáveis da 3B
+
+1. Abertura e recarga chegam a Conexões sem sessão; nenhuma tentativa de acessar
+   broker e nenhum contador/perfil fictício; contexto distingue HTTPS/AMQPS não iniciados.
+2. Cinco destinos identificáveis, contexto persistente e razão acessível de
+   indisponibilidade. Sobre/tema operam por teclado sem perder o contexto.
+3. Sistema/Claro/Escuro funcionam; escolha persistida, migração `0`/`1`, dados
+   inválidos e storage indisponível são exercitados; listeners do SO são removidos.
+4. Tokens aprovados aplicados a estados reais; nomes acessíveis, foco visível,
+   ordem de Tab, link para conteúdo e Escape/retorno de foco no painel compacto.
+5. Sidebar de 224/64 px no breakpoint aprovado; revisar 1440 × 900, 1024 × 700,
+   janela menor e zoom 200%, com acesso às ações por reflow/rolagem. Não reduzir
+   tipografia para caber ou alegar acessibilidade integral por screenshots.
+6. Falha desktop recebe feedback sanitizado e acessível; estados vazios e
+   indisponíveis não parecem carregamento infinito. Estados loading/erro/parcial
+   das primitivas são exercitados por fixtures de teste, sem conexão simulada no app.
+7. Arraste/controles/edição/zoom nativos preservados, sem roubar digitação; testar
+   atalhos apenas quando o destino estiver disponível. Nenhum atalho destrutivo.
+8. `npm run check`, package e smoke local passam, incluindo as proteções 2B,
+   recarga/reabertura e URL invariável. Registrar SO/CPU efetivos, falhas corrigidas
+   e pendências dos demais alvos; não enfraquecer o pacote para automação.
+9. Revisão visual dos temas e registro de contraste/teclado/zoom efetivamente
+   executados; código e documentação sincronizados para aprovação de conclusão.
+
+### Exclusões e resultado de autorização
+
+Perfis reais, cofre, autenticação/TLS, HTTP/AMQP e testes de conectividade pertencem
+à 4A/4B e seus contratos. Não inclui CRUD RabbitMQ, leitura/consumo de mensagens,
+histórico, gráficos, assinatura/notarização, atualização automática, instaladores,
+publicação ou push. Não exige nova stack, dependência ou ADR.
+
+Uma decisão significativa fora desse recorte deverá ser apresentada antes do
+trabalho dependente. A aprovação da 3A só autoriza registrar sua entrega e
+apresentar este contrato; **aguardar autorização explícita para executar a 3B**.

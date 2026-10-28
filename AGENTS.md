@@ -43,7 +43,10 @@ reais e limitações. Testes destrutivos somente em brokers isolados provisionad
 pelo harness. A Etapa 2A foi implementada, verificada e aprovada. Não iniciar
 integração RabbitMQ. A resposta “Autorizado” aprovou executar o contrato da 2B,
 incluindo as verificações locais e dependências necessárias. A conclusão da 2B e
-seu commit foram posteriormente aprovados por “Aprovado”; a 3A não foi autorizada.
+seu commit foram posteriormente aprovados por “Aprovado”. A resposta “Autorizo”
+aprovou executar a 3A documental/visual; não alterar código, dependências ou assets.
+A resposta posterior “Aprovado” aceitou D3A-01–08, a conclusão da 3A e seu commit;
+não autorizou executar a 3B.
 A [estratégia de testes](docs/07-testing/test-strategy.md) e o
 [modelo de segurança](docs/08-security/security-model.md) estão aprovados como planos,
 sem homologação. Limites e metas aprovados têm fonte única nos
@@ -79,11 +82,11 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **2B — fronteira segura e ciclo desktop, concluída e aprovada**.
-- Última etapa concluída e aprovada: **2B — fronteira segura e ciclo desktop**.
-- Próxima etapa proposta: **3A — proposta de navegação e design**, ainda não autorizada.
-- Próxima ação autorizada: registrar/conferir o commit aprovado da 2B e apresentar o
-  contrato da 3A; aguardar autorização específica antes de executá-la.
+- Etapa atual: **3A concluída e aprovada; contrato da 3B em apresentação**.
+- Última etapa concluída e aprovada: **3A — navegação e design system**.
+- Próxima etapa proposta: **3B — interface base**, ainda não autorizada.
+- Próxima ação autorizada: conferir o registro do commit aprovado da 3A e apresentar o
+  contrato da 3B no roadmap; aguardar autorização própria antes de implementar.
 
 Ao retomar, ler este arquivo, a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -109,3 +112,13 @@ Nunca restaurar acesso direto a clipboard, IPC genérico ou URLs arbitrárias na
 Após a apresentação da 2B surgiram cinco alterações locais em assets (três arquivos
 versionados e dois novos logotipos). Preservá-las fora do commit da 2B; não revertê-las
 nem inferir que já integraram o pacote testado. Ver o estado atual para retomada.
+
+Na retomada da 3A, o Git estava limpo em `39234fa` (commit posterior de logos); a
+entrega da 2B está em `a550731`. Os cinco assets antes pendentes agora estão
+versionados. A 3A pode inspecioná-los e referenciá-los em mockups, sem editá-los.
+
+Design aprovado na 3A: [navegação](docs/03-architecture/navigation.md),
+[design system](docs/03-architecture/design-system.md) e
+[mockups/verificações](docs/03-architecture/ui-proposals/README.md). D3A-01–08 estão
+Accepted; isso não implementa o design. Aplicar tokens/layouts exige o contrato e
+a autorização próprios da 3B. Dados fictícios permanecem restritos a documentação/testes.

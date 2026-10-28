@@ -135,3 +135,26 @@ São evidências parciais de T-01/T-10/T-12; continuam pendentes integração Ra
 SOs/CPUs não executados, acessibilidade completa e gates de release. CI preparada
 para smoke macOS após package, ainda sem execução remota. Ver
 [comandos, falhas corrigidas e limites](desktop-boundary-2b.md).
+
+## Revisão estática de design — Etapa 3A
+
+Design aprovado em [navegação](../03-architecture/navigation.md) e
+[design system](../03-architecture/design-system.md), decisões D3A-01–08 Accepted
+por “Aprovado”. A verificação desta etapa é
+documental/visual: 48 pares de cor recalculados sem arredondamento na comparação;
+SVGs renderizados e inspecionados; rastreabilidade dos 30 FRs do MVP; preservação
+dos arquivos de código/config/assets da base 39234fa. Não foram executados testes
+funcionais da aplicação, brokers, empacotamento, benchmark ou CI.
+
+Para a implementação futura de D3A-01–08, selecionar os casos pertinentes de T-10:
+modo Sistema/Claro/Escuro e migração da preferência; Tab/foco/teclado nativo;
+redimensionamento/zoom 200%; contexto de produção além de cor; carregamento/vazio/
+erro/indisponível/parcial; dados antigos e resultado incerto. Medir contraste de
+todos os estados reais e revisar tecnologias assistivas por SO antes de alegar
+conformidade. Testar também que a navegação em memória não altera a URL validada
+pela fronteira e que dados sintéticos ficam no harness, não numa sessão real falsa.
+
+Mockups fixos não exercitam fluxo, foco ou reflow. Contraste de tokens não certifica
+a aplicação. Confirmação destrutiva continua exigindo T-06/T-10 nas etapas dos
+casos de uso, com main/nativo/contexto real; a imagem não substitui esse teste.
+Resultados e limitações da 3A constam em [progresso](../05-roadmap/progress.md).

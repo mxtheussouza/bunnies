@@ -16,14 +16,17 @@ permissões e plugins do broker condicionam as operações disponíveis.
 
 O [inventário](../01-audit/repository-inventory.md) registra os recursos visuais
 existentes. Sua substituição ou alteração significativa exige justificativa e
-aprovação. Não há autorização para criar outra marca ou gerar novos recursos.
+aprovação. Na 3A não há autorização para criar outra marca ou editar os assets; mockups
+documentais podem referenciar a identidade existente.
 
 ## Situação comprovada
 
 No commit auditado `52077522486403a3d0351341c952ebb69e00b954`, o aplicativo contém uma
 base Electron/React, tema e controles de janela. Não existe integração RabbitMQ
 implementada. A descrição do README e o número `1.0.0` do manifesto não comprovam
-uma versão utilizável do produto. A execução não foi homologada.
+uma versão utilizável do produto. A fundação desktop teve smoke local na 2B, sem
+homologar o produto completo ou os outros sistemas; o commit posterior de logos
+também não foi homologado no runtime por esta entrega documental.
 
 ## Fluxos pretendidos
 
@@ -60,8 +63,20 @@ validação nos requisitos não funcionais. Não existem benchmarks ou homologa�
 ## Decisões pendentes
 
 Stack, arquitetura, matriz candidata, MVP, armazenamento e estratégias de segurança,
-testes e distribuição foram aceitos. Permanecem pendentes a estrutura física final,
-design system detalhado, infraestrutura de release, autenticação adicional e a
-validação efetiva dos mecanismos e da compatibilidade. Consultar a
+testes e distribuição foram aceitos. A organização desktop foi implementada na 2B.
+O design da 3A também foi aprovado, sem implementação. Permanecem pendentes a
+autorização de execução da 3B, os módulos de produto, infraestrutura de release,
+autenticação adicional e validação efetiva da compatibilidade. Consultar a
 [avaliação tecnológica](../03-architecture/technology-evaluation.md) e o
 [roadmap](../05-roadmap/roadmap.md).
+
+## Direção visual aprovada na 3A
+
+Com execução autorizada por “Autorizo”, a avaliação considerou a marca laranja
+registrada em 39234fa. A direção recomendada usa neutros e acentos semânticos
+laranja, sem alterar logos, com contexto fixo de ambiente/conexão/vhost e cinco
+destinos principais. A resposta posterior **“Aprovado”** aceitou D3A-01–08 e a
+conclusão/commit da 3A. O design está **Accepted**, com implementação ainda pendente. Ver
+[navegação](../03-architecture/navigation.md),
+[design system](../03-architecture/design-system.md) e
+[mockups](../03-architecture/ui-proposals/README.md).

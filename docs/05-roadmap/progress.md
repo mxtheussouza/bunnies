@@ -324,3 +324,113 @@ consistentes, incluindo o contrato proposto da 3A. Achados históricos preservad
 (com links de código no commit auditado), manifesto/lock e whitespace conferidos.
 Os 56 arquivos da entrega foram separados explicitamente dos cinco assets locais;
 nenhuma implementação adicional ou repetição de testes nesta sincronização.
+
+## Etapa 3A — Navegação e design system
+
+Data: 2026-10-28. Execução autorizada por **“Autorizo”** após a apresentação do
+contrato da 3A. Git inicialmente limpo em `39234fa`, commit posterior que registrou
+os cinco assets antes pendentes; a entrega da 2B está em `a550731`. Preservado esse
+histórico, sem pull/rebase, criação de branch ou push pelo agente.
+
+Status final: **concluída e aprovada**. Após a apresentação abaixo, a resposta
+“Aprovado” aceitou D3A-01–08 e autorizou conclusão/commit; a 3B não está autorizada.
+
+### Proposta entregue
+
+Dois documentos especializados: navegação com fluxos/estados/rastreabilidade dos
+30 FRs do MVP e design system com inventário, alternativas, tokens, componentes,
+interação, temas e regras de reflow/foco. Direção recomendada Proposed: neutros
+com acentos laranja, cinco destinos e contexto fixo de ambiente/conexão/vhost;
+Sistema/Claro/Escuro e rótulos PT-BR com termos e identificadores RabbitMQ intactos.
+
+Cinco SVGs autocontidos e cinco previews PNG: Conexões sem sessão, Visão geral
+parcial, Filas em produção, conteúdo de confirmação nativa em 1024 × 700 e folha
+visual do design system. Dados sintéticos; nenhum botão executa operações. Não
+houve substituição/recoloração de logo ou mudança em fontes/config/assets do app.
+
+A comparação favorece sidebar curta com contexto fixo sobre árvore de brokers;
+favorece acento laranja ligado à marca atual sobre manter azul como acento principal.
+Azul continua como informação/link/foco no tema claro. Isso não constitui aprovação
+do novo design nem seleção de biblioteca UI; nenhuma dependência foi instalada.
+
+### Verificações efetivamente executadas
+
+| Verificação | Resultado |
+| --- | --- |
+| Inventário visual | Cinco assets inventariados; PNGs inspecionados visualmente e dimensões/formatos/alpha/hashes lidos dos arquivos; PNGs pequenos idênticos |
+| Contraste | 48 pares aprovados em luminância sRGB, sem arredondar para decidir; branco sobre #FF6600 medido em 2,94:1 e rejeitado para texto de botão |
+| Rastreabilidade | Os 30 FRs de MVP mapeados a destinos/padrões; FR-031–038 não ganham funcionalidades antecipadas |
+| Renderização | Cinco SVGs renderizados em PNG por Electron 45.1.0/Playwright já instalados; captura/inspeção com perfil temporário e rede externa bloqueada |
+| Layout | Nenhum texto/shape fora das cinco pranchas na inspeção geométrica; previews abertos e conferidos visualmente |
+| Coerência | Conexões sem status verde fictício; HTTPS/AMQPS separados; produção textual/simbólica; métricas com escopo/instante; Cancelar padrão na confirmação; sem inspeção/consumo implícitos |
+| Escopo | Sete documentos existentes alterados e 16 arquivos documentais/visuais novos; hashes dos outros 91 arquivos versionados preservados, incluindo fontes, ferramentas, manifesto/lock e assets |
+
+A revisão acrescentou bloqueio explícito da navegação dependente sem sessão,
+esclareceu o resumo de perfil como somente leitura, alinhou números das filas e
+incluiu o contraste do texto dos botões destrutivos. O cálculo inicial tinha
+46 pares; a versão final tem 48, todos com limiar atendido.
+
+O auxiliar de render inicial não navegava a janela e a captura oculta atingiu
+timeout. Foram corrigidos apenas auxiliares temporários em out: carregar documento
+inicial, usar janela de render e capturar o viewport em escala CSS. As cinco
+exportações finais passaram. Isso não é falha/teste da aplicação Bunnies, que não
+foi iniciada nesta etapa; nenhum controle de segurança do produto foi relaxado.
+Metadados foram obtidos com sips/leitura PNG pela biblioteca padrão, sem instalar Pillow.
+
+Conferência final: 31 documentos Markdown, 207 links locais válidos e 82 tabelas
+consistentes; os três JSONs passaram no Prettier instalado. Os 48 contrastes foram
+recalculados a partir dos tokens. XML, dimensões SVG/PNG e bytes incorporados da
+marca foram conferidos; os cinco previews finais foram abertos para revisão visual.
+HEAD permanece em `39234fa`, index vazio e nenhuma alteração fora do recorte documental.
+O primeiro filtro de rastreabilidade também capturou a menção de exclusão FR-031;
+restringido às linhas da tabela, confirmou os 30 requisitos do MVP sem mudar o produto.
+
+### Limites e continuidade
+
+Pares de cor e imagens estáticas não homologam acessibilidade da aplicação, zoom
+real, reflow, navegação, foco, diálogo nativo, persistência de tema ou SOs/CPUs. A
+barra de janela é esquemática e o diálogo só ilustra conteúdo; sua execução futura
+permanece no main com revalidação contextual. A 3B deverá selecionar testes T-10
+apropriados; módulos de broker mantêm seus contratos/gates.
+
+Não foram executados suíte funcional da aplicação, build/package, brokers, TLS,
+cofre, benchmark ou CI. Os resultados da 2B não foram reinterpretados como novos
+resultados sobre os logos de 39234fa. Sem consumo/ack/requeue, histórico persistente,
+SaaS, servidor próprio ou versão web. Nada foi staged/commitado/publicado nesta entrega.
+
+Referências: [navegação](../03-architecture/navigation.md),
+[design system](../03-architecture/design-system.md),
+[mockups e verificações](../03-architecture/ui-proposals/README.md).
+
+### Solicitação apresentada ao proprietário
+
+Apresentar as decisões D3A-01–08 e os mockups para aprovação da direção/design,
+conclusão da 3A e commit sugerido
+`docs(design): define desktop navigation and design system`. Somente após o aceite
+registrar esse commit e apresentar o contrato da 3B; não implementar a interface
+automaticamente com base nos mockups.
+
+### Aprovação e contrato seguinte
+
+O proprietário respondeu **“Aprovado”** à pergunta explícita sobre D3A-01–08,
+conclusão da 3A e o commit `docs(design): define desktop navigation and design system`.
+Navegação, design system, tokens e referências operacionais passam a Accepted;
+mockups/PNGs e valores medidos permanecem como apresentados. Não se trata de
+implementação ou homologação do design.
+
+Preparado no [roadmap](roadmap.md) o contrato **Proposed** da 3B: shell e contexto
+sem sessão, temas e migração de preferência, pequenas primitivas, teclado/reflow,
+adaptação da barra da janela e verificações locais com ferramentas existentes.
+Sem nova dependência, IPC, módulo RabbitMQ ou alteração da marca. Não executar
+a 3B antes de autorização própria; o aceite do recorte D3A-08 não a substitui.
+
+A sincronização do aceite altera somente os documentos/estados da entrega 3A e
+três campos status em JSON; sem recalcular imagens ou repetir testes da aplicação.
+O commit de entrega contém este registro e o contrato seguinte; consultar seu
+hash em `git log -1`. Nenhum push foi solicitado ou executado.
+
+Conferência do aceite: 31 documentos, 210 links locais válidos e 83 tabelas
+consistentes; oito decisões D3A Accepted, contrato 3B com todos os campos e status
+Proposed, 48 contrastes e cinco pares SVG/PNG conferidos. Os três JSONs passaram
+no Prettier; whitespace validado. O recorte permanece sete documentos existentes
+e 16 artefatos novos, com hashes dos outros 91 arquivos versionados preservados.

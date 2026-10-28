@@ -94,3 +94,25 @@ Consultar [visão](../00-overview/product-vision.md),
 
 A fundação transversal da 2A recebeu autorização própria e teve sua conclusão aprovada:
 [evidências](../07-testing/foundation-2a.md). Não implementa os oito módulos acima.
+
+## Planejamento visual da 3A — Accepted
+
+O proprietário aprovou D3A-01–08 por “Aprovado”. Isso não implementa módulos. A navegação
+agrupa responsabilidades sem criar serviços/telas vazias por antecipação:
+
+| Módulo | Destino/padrão visual proposto | Limite |
+| --- | --- | --- |
+| M01 | Conexões, resumo/edição, estados HTTPS/AMQPS e modo de segredo | Nenhuma conexão automática; testes/ativação explícitos |
+| M02 | Visão geral do vhost, contadores e filas prioritárias | Escopo/instante explícitos; sem dado ausente convertido em zero |
+| M03 | Filas, detalhe/criar e menu de exclusão/purge | Sem lote ou inspeção de mensagens; confirmação nativa contextual |
+| M04 | Exchanges, detalhe e bindings | Padrão/reservados/capacidades respeitados |
+| M05 | Publicar, payload/propriedades e resultados | Sem consumo; resultado incerto sem reenvio automático |
+| M06 | Seletor de vhost e estados de permissão | CRUD administrativo avançado não ganha tela no MVP |
+| M07 | Atualidade/pausa/estado parcial na Visão geral | Sem histórico persistente ou gráficos avançados implícitos |
+| M08 | Teclado, foco, busca local/contextual e preferências | Sem favoritos, pesquisa global ou histórico antecipados |
+
+Referências de revisão: [navegação](../03-architecture/navigation.md),
+[design system](../03-architecture/design-system.md) e
+[mockups](../03-architecture/ui-proposals/README.md). As decisões D3A-01–08
+estão Accepted; documentos individuais dos módulos serão criados nos contratos
+correspondentes. O aceite do design não autoriza a implementação da 3B.

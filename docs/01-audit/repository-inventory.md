@@ -104,7 +104,7 @@ As [versões e recomendações](dependency-audit.md) distinguem manifesto, lockf
 publicações consultadas. Não existem cliente RabbitMQ, biblioteca de UI ou gerenciador
 de estado externo. O tema usa Context API, hooks e `localStorage`.
 
-Os scripts estão em [package.json](../../package.json), linhas 10–16. O README
+Os scripts estão em [package.json](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/package.json), linhas 10–16. O README
 orienta npm, mas `lint:fix` invoca Yarn. Não há script de teste ou versão de package
 manager fixada. Há aliases repetidos entre TypeScript, Webpack e ESLint.
 
@@ -122,7 +122,7 @@ SHA-256 do ICO:
 `825ef88e493bf698ad68716c5ecbad03a17187ef07aea0c636a47ed5ab7334d3`.
 
 O PNG inspecionado usa tons verdes e azuis. Os tokens em
-[Theme.scss](../../src/renderer/styles/Theme.scss) incluem destaque `#32639f` no tema
+[Theme.scss](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/src/renderer/styles/Theme.scss) incluem destaque `#32639f` no tema
 escuro e `#2f77ca` no claro, com fundos `#202020` e `#f1f0f0`. Faltam fontes de maior
 resolução e recursos específicos de distribuição macOS/Linux. Preservar os originais
 e solicitar aprovação antes de alterar a identidade.
@@ -153,3 +153,10 @@ e solicitar aprovação antes de alterar a identidade.
 
 As classificações recomendam tratamento; não autorizam remoções ou substituições.
 Consultar [análise funcional](legacy-analysis.md) e [dívida técnica](technical-debt.md).
+
+## Navegação do registro histórico
+
+Os links de código acima apontam para o commit auditado, preservando o conteúdo dos
+achados mesmo após remoções/movimentações do legado. O status de remediação atual
+está nas [evidências da 2B](../07-testing/desktop-boundary-2b.md); o texto desta
+auditoria não é uma reavaliação do código atual.

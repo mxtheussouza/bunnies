@@ -2,8 +2,8 @@
 
 Data: 2026-10-28. Status: **Accepted como direção arquitetural e especificação**.
 Modernização incremental com Electron, React e TypeScript aprovada pelo proprietário
-na conclusão da 1B, junto aos sete ADRs. A aprovação não implementa este desenho nem
-autoriza executar a Etapa 2A; compatibilidade e segurança efetivas exigem os testes.
+na conclusão da 1B, junto aos sete ADRs. A aceitação da 1B não implementou o desenho. Os contratos da 2A e da 2B foram
+autorizados posteriormente; evidências e limites da implementação estão ao final.
 
 Referências: [avaliação e matriz tecnológica](technology-evaluation.md),
 [requisitos funcionais](../02-requirements/functional-requirements.md),
@@ -59,9 +59,9 @@ criar serviços remotos ou processos por módulo.
 | Regras de negócio | Tipos/regras puros próximos da funcionalidade; extrair domain somente quando trouxer benefício |
 | Testes | Próximos das unidades; integração/E2E separados quando criados por contrato |
 
-Isso não é a estrutura definitiva nem autorização para mover arquivos. A base atual
-continua em `src`, `misc` e `tools`. Com ADR-0001 aceito, detalhar nomes e mudanças
-físicas no contrato da etapa de implementação antes de executá-las.
+A estrutura física desktop foi detalhada no contrato aprovado da 2B e está ao final.
+A base continua em `src`, `misc` e `tools`; novos módulos exigem contratos próprios
+antes de reorganizações adicionais.
 O [índice de módulos](../04-modules/module-index.md) conserva os oito limites do produto.
 
 ## Contratos IPC candidatos
@@ -206,9 +206,10 @@ verificação. Não prometer proteção contra outro processo comprometido do me
 - Os sete ADRs estão aceitos; os contratos de implementação continuam exigindo
   aprovação antes de criar diretórios, migrar ferramentas ou integrar ambientes reais.
 
-Pontos ainda não comprovados: resolução efetiva das dependências; API do Node
-embarcado; provider Linux; automação Electron experimental; CA e comportamento por
-SO; confirmação real; formatos/assinatura de distribuição. A
+A resolução e a fronteira foram verificadas no recorte local das etapas 2A/2B.
+Ainda não comprovados: providers de credenciais, CA, demais SOs/CPUs, confirmação
+destrutiva real e formatos/assinatura de distribuição. Automação Electron continua
+experimental. A
 [estratégia de testes](../07-testing/test-strategy.md) define os gates futuros.
 
 ## Estado da fundação após a execução autorizada da 2A
@@ -218,3 +219,53 @@ configurações na raiz, workflow e smoke em `tools/testing`, conforme contrato.
 Instalação, tipagem/lint, testes e pacote/smoke local foram executados; os demais
 gates desta arquitetura permanecem pendentes. A conclusão da 2A e seu commit foram aprovados com “Sim”.
 Ver [evidências e limitações](../07-testing/foundation-2a.md).
+
+## Organização desktop implementada na Etapa 2B
+
+O contrato físico da 2B foi autorizado após `27e4f95`. Estrutura atual:
+
+```text
+src/
+  main/
+    app.ts                 # composição, sessão, protocolo e ciclo da aplicação
+    appWindow.ts           # janela única e política de navegação
+    ipc/desktop.ts         # registro único, autenticação e execução limitada
+    security/
+      desktopPolicy.ts     # URL, DTO e allowlist de recursos
+      resources.ts         # recursos locais/MIME/CSP e confinamento por realpath
+      session.ts           # permissões, rede Chromium e downloads
+  preload/
+    index.ts               # entrypoint sandboxed e contextBridge
+    desktopApi.ts          # métodos nomeados e contenção de falhas de transporte
+  shared/desktop.ts        # DTOs/resultados, sem Node/Electron/React
+  renderer/                # interface legada e feedback de erro
+misc/window/               # componentes preservados; sem ponte ou handlers legados
+tools/testing/              # automação privilegiada, fora da API da aplicação
+```
+
+Testes ficam junto das unidades. Tipos compartilhados não importam camadas
+privilegiadas; lint restringe imports de Node/Electron/main no renderer e de
+Node/main no preload. Isso auxilia manutenção, sem constituir isolamento de runtime.
+
+A ponte `window.bunnies` expõe getInfo, close, quit, minimize, toggleMaximize,
+showEditMenu, view com enum limitado e openLink com identificador fixo. Todos
+encaminham ao handler estático bunnies:desktop, que valida a janela/frame/página e
+o DTO antes de executar. Não há invoke/send genéricos, eventos Electron ou URL
+arbitrária. Edição/clipboard usam roles de menu nativo; a UI só solicita abrir esse
+menu. Versão/plataforma vêm do main, substituindo metadados mutáveis no DOM.
+
+Resultados de erro têm código, requestId e mensagem fixa, sem stack/path/argumentos.
+O fechamento remove a referência à janela, não encerra forçadamente o app macOS;
+activate reutiliza/cria a principal e os handlers permanecem registrados uma vez,
+com remoção ao sair. Funcionalidades RabbitMQ não foram antecipadas.
+
+Produção usa bunnies://app/app_window/index.html e recursos explícitos, sem servir
+preload/maps/package.json. CSP em headers, CSS extraído e sessão sem rede no renderer.
+Desenvolvimento usa somente localhost com estilos/HMR permitidos nesse perfil; o
+preload tem configuração própria, sem cliente HMR ou shims Node. A mudança de origem
+file para bunnies não migra a preferência de tema antiga; o usuário pode escolhê-la
+novamente. Ainda não existiam perfis ou credenciais a migrar.
+
+A conclusão da 2B e seu commit foram aprovados por “Aprovado”; [resultados reais](../07-testing/desktop-boundary-2b.md).
+Não confundir estes controles locais com homologação dos quatro alvos, integração
+segura de broker ou proteção de artefato de release com fuses/assinatura.

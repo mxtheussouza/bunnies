@@ -1,7 +1,7 @@
 # Roadmap e contratos de execução
 
-Data: 2026-10-28. Status: Etapas 0, 1A, 1B e 2A concluídas e aprovadas; sete ADRs aceitos.
-Conclusão/commit da 2A aprovados por “Sim”; execução da 2B não autorizada.
+Data: 2026-10-28. Status: Etapas 0, 1A, 1B, 2A e 2B concluídas e aprovadas; sete ADRs aceitos.
+Conclusão/commit da 2B aprovados por “Aprovado”; execução da 3A não autorizada.
 
 ## Sequência proposta
 
@@ -11,7 +11,7 @@ Conclusão/commit da 2A aprovados por “Sim”; execução da 2B não autorizad
 | 1A | Registro documental da auditoria, governança e propostas | Concluída e aprovada; commit `c292b35` |
 | 1B | Stack, matriz tecnológica, arquitetura, MVP e estratégia de testes | Concluída e aprovada; sete ADRs Accepted e commit autorizado |
 | 2A | Ambiente reproduzível, dependências compatíveis, tipagem, lint e CI inicial | Concluída e aprovada; commit autorizado por “Sim” |
-| 2B | Ciclo desktop, fronteira segura, erros e smoke de empacotamento | Proposta |
+| 2B | Ciclo desktop, fronteira segura, erros e smoke de empacotamento | Concluída e aprovada; commit autorizado |
 | 3A | Navegação, tokens e componentes para aprovação | Proposta |
 | 3B | Interface base acessível, temas e estados | Proposta |
 | 4A | Perfis, proteção de credenciais e testes de conectividade | Proposta |
@@ -199,9 +199,11 @@ A resposta posterior **“Sim”** aprovou a conclusão da 2A e autorizou seu co
 `chore(setup): modernize desktop development foundation`. A proposta abaixo
 não foi autorizada por esse aceite.
 
-## Contrato proposto — Etapa 2B: fronteira segura e ciclo desktop
+## Contrato autorizado — Etapa 2B: fronteira segura e ciclo desktop
 
-Status: **Proposed; aguardar autorização explícita**.
+Status: **Execução autorizada** pela resposta “Autorizado” após o commit `27e4f95`.
+Conclusão e commit posteriormente aprovados por “Aprovado”, após apresentação
+das evidências e limitações.
 
 | Campo | Proposta para aprovação |
 | --- | --- |
@@ -234,3 +236,34 @@ contratos de distribuição próprios, não fazem parte desta proposta.
 Não inclui integração RabbitMQ, persistência de credenciais, novos módulos de produto,
 redesign, push ou homologação dos quatro alvos. Novas decisões significativas que
 alterem os ADRs aprovados serão submetidas ao proprietário antes do trabalho dependente.
+
+Entrega da execução autorizada da 2B: [evidências e limitações](../07-testing/desktop-boundary-2b.md).
+O proprietário respondeu “Aprovado” à conclusão e ao commit da 2B. Isso não autoriza
+a execução da 3A. Alterações locais posteriores em assets foram preservadas fora
+do commit da 2B, conforme estado atual.
+
+## Contrato proposto — Etapa 3A: navegação e design system
+
+Status: **Proposed; aguardar autorização explícita**.
+
+| Campo | Proposta para aprovação |
+| --- | --- |
+| Identificador e nome | 3A — Proposta de navegação e design system desktop |
+| Objetivo | Definir uma experiência visual e de navegação revisável antes de implementar a interface base |
+| Justificativa | A fronteira desktop foi verificada localmente, mas a tela ainda é o boilerplate legado; telas complexas e identidade exigem aprovação antes de implementação |
+| Escopo | Planejamento de UX, inventário visual atual, tokens e componentes propostos, navegação do MVP e mockups documentais; preservar nome e avaliar os assets existentes/novos |
+| Tarefas | Inspecionar logos/ícones/paleta e alterações locais; propor shell e navegação por conexão/vhost/módulo; definir temas claro/escuro, tipografia, cores semânticas, espaçamento, foco/contraste e redimensionamento; especificar tabelas, pesquisa, filtros, formulários, confirmações, erros e estados; preparar mockups de shell, conexões e listagem de filas com dados sintéticos; apresentar alternativas e recomendar um recorte para a 3B |
+| Módulos afetados | Shell/elementos comuns e planejamento visual dos módulos do MVP; sem implementar operações RabbitMQ |
+| Arquivos previstos | Novos docs/03-architecture/navigation.md e design-system.md; mockups estáticos em docs/03-architecture/ui-proposals quando necessários; atualizar visão, índice de módulos, testes, roadmap/estado/progresso e AGENTS |
+| Dependências | 2B concluída; MVP e requisitos aprovados; recursos visuais disponíveis no workspace; não presumir que alterações locais de assets já foram incluídas ou homologadas |
+| Riscos | Descaracterizar a identidade, projetar fluxos incompatíveis com capacidades/permissões do broker, baixa legibilidade/densidade, diferenças entre SOs e confundir mockup com funcionalidade |
+| Critérios de aceitação | Navegação e ações do MVP mapeadas; contexto de ambiente/conexão/vhost explícito; produção distinguível; temas e tokens coerentes com a identidade; regras de contraste/foco/teclado/redimensionamento definidas; estados e efeitos destrutivos compreensíveis; decisões pendentes separadas das recomendações |
+| Estratégia de verificação | Revisão de fluxos contra requisitos, checagem de contraste dos tokens propostos, inspeção visual dos mockups e links/documentação; nenhuma promessa de acessibilidade/runtime funcional sem implementação |
+| Resultado esperado | Proposta de navegação/design pronta para aprovação do proprietário e contrato menor da 3B |
+| Impacto documental | Referência de UX/design, justificativa de reuso/alterações visuais recomendadas, decisões pendentes e estado retomável; sem registrar proposta como design aprovado |
+
+Não altera src/misc/tools, dependências ou assets existentes; não incorpora os cinco
+assets locais ao commit da 2B nem inicia telas funcionais. A inspeção e os mockups
+podem usar os recursos como referência, sem substituir a identidade automaticamente.
+Mockups são artefatos de proposta desktop, sem servidor, produto web ou nova stack.
+A implementação da 3B e qualquer publicação exigem contratos/autorizações próprios.

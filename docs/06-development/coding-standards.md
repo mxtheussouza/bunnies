@@ -1,6 +1,6 @@
 # Desenvolvimento e convenções
 
-Etapa 2A, 2026-10-28. Stack aprovada no [ADR-0001](../03-architecture/adr/0001-desktop-stack.md).
+Atualizado na Etapa 2B, 2026-10-28. Stack aprovada no [ADR-0001](../03-architecture/adr/0001-desktop-stack.md).
 
 ## Ambiente e comandos
 
@@ -42,10 +42,12 @@ e `.webpack/`, ignorados pelo Git.
   Plugins React/import legados foram retirados conforme ADR; as regras perdidas não
   são equivalentes a tipagem/testes. `skipLibCheck` limita a checagem das declarações
   de terceiros, sem dispensar os smokes de compatibilidade.
-- Preservar `src`, `misc` e `tools` nesta etapa. Testes iniciais ficam próximos das
-  unidades. Reorganizar processos/módulos somente no contrato correspondente.
-- Não importar main/Node/transporte no renderer. O bridge legado ainda exige a
-  revisão da 2B; a tipagem do bridge nesta etapa não implementa validação de IPC.
+- Organização desktop implementada: main, preload e shared separados conforme
+  contrato da 2B; UI legada permanece em renderer/misc. Testes próximos das unidades.
+- Não importar main/Node/transporte no renderer ou Node/main no preload. Lint
+  restringe esses imports. Contratos shared não importam Node/Electron/React.
+- A validação obrigatória de IPC ocorre no main (janela/frame/URL/DTO), além de tipos.
+  Expor apenas métodos nomeados; não recuperar a ponte legada ou acesso a clipboard.
 - Não instalar adapters de broker, schemas ou bibliotecas futuras antes de seu uso.
 - Documentação em português e Conventional Commits em inglês; conclusão e commit
   exigem aprovação, conforme [AGENTS.md](../../AGENTS.md).
@@ -58,13 +60,15 @@ acessibilidade, segurança do Electron nem armazenamento do sistema operacional.
 
 O smoke abre o executável empacotado para o alvo local, cria um diretório temporário
 de dados, confirma `app.isPackaged`, versão, renderização e tema após reload, encerra
-o processo e remove apenas seu próprio diretório. Playwright usa automação Electron
+o processo e remove apenas seu próprio diretório. Na 2B também verifica sandbox,
+CSP, rede/nav/permissões, recursos, janela estrangeira e recriação. O servidor HTTP
+local é fixture de teste temporária, nunca backend do produto. Playwright usa automação Electron
 experimental e argumentos de inspeção; esta é uma validação de desenvolvimento,
 sem assinatura, fuses de release ou homologação completa. Não desabilitar sandbox
 para contornar falhas do runner.
 
-A CI proposta executa qualidade em Ubuntu e empacotamento em Ubuntu, Windows Server
-e macOS. Windows Server não equivale à homologação Windows 11, e runner macOS não
+A CI preparada executa qualidade em Ubuntu e empacotamento em Ubuntu, Windows Server
+e macOS, com smoke desktop adicional no job macOS. Windows Server não equivale à homologação Windows 11, e runner macOS não
 substitui os dois alvos/CPUs aprovados. O workflow não envia artefatos, assina ou
 publica. Sua execução remota permanece pendente até push autorizado.
 
@@ -75,3 +79,11 @@ Fontes: [Forge/Webpack](https://www.electronforge.io/config/plugins/webpack),
 
 Política npm: [install-scripts](https://docs.npmjs.com/cli/v11/commands/npm-install-scripts/).
 Download: [Electron](https://www.electronjs.org/docs/latest/tutorial/installation).
+
+O preload tem config Webpack própria com devServer false, para não injetar cliente
+HMR ou shims Node no sandbox Electron 45. O renderer conserva o HMR em localhost.
+Após alterar o preload, recarregar a janela/reiniciar o app quando necessário; não
+introduzir polyfills Node para contornar isolamento. CSS de produção é extraído
+por mini-css-extract-plugin 2.10.2; exceções inline de estilo só no desenvolvimento.
+
+Evidências e limites: [fronteira 2B](../07-testing/desktop-boundary-2b.md).

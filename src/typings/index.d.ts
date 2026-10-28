@@ -7,14 +7,10 @@ declare module "*.scss";
 declare module "*.less";
 
 interface Window {
-  electron_window: {
-    titlebar: import("../../misc/window/titlebarContext").TitlebarContextApi;
-  };
+  bunnies: import("../shared/desktop").DesktopApi;
 }
 
 declare module "electron-squirrel-startup" {
   const handled: boolean;
   export default handled;
 }
-
-declare const BUNNIES_APP_VERSION: string;

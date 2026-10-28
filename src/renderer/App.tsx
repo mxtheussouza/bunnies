@@ -1,4 +1,5 @@
 import React from "react";
+import { DESKTOP_ERROR_EVENT } from "@src/common/desktop";
 import { icons } from "@src/common/icons";
 
 import Card from "./components/Card";
@@ -11,9 +12,21 @@ import "./App.scss";
 const App: React.FC = () => {
   const { darkTheme, toggleTheme } = useThemeContext();
   const { versions } = useVersions();
+  const [desktopError, setDesktopError] = React.useState(false);
+  React.useEffect(() => {
+    const report = () => setDesktopError(true);
+    window.addEventListener(DESKTOP_ERROR_EVENT, report);
+    return () => window.removeEventListener(DESKTOP_ERROR_EVENT, report);
+  }, []);
 
   return (
     <div id="app-container">
+      {desktopError && (
+        <div role="alert">
+          Não foi possível concluir a operação desktop.
+          <Button onClick={() => setDesktopError(false)}>Fechar aviso</Button>
+        </div>
+      )}
       <div className="header">
         <div className="main-heading">
           <h1 className="themed">Bunnies</h1>

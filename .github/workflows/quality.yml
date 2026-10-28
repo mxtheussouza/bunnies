@@ -38,6 +38,9 @@ jobs:
       - run: npm install --global npm@11.19.1
       - run: npm ci
       - run: npm run package
+      - name: Verify packaged desktop boundary on macOS
+        if: runner.os == 'macOS'
+        run: npm run smoke:package
 
   # Launching on each real desktop/session remains a separate validation gate.
   # No publication, signing, credentials or sandbox bypass belongs in this workflow.

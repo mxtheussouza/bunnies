@@ -4,16 +4,16 @@ Atualizado em: 2026-10-28.
 
 | Campo | Estado |
 | --- | --- |
-| Etapa atual | 2A — Fundação técnica |
-| Status | Concluída e aprovada pelo proprietário com “Sim”; commit de entrega autorizado |
-| Última etapa concluída | 2A — Fundação técnica |
-| Último commit | Entrega 2A: `chore(setup): modernize desktop development foundation`; obter SHA com `git log -1 --format='%h %s' -- AGENTS.md docs`. Base anterior: `97cd313` |
-| Decisões aprovadas | Diretrizes; auditoria 0; conclusão/commit da 1A; sete ADRs Accepted; Electron incremental e matriz candidata; MVP; requisitos/limites/metas e estratégias de testes/segurança; conclusão e commit da 1B; execução da 2A, incluindo instalações e artefatos locais; conclusão e commit da 2A |
-| Decisões pendentes | Contrato/autorização da 2B; estrutura física final; design detalhado; infraestrutura de release e autenticações adicionais; alternativas caso gates de implementação falhem |
-| Tarefas concluídas | Fundação atualizada; lock limpo; tipagem/lint/11 testes/formatação; CI preparada; início em desenvolvimento e pacote/smoke local; documentação e revisão técnica |
-| Tarefas pendentes | Conferir registro do commit aprovado da 2A; contrato/autorização próprios para a 2B; validação remota e demais SOs/CPUs |
-| Problemas conhecidos | Sem integração RabbitMQ; segurança da 2B pendente; seis entradas low/moderate no tooling; makers e demais alvos não homologados; CI remota não executada; provider Linux e metas não medidos |
-| Próxima ação autorizada | Registrar/conferir commit aprovado da 2A e apresentar contrato proposto da 2B; aguardar autorização específica |
+| Etapa atual | 2B — Fronteira segura e ciclo desktop |
+| Status | Concluída e aprovada por “Aprovado”; commit de entrega autorizado |
+| Última etapa concluída | 2B — Fronteira segura e ciclo desktop |
+| Último commit | Entrega 2B: `fix(desktop): secure Electron process boundaries`; obter SHA com `git log -1 --format='%h %s' -- AGENTS.md docs`. Base anterior: `27e4f95` |
+| Decisões aprovadas | Diretrizes; auditoria 0; conclusão/commit da 1A; sete ADRs Accepted; Electron incremental e matriz candidata; MVP; requisitos/limites/metas e estratégias de testes/segurança; conclusão e commit da 1B; execução da 2A, incluindo instalações e artefatos locais; conclusão e commit da 2A; execução e organização desktop da 2B; conclusão e commit da 2B |
+| Decisões pendentes | Contrato/autorização da 3A; incorporação das alterações locais de assets; estrutura dos módulos futuros; design detalhado; infraestrutura de release e autenticações adicionais; alternativas caso gates de implementação falhem |
+| Tarefas concluídas | Ponte mínima/IPC validado; sandbox/CSP/protocolo local; ciclo desktop; CSS extraído; erros sanitizados; 65 testes; instalação limpa, desenvolvimento e package/smoke local; revisão e documentação |
+| Tarefas pendentes | Conferir commit aprovado da 2B; contrato/autorização da 3A; preservar assets locais; CI remota, demais alvos, UX nativa e gates de release |
+| Problemas conhecidos | Sem integração RabbitMQ; controles dos módulos/gates de release pendentes; seis entradas low/moderate no tooling; makers e demais alvos não homologados; CI remota não executada; provider Linux e metas não medidos |
+| Próxima ação autorizada | Registrar/conferir commit aprovado da 2B e apresentar contrato da 3A; não executar 3A sem autorização |
 
 ## Autorização e limites
 
@@ -41,10 +41,12 @@ compõem o recorte aceito; requisitos corporativos não foram presumidos.
 Branch utilizada: `chore/modernization-app`. O working tree estava limpo antes da
 escrita da 1B, com HEAD `c292b35`. O [contrato](roadmap.md) lista 12 novos documentos e
 sete atualizados na apresentação. A aprovação sincronizou também a visão do produto,
-totalizando oito atualizados; este estado integra o commit aprovado da 1B.
+totalizando oito atualizados naquela entrega.
 Na conclusão da 1B não havia implementação ou instalação. Na 2A, a fundação e os
-ajustes mínimos foram implementados conforme contrato. Assets, licença e auditoria
-histórica permanecem intactos. O commit da 2A foi autorizado após sua revisão;
+ajustes mínimos foram implementados conforme contrato. Na apresentação da 2B, assets e licença permaneciam intactos; os achados históricos
+foram preservados. Posteriormente surgiram alterações locais de assets descritas abaixo.
+Na 2B, os links de código da auditoria passaram a apontar para o commit auditado,
+para continuar consultáveis após a remoção da ponte legada. O commit da 2A foi autorizado após sua revisão;
 nenhum broker, container ou push foi executado.
 
 ## Retomada
@@ -54,11 +56,33 @@ nenhum broker, container ou push foi executado.
    [roadmap](roadmap.md) e o [progresso](progress.md).
 2. Verificar branch, HEAD, diff e arquivos não rastreados, preservando alterações.
 3. Conferir eventuais aprovações posteriores à atualização deste estado.
-4. Conferir o commit aprovado da 2A pela mensagem acima; se ainda não existir,
-   concluir somente esse registro já autorizado, preservando alterações alheias.
-5. Apresentar o contrato proposto da 2B e aguardar autorização específica.
+4. Conferir o commit aprovado da 2B pela mensagem acima; se ainda não existir,
+   concluir apenas esse registro autorizado, excluindo os assets locais posteriores.
+5. Preservar as alterações de assets e apresentar o contrato da 3A; aguardar
+   autorização específica antes de executar a etapa.
 
 Resultados de verificação e limitações estão no [registro de progresso](progress.md).
 
 Resultados: [evidências da 2A](../07-testing/foundation-2a.md). O teste local usa
 macOS 27.0.1 arm64, sem comprovar o mínimo macOS 14 ou os outros alvos aprovados.
+
+A resposta posterior **“Autorizado”** aprovou executar a 2B conforme contrato no
+roadmap. O Git estava limpo em `27e4f95`. A resposta posterior **“Aprovado”**
+aprovou sua conclusão e autorizou o commit `fix(desktop): secure Electron process
+boundaries`, sem autorizar executar a 3A.
+
+A entrega da 2B foi aprovada; ver [evidências](../07-testing/desktop-boundary-2b.md).
+O commit foi autorizado; não houve push, conexão RabbitMQ ou publicação.
+
+## Alterações locais posteriores à apresentação
+
+Preservadas e excluídas do commit aprovado da 2B:
+
+- Modificados: `assets/icons/bunnies.png`, `assets/images/logo.png`,
+  `assets/images/appIcon.ico`.
+- Novos: `assets/logotipos/bunnies-logo.png` e
+  `assets/logotipos/bunnies-logo-extensive.png`.
+
+Não foram gerados por esta execução e não integraram o pacote/ASAR testado da 2B.
+A aprovação da 2B não deve incorporá-los silenciosamente; sua avaliação visual
+poderá ocorrer na 3A, mediante autorização. Não reverter ou sobrescrever esses arquivos.

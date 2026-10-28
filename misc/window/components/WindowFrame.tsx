@@ -4,18 +4,11 @@ import logo from "@assets/images/logo.png";
 
 type Props = {
   title?: string;
+  development: boolean;
   borderColor?: string;
-  platform: "windows" | "mac";
+  platform: import("@src/shared/desktop").DesktopInfo["platform"];
   children: React.ReactNode;
 };
-
-type Context = {
-  platform: "windows" | "mac";
-};
-
-export const WindowContext = React.createContext<Context>({
-  platform: "windows",
-});
 
 const WindowFrame: React.FC<Props> = props => {
   const itsRef = React.useRef<HTMLDivElement>(null);
@@ -34,18 +27,20 @@ const WindowFrame: React.FC<Props> = props => {
   }, [props.borderColor]);
 
   return (
-    <WindowContext.Provider value={{ platform: props.platform }}>
+    <>
       {/* Reference creator */}
       <div className="start-electron-window" ref={itsRef}></div>
       {/* Window Titlebar */}
       <Titlebar
         title={props.title ?? "Electron Window"}
+        development={props.development}
+        platform={props.platform}
         mode="centered-title"
         icon={logo}
       />
       {/* Window Content (Application to render) */}
       <div className="window-content">{props.children}</div>
-    </WindowContext.Provider>
+    </>
   );
 };
 

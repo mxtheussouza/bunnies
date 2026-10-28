@@ -2,27 +2,42 @@ import React from "react";
 import classNames from "classnames";
 import titlebarMenus from "../../titlebarMenus";
 import WindowControls from "../WindowControls";
-import context from "../../titlebarContextApi";
-import { WindowContext } from "../WindowFrame";
+import type { DesktopInfo } from "@src/shared/desktop";
 
 import "./styles.less";
 
 type Props = {
   title: string;
+  platform: DesktopInfo["platform"];
+  development: boolean;
   mode: "centered-title";
   icon?: string;
 };
 
 const Titlebar: React.FC<Props> = props => {
+  const menus = React.useMemo(
+    () =>
+      titlebarMenus.map(menu => ({
+        ...menu,
+        items: menu.items
+          .filter(item => !item.developmentOnly || props.development)
+          .map(item => ({
+            ...item,
+            shortcut:
+              props.platform === "darwin"
+                ? item.shortcut?.replaceAll("Ctrl", "Cmd")
+                : item.shortcut,
+          })),
+      })),
+    [props.development, props.platform],
+  );
   const activeMenuIndex = React.useRef<number | null>(null);
   const menusRef = React.useMemo(
-    () => titlebarMenus.map(() => React.createRef<HTMLDivElement>()),
-    [],
+    () => menus.map(() => React.createRef<HTMLDivElement>()),
+    [menus],
   );
 
   const [menusVisible, setMenusVisible] = React.useState<boolean>(true);
-
-  const windowContext = React.useContext(WindowContext);
 
   const closeActiveMenu = React.useCallback(() => {
     if (activeMenuIndex.current != null) {
@@ -78,7 +93,10 @@ const Titlebar: React.FC<Props> = props => {
     };
   }, [activeMenuIndex, menusRef, closeActiveMenu]);
 
-  function showMenu(index: number, event: React.MouseEvent<HTMLDivElement>) {
+  function showMenu(
+    index: number,
+    event: React.SyntheticEvent<HTMLDivElement>,
+  ) {
     event.stopPropagation();
     event.preventDefault();
 
@@ -106,27 +124,9 @@ const Titlebar: React.FC<Props> = props => {
     }
   }
 
-  function handleAction(action?: string, value?: string | number) {
+  function handleAction(action?: () => void) {
     closeActiveMenu();
-    const handleActionContext = context;
-    if (action) {
-      if (
-        typeof handleActionContext[action as keyof typeof context] ===
-        "function"
-      ) {
-        if (action === "open_url") {
-          if (typeof value === "string") context.open_url(value);
-        } else {
-          const handler =
-            handleActionContext[
-              action as Exclude<keyof typeof context, "open_url">
-            ];
-          handler();
-        }
-      } else {
-        console.log(`action [${action}] is not available in titlebar context`);
-      }
-    }
+    action?.();
   }
 
   return (
@@ -152,13 +152,32 @@ const Titlebar: React.FC<Props> = props => {
           hidden: !menusVisible,
         })}
       >
-        {titlebarMenus.map((item, menuIndex) => {
+        {menus.map((item, menuIndex) => {
           return (
             <div className="menu-item" key={`menu_${menuIndex}`}>
               <div
                 className="menu-title"
-                onClick={e => showMenu(menuIndex, e)}
-                onMouseEnter={() => onMenuHover(menuIndex)}
+                role="button"
+                tabIndex={0}
+                onClick={e => {
+                  if (item.action) {
+                    closeActiveMenu();
+                    item.action();
+                  } else showMenu(menuIndex, e);
+                }}
+                onKeyDown={e => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    if (item.action) {
+                      closeActiveMenu();
+                      item.action();
+                    } else showMenu(menuIndex, e);
+                  }
+                }}
+                onMouseEnter={() => {
+                  if (!item.action) onMenuHover(menuIndex);
+                  else closeActiveMenu();
+                }}
                 onMouseDown={e => e.preventDefault()}
               >
                 {item.name}
@@ -178,9 +197,7 @@ const Titlebar: React.FC<Props> = props => {
                     <div
                       key={`menu_${menuIndex}_popup_item_${menuItemIndex}`}
                       className="menu-popup-item"
-                      onClick={() =>
-                        handleAction(menuItem.action, menuItem.value)
-                      }
+                      onClick={() => handleAction(menuItem.action)}
                       onMouseDown={e => e.preventDefault()}
                     >
                       <div className="popup-item-name">{menuItem.name}</div>
@@ -196,7 +213,7 @@ const Titlebar: React.FC<Props> = props => {
         })}
       </section>
 
-      <WindowControls platform={windowContext.platform} tooltips={true} />
+      <WindowControls platform={props.platform} tooltips={true} />
     </div>
   );
 };

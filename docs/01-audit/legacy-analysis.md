@@ -50,13 +50,13 @@ flowchart TD
 | 14. Como carrega recursos? | Imagens importadas via Webpack Asset Modules; ICO da janela por caminho relativo ao diretório de trabalho |
 | 15. Como compila/distribui? | Forge/Webpack; `package`, `make` e `publish`; makers Squirrel, ZIP macOS, DEB e RPM |
 
-Referências de código: [entrada](../../src/main/app.ts),
-[janela](../../src/main/appWindow.ts), [renderer](../../src/renderer/renderer.tsx),
-[preload](../../src/renderer/preload.tsx),
-[ponte](../../misc/window/windowPreload.ts),
-[chamadas IPC](../../misc/window/titlebarContext.ts),
-[handlers IPC](../../misc/window/titlebarIPC.ts) e
-[Forge](../../tools/forge/forge.config.js).
+Referências de código: [entrada](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/src/main/app.ts),
+[janela](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/src/main/appWindow.ts), [renderer](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/src/renderer/renderer.tsx),
+[preload](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/src/renderer/preload.tsx),
+[ponte](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/misc/window/windowPreload.ts),
+[chamadas IPC](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/misc/window/titlebarContext.ts),
+[handlers IPC](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/misc/window/titlebarIPC.ts) e
+[Forge](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/tools/forge/forge.config.js).
 
 ## Fronteira privilegiada
 
@@ -81,19 +81,19 @@ de tamanho/posição, restauração de sessão ou validação de múltiplas inst
 
 ## Tema, interface e versão
 
-O [provider](../../src/providers/ThemeMode.tsx) lê e escreve o tema em `localStorage`
+O [provider](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/src/providers/ThemeMode.tsx) lê e escreve o tema em `localStorage`
 e adiciona/remove a classe `dark-mode`. Não há preferência de seguir o sistema ou
 tratamento de indisponibilidade do storage. Os tokens convivem com cores fixas.
 
-[WindowFrame](../../misc/window/components/WindowFrame.tsx) importa Titlebar, que
+[WindowFrame](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/misc/window/components/WindowFrame.tsx) importa Titlebar, que
 importa WindowContext de WindowFrame: há um ciclo de dependência. Os controles usam
 `div` clicáveis e os estilos removem o contorno de foco sem substituto explícito.
 Os atalhos no modelo de menus não são todos registrados como accelerators.
 
 O preload grava `npm_package_version` em `data-versions` no DOM;
-[useVersions](../../src/common/hooks/useVersions.tsx) faz a leitura sem validação.
+[useVersions](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/src/common/hooks/useVersions.tsx) faz a leitura sem validação.
 A presença dessa variável no aplicativo instalado não está garantida. A tela
-[App](../../src/renderer/App.tsx) continua descrevendo um boilerplate.
+[App](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/src/renderer/App.tsx) continua descrevendo um boilerplate.
 
 ## Build e distribuição
 
@@ -117,3 +117,10 @@ dashboard, administração ou métricas implementados. A pesquisa em `src`, `mis
 As recomendações estão na [dívida técnica](technical-debt.md), na
 [avaliação tecnológica](../03-architecture/technology-evaluation.md) e no
 [MVP proposto](../02-requirements/mvp-scope.md).
+
+## Navegação do registro histórico
+
+Os links de código acima apontam para o commit auditado, preservando o conteúdo dos
+achados mesmo após remoções/movimentações do legado. O status de remediação atual
+está nas [evidências da 2B](../07-testing/desktop-boundary-2b.md); o texto desta
+auditoria não é uma reavaliação do código atual.

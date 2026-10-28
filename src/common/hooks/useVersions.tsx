@@ -2,25 +2,19 @@ import React from "react";
 
 export const useVersions = () => {
   const [versions, setVersions] = React.useState<Record<string, string>>({});
-
   React.useEffect(() => {
-    const raw = document.getElementById("app")?.getAttribute("data-versions");
-    if (!raw) return;
-    try {
-      const parsed: unknown = JSON.parse(raw);
-      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
-        return;
-      setVersions(
-        Object.fromEntries(
-          Object.entries(parsed).filter(
-            (entry): entry is [string, string] => typeof entry[1] === "string",
-          ),
-        ),
-      );
-    } catch {
-      // Missing or malformed version metadata must not prevent rendering.
-    }
+    let active = true;
+    void window.bunnies
+      .getInfo()
+      .then(result => {
+        if (active && result.ok) setVersions({ bunnies: result.value.version });
+      })
+      .catch(() => {
+        /* Metadata absence must not prevent rendering. */
+      });
+    return () => {
+      active = false;
+    };
   }, []);
-
   return { versions };
 };

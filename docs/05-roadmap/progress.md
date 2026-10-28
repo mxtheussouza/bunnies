@@ -230,3 +230,97 @@ Conferência da aprovação: 27 documentos, 173 links locais e 62 tabelas consis
 (inclui o contrato proposto da 2B); whitespace, lock/manifesto e preservação de assets,
 licença e auditoria histórica verificados. Nenhuma alteração adicional de código
 foi feita ao registrar o aceite; os testes da apresentação não foram repetidos.
+
+## Etapa 2B — Fronteira segura e ciclo desktop
+
+Data: 2026-10-28. Base `27e4f95`; branch `chore/modernization-app`, inicialmente limpa.
+O proprietário respondeu **“Autorizado”** ao contrato da 2B apresentado após concluir
+a 2A. Na apresentação da entrega, conclusão e commit ainda aguardavam aprovação;
+o aceite posterior está registrado abaixo.
+
+### Resultado implementado
+
+Preload movido para src/preload com ponte mínima window.bunnies; contratos em
+src/shared sem Node/React; autenticação de janela/frame/página e DTO estrito no main.
+Ponte/IPC legados retirados. Recursos por protocolo local com allowlist, realpath,
+MIME/nosniff e CSP de produção; CSS extraído por mini-css-extract-plugin 2.10.2, única
+dependência direta adicionada. Sandbox/context isolation ativos, navegação, popups,
+webviews, permissões, rede Chromium/file e downloads restritos.
+
+A revisão reduziu a edição a um menu nativo: a UI não pode solicitar copiar/colar
+diretamente por IPC. Links externos usam apenas identificador fixo do destino
+preexistente. Erros têm mensagens fixas e tratamento na UI; versão/plataforma vêm
+do main, com controles existentes apropriados ao SO. Ciclo e registro de handlers
+permitiram reabrir a principal sem duplicação. O ciclo WindowFrame/Titlebar acabou
+com passagem explícita de propriedades. Nenhuma integração RabbitMQ foi antecipada.
+
+### Verificações efetivas
+
+| Verificação | Resultado |
+| --- | --- |
+| Instalação limpa | npm ci status 0, 799 pacotes, sem peers forçados; nenhum script transitivo pendente |
+| Qualidade | Typecheck/lint/formatação status 0; 65 testes em oito arquivos passaram |
+| Artefato local | package/smoke status 0 em macOS 27.0.1 arm64/Electron 45.1.0 |
+| Isolamento e IPC reais | Sem Node no renderer; flags de sandbox/context isolation e guarda do preload; janela estrangeira real rejeitada; argumentos arbitrários/grandes rejeitados; DevTools negado no pacote |
+| CSP/recursos/rede | CSS/logo presentes; script/style inline e eval bloqueados; preload/map/config não servidos; fixture de rede local não recebeu requisições da UI ou sessão |
+| Navegação e ciclo | Popup/navegação bloqueados; Notification negada; duas recriações da principal e activate repetido sem duplicação |
+| Desenvolvimento | Ponte, renderização e tema passaram em perfil temporário; HMR no renderer e sem shims/cliente HMR no preload |
+| Revisão visual | Captura do pacote aberta e conferida; identidade/assets e estilos existentes preservados; controles seguem a plataforma |
+| Dependências | Audit permanece com seis entradas low/moderate, sem high/critical; nenhuma correção automática forçada |
+| CI | Smoke adicional preparado no job macOS após package; execução remota não realizada |
+
+Os testes de políticas cobrem também frames/origens inválidos, schemas, permissões,
+downloads, erros sanitizados e escape por symlink. Não confundir fakes com todos os
+fluxos nativos reais: edição por teclado passou, mas popup e UX nativa por SO ainda
+pedem revisão manual. São evidências parciais de T-01/T-10/T-12, não de todo o MVP.
+
+### Revisão e documentação
+
+Arquitetura, segurança, comandos, testes, AGENTS e estado sincronizados. Os 24 links
+de código nos quatro documentos de auditoria agora apontam ao commit original
+5207752, com nota de contexto histórico. Texto dos achados preservado e comparação
+normalizada executada; assets/licença não foram alterados. Isso mantém as evidências
+consultáveis após a remoção dos cinco arquivos da ponte antiga.
+
+A revisão conferiu importações entre processos, exposição da ponte, fronteiras
+IPC, política de recursos/CSP, rejeições assíncronas, edição nativa e cleanup das
+fixtures. Os ajustes intermediários do harness e suas razões estão nas
+[evidências da 2B](../07-testing/desktop-boundary-2b.md); nenhum controle foi desligado
+para obter sucesso. Logs/capturas são artefatos locais ignorados, não dados de broker.
+
+Permanecem sem execução: demais SOs/CPUs, mínimo macOS 14, CI remota, brokers,
+credenciais, TLS, pentest, benchmark, acessibilidade completa, instaladores e
+assinatura/notarização/fuses de release. Não houve commit, push ou publicação na 2B.
+
+### Próxima ação autorizada
+
+O proprietário respondeu **“Aprovado”** à pergunta explícita sobre aprovar a
+conclusão da 2B e autorizar `fix(desktop): secure Electron process boundaries`.
+O aceite inclui as limitações apresentadas; não autoriza executar a 3A.
+
+Registrar/conferir o commit aprovado e apresentar o contrato proposto da 3A.
+Este registro integra o próprio commit da 2B; obter seu SHA com
+`git log -1 --format='%h %s' -- AGENTS.md docs`. Nenhum push foi realizado.
+
+Conferência final documental: 28 documentos incluindo README/AGENTS, 167 links
+locais válidos e 65 tabelas consistentes; manifesto/lock sincronizados. Captura
+final conferida; ASAR com 12 entradas, CSS separado, sem testes e preload com
+require externo somente de electron. Checksum registrado nas evidências.
+
+### Conferência após a aprovação
+
+Foram encontradas cinco alterações locais posteriores à apresentação: os três
+assets existentes modificados e dois novos PNGs em assets/logotipos. Elas não foram
+produzidas por esta execução, não integraram o pacote testado e foram preservadas
+fora do commit autorizado da 2B. A working tree não ficará limpa por causa desses
+assets; não reverter nem incluí-los sem um recorte de entrega apropriado.
+
+A sincronização da aprovação altera apenas documentação; implementação e resultados
+da apresentação mantidos. A proposta da 3A prevê avaliar os recursos visuais atuais,
+sem adotá-los ou editar o código antes de autorização própria.
+
+Conferência da aprovação: 28 documentos, 167 links locais válidos e 66 tabelas
+consistentes, incluindo o contrato proposto da 3A. Achados históricos preservados
+(com links de código no commit auditado), manifesto/lock e whitespace conferidos.
+Os 56 arquivos da entrega foram separados explicitamente dos cinco assets locais;
+nenhuma implementação adicional ou repetição de testes nesta sincronização.

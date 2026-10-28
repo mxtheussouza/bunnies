@@ -41,7 +41,9 @@ Consultar a [visão do produto](docs/00-overview/product-vision.md).
 Executar verificações pertinentes ao escopo autorizado e registrar resultados
 reais e limitações. Testes destrutivos somente em brokers isolados provisionados
 pelo harness. A Etapa 2A foi implementada, verificada e aprovada. Não iniciar
-integração RabbitMQ nem a 2B antes de autorização específica.
+integração RabbitMQ. A resposta “Autorizado” aprovou executar o contrato da 2B,
+incluindo as verificações locais e dependências necessárias. A conclusão da 2B e
+seu commit foram posteriormente aprovados por “Aprovado”; a 3A não foi autorizada.
 A [estratégia de testes](docs/07-testing/test-strategy.md) e o
 [modelo de segurança](docs/08-security/security-model.md) estão aprovados como planos,
 sem homologação. Limites e metas aprovados têm fonte única nos
@@ -70,15 +72,18 @@ A resposta posterior “Autorizado” permitiu a Etapa 1B documental. Após a ap
 autorizando o commit da 1B. A resposta posterior “Autorizado” aprovou o contrato da 2A, incluindo instalação
 e verificações que geram artefatos locais. Após a apresentação dos resultados,
 “Sim” aprovou a conclusão da 2A e autorizou o commit
-`chore(setup): modernize desktop development foundation`. Isso não autoriza a 2B.
+`chore(setup): modernize desktop development foundation`. Esse aceite não autorizou a 2B. A resposta posterior “Autorizado” aprovou o
+contrato próprio da 2B. Após a apresentação dos resultados, “Aprovado” aceitou
+sua conclusão e autorizou `fix(desktop): secure Electron process boundaries`,
+sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **2A — fundação técnica, concluída e aprovada**.
-- Última etapa concluída e aprovada: **2A — fundação técnica**.
-- Próxima etapa proposta: **2B — fronteira desktop**, ainda não autorizada.
-- Próxima ação autorizada: registrar/conferir o commit aprovado da 2A e apresentar
-  o contrato proposto da 2B; aguardar autorização própria antes de executá-la.
+- Etapa atual: **2B — fronteira segura e ciclo desktop, concluída e aprovada**.
+- Última etapa concluída e aprovada: **2B — fronteira segura e ciclo desktop**.
+- Próxima etapa proposta: **3A — proposta de navegação e design**, ainda não autorizada.
+- Próxima ação autorizada: registrar/conferir o commit aprovado da 2B e apresentar o
+  contrato da 3A; aguardar autorização específica antes de executá-la.
 
 Ao retomar, ler este arquivo, a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -93,4 +98,14 @@ Referências adicionais: [análise do legado](docs/01-audit/legacy-analysis.md),
 Comandos e regras de tooling: [desenvolvimento](docs/06-development/coding-standards.md).
 Resultados reais e limitações: [evidências da 2A](docs/07-testing/foundation-2a.md).
 Instalação/check/package/smoke local foram verificados em macOS arm64; isso não
-homologa os demais alvos nem fecha os riscos de segurança previstos para a 2B.
+homologa os demais alvos. A fronteira implementada na 2B e seus limites estão nas
+[evidências da 2B](docs/07-testing/desktop-boundary-2b.md).
+
+Estrutura desktop atual: `src/main` (janela, IPC e políticas), `src/preload`
+(ponte mínima), `src/shared` (contratos sem Node/React); UI preservada em renderer
+e misc. Restrições de import estão no lint, não substituem as verificações no main.
+Nunca restaurar acesso direto a clipboard, IPC genérico ou URLs arbitrárias na ponte.
+
+Após a apresentação da 2B surgiram cinco alterações locais em assets (três arquivos
+versionados e dois novos logotipos). Preservá-las fora do commit da 2B; não revertê-las
+nem inferir que já integraram o pacote testado. Ver o estado atual para retomada.

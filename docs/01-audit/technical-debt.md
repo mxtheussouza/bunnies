@@ -41,14 +41,14 @@ dos achados da aplicação. Todos os itens continuam abertos.
 | TD-21 | P2 | Tokens CSS incompletos, cores fixas e PNG duplicado | Estados/temas inconsistentes; revisar tokens sem substituir identidade |
 | TD-22 | P2 | Sem política de registro único/remoção dos handlers IPC | Recriação de janela pode duplicar handlers; vincular registro ao ciclo de vida |
 
-Referências: [janela](../../src/main/appWindow.ts),
-[IPC](../../misc/window/titlebarIPC.ts),
-[ponte](../../misc/window/titlebarContext.ts),
-[Titlebar](../../misc/window/components/Titlebar/index.tsx),
-[ControlButton](../../misc/window/components/ControlButton.tsx),
-[botão](../../src/renderer/components/Button/styles.scss),
-[Webpack](../../tools/webpack/webpack.rules.js) e
-[Forge](../../tools/forge/forge.config.js). As linhas indicadas referem-se à base auditada.
+Referências: [janela](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/src/main/appWindow.ts),
+[IPC](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/misc/window/titlebarIPC.ts),
+[ponte](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/misc/window/titlebarContext.ts),
+[Titlebar](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/misc/window/components/Titlebar/index.tsx),
+[ControlButton](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/misc/window/components/ControlButton.tsx),
+[botão](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/src/renderer/components/Button/styles.scss),
+[Webpack](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/tools/webpack/webpack.rules.js) e
+[Forge](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/tools/forge/forge.config.js). As linhas indicadas referem-se à base auditada.
 
 O guia oficial recomenda runtime atual, validação de remetente IPC, restrição de
 navegação e abertura segura de links. [Segurança Electron](https://www.electronjs.org/docs/latest/tutorial/security).
@@ -83,3 +83,10 @@ efeitos. Falhas após envio precisam admitir resultado incerto.
 Nenhuma medição ou homologação dessas lacunas foi realizada. Um único ambiente não
 comprova funcionamento dos três sistemas operacionais. Versões e avisos externos
 são temporais e deverão ser revalidados antes da implementação.
+
+## Navegação do registro histórico
+
+Os links de código acima apontam para o commit auditado, preservando o conteúdo dos
+achados mesmo após remoções/movimentações do legado. O status de remediação atual
+está nas [evidências da 2B](../07-testing/desktop-boundary-2b.md); o texto desta
+auditoria não é uma reavaliação do código atual.

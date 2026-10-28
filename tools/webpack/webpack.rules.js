@@ -1,3 +1,9 @@
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const styleLoader =
+  process.env.NODE_ENV === "development"
+    ? "style-loader"
+    : MiniCssExtractPlugin.loader;
+
 module.exports = [
   {
     // Typescript loader
@@ -13,13 +19,13 @@ module.exports = [
   {
     // CSS Loader
     test: /\.css$/,
-    use: [{ loader: "style-loader" }, { loader: "css-loader" }],
+    use: [{ loader: styleLoader }, { loader: "css-loader" }],
   },
   {
     // SCSS (SASS) Loader
     test: /\.s[ac]ss$/i,
     use: [
-      { loader: "style-loader" },
+      { loader: styleLoader },
       { loader: "css-loader" },
       { loader: "sass-loader" },
     ],
@@ -28,7 +34,7 @@ module.exports = [
     // Less loader
     test: /\.less$/,
     use: [
-      { loader: "style-loader" },
+      { loader: styleLoader },
       { loader: "css-loader" },
       { loader: "less-loader" },
     ],

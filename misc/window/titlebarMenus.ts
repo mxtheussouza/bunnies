@@ -1,13 +1,16 @@
+import { runDesktop } from "@src/common/desktop";
+
 export type TitlebarMenuItem = {
   name: string;
-  action?: string;
+  action?: () => void;
   shortcut?: string;
-  value?: string | number;
+  developmentOnly?: boolean;
   items?: TitlebarMenuItem[];
 };
 
 export type TitlebarMenu = {
   name: string;
+  action?: () => void;
   items: TitlebarMenuItem[];
 };
 
@@ -17,71 +20,32 @@ const titlebarMenus: TitlebarMenu[] = [
     items: [
       {
         name: "Exit",
-        action: "exit",
+        action: () => runDesktop(() => window.bunnies.quit()),
       },
     ],
   },
   {
     name: "Edit",
-    items: [
-      {
-        name: "Undo",
-        action: "undo",
-        shortcut: "Ctrl+Z",
-      },
-      {
-        name: "Redo",
-        action: "redo",
-        shortcut: "Ctrl+Y",
-      },
-      {
-        name: "__",
-      },
-      {
-        name: "Cut",
-        action: "cut",
-        shortcut: "Ctrl+X",
-      },
-      {
-        name: "Copy",
-        action: "copy",
-        shortcut: "Ctrl+C",
-      },
-      {
-        name: "Paste",
-        action: "paste",
-        shortcut: "Ctrl+V",
-      },
-      {
-        name: "Delete",
-        action: "delete",
-      },
-      {
-        name: "__",
-      },
-      {
-        name: "Select All",
-        action: "select_all",
-        shortcut: "Ctrl+A",
-      },
-    ],
+    action: () => runDesktop(() => window.bunnies.showEditMenu()),
+    items: [],
   },
   {
     name: "View",
     items: [
       {
         name: "Reload",
-        action: "reload",
+        action: () => runDesktop(() => window.bunnies.view("reload")),
         shortcut: "Ctrl+R",
       },
       {
         name: "Force Reload",
-        action: "force_reload",
+        action: () => runDesktop(() => window.bunnies.view("forceReload")),
         shortcut: "Ctrl+Shift+R",
       },
       {
-        name: "Toogle Developer Tools",
-        action: "toggle_devtools",
+        name: "Toggle Developer Tools",
+        developmentOnly: true,
+        action: () => runDesktop(() => window.bunnies.view("toggleDevTools")),
         shortcut: "Ctrl+Shift+I",
       },
       {
@@ -89,17 +53,17 @@ const titlebarMenus: TitlebarMenu[] = [
       },
       {
         name: "Actual Size",
-        action: "actual_size",
+        action: () => runDesktop(() => window.bunnies.view("resetZoom")),
         shortcut: "Ctrl+0",
       },
       {
         name: "Zoom In",
-        action: "zoom_in",
+        action: () => runDesktop(() => window.bunnies.view("zoomIn")),
         shortcut: "Ctrl++",
       },
       {
         name: "Zoom Out",
-        action: "zoom_out",
+        action: () => runDesktop(() => window.bunnies.view("zoomOut")),
         shortcut: "Ctrl+-",
       },
       {
@@ -107,7 +71,7 @@ const titlebarMenus: TitlebarMenu[] = [
       },
       {
         name: "Toggle Fullscreen",
-        action: "toggle_fullscreen",
+        action: () => runDesktop(() => window.bunnies.view("toggleFullscreen")),
         shortcut: "F11",
       },
     ],
@@ -117,12 +81,12 @@ const titlebarMenus: TitlebarMenu[] = [
     items: [
       {
         name: "Minimize",
-        action: "minimize",
+        action: () => runDesktop(() => window.bunnies.minimize()),
         shortcut: "Ctrl+M",
       },
       {
         name: "Close",
-        action: "exit",
+        action: () => runDesktop(() => window.bunnies.close()),
         shortcut: "Ctrl+W",
       },
     ],
@@ -132,9 +96,8 @@ const titlebarMenus: TitlebarMenu[] = [
     items: [
       {
         name: "Matheus Souza",
-        action: "open_url",
-        value: "https://github.com/matheusdearaujo",
-        shortcut: "@matheusdearaujo",
+        action: () => runDesktop(() => window.bunnies.openLink("author")),
+        shortcut: "@mxtheussouza",
       },
     ],
   },

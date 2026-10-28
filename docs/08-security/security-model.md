@@ -1,8 +1,9 @@
 # Modelo de segurança
 
 Data: 2026-10-28. Status: **Approved como modelo de controles e validação**.
-Aceito na conclusão da 1B com os ADRs. Nenhum controle novo foi implementado nesta
-etapa. Os [achados do legado](../01-audit/technical-debt.md) continuam abertos.
+Aceito na conclusão da 1B com os ADRs. Na 1B não havia novos controles implementados.
+O [registro do legado](../01-audit/technical-debt.md) é histórico; a implementação
+local e a cobertura parcial da 2B estão detalhadas ao final.
 Este modelo usa Electron conforme ADR-0001; mudança de stack exige decisão revisada.
 
 ## Ativos e fronteiras
@@ -141,3 +142,29 @@ Riscos permanecem: comprometimento do usuário/OS/broker; avisos de dependência
 diferenças de providers; limites de automação e corridas externas. Não houve pentest,
 teste TLS ou verificação dinâmica desses controles. Aprovar este modelo não resolve
 os achados nem autoriza instalar dependências, iniciar brokers ou publicar pacotes.
+
+## Implementação e verificação local da 2B
+
+SEC-01/02/03 receberam sandbox/context isolation, validação de janela/frame/URL e
+comandos desktop, ponte mínima e restrições de navegação/permissões. SEC-11 tem
+verificação inicial de recursos/CSP e smoke do pacote, sem concluir fuses/assinatura
+ou homologação de release. Detalhes e evidências em
+[fronteira desktop 2B](../07-testing/desktop-boundary-2b.md).
+
+CSP de produção usa default-src none, script/style self, connect-src none, imagens
+locais/data e frames/objetos/forms desativados. O protocolo serve somente os recursos
+da UI permitidos, confina realpath e devolve erros vazios. A sessão cancela rede
+Chromium/file; futuros transportes de broker serão no Node main, sujeitos a seus
+próprios controles TLS/limites. Essa política não bloqueia transporte Node por si só.
+
+Não expor copiar/colar/seletores nativos como comandos de IPC: o main abre um menu
+nativo e os roles exigem a escolha do usuário no SO. A ponte não pode ler clipboard
+ou receber URLs arbitrárias; openLink resolve somente o identificador fixo author.
+O preload expõe a API apenas no frame principal e após confirmar sandbox/context
+isolation no wrapper do Electron, sem depender de shims Node.
+
+SEC-04/05/06/07/08/09/10/12 e controles de dados de broker/credenciais permanecem
+para as etapas dos módulos; não foram homologados pela 2B. A automação e a inspeção
+local usam um artefato de teste, sem comprovar fuses de release, SOs não executados
+ou diálogos nativos. A conclusão da 2B foi posteriormente aprovada por “Aprovado”, com as limitações
+registradas; isso não homologa os demais controles ou autoriza a 3A.

@@ -118,3 +118,20 @@ macOS arm64. São cobertura inicial e parcial de T-10/T-12; não encerram esses
 cenários, o MVP ou a matriz multiplataforma. Não houve integração com RabbitMQ,
 credenciais, rede/TLS ou operação destrutiva. Consulte as
 [evidências da 2A](foundation-2a.md), incluindo resultados, falhas corrigidas e limites.
+
+## Evidências da fronteira desktop — Etapa 2B
+
+65 testes em oito arquivos cobrem políticas/recursos/sessão, validação e erros IPC,
+preload, tema, metadados pelo bridge e feedback de erro. O smoke passou no Electron
+real macOS arm64, incluindo ponte mínima, sandbox, CSP, rede/nav/popup, permissão
+Notification, recursos privados, janela estrangeira e duas recriações.
+
+A edição passa pelo menu nativo; o teste de seleção por teclado não homologa todas
+as escolhas do popup, clipboard ou comportamento nativo de cada SO. Não alterar
+o clipboard real do usuário para aprovar uma fixture de teste. O teste de eval
+desativa o bypass CSP que o CDP habilita por padrão.
+
+São evidências parciais de T-01/T-10/T-12; continuam pendentes integração RabbitMQ,
+SOs/CPUs não executados, acessibilidade completa e gates de release. CI preparada
+para smoke macOS após package, ainda sem execução remota. Ver
+[comandos, falhas corrigidas e limites](desktop-boundary-2b.md).

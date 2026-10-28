@@ -1,6 +1,6 @@
 import React from "react";
 import classNames from "classnames";
-import context from "../titlebarContextApi";
+import { runDesktop } from "@src/common/desktop";
 
 import ControlButton from "./ControlButton";
 
@@ -19,24 +19,24 @@ const WindowControls: React.FC<Props> = props => {
     <section
       className={classNames(
         "window-titlebar-controls",
-        `type-${props.platform}`,
+        `type-${props.platform === "darwin" ? "mac" : "windows"}`,
       )}
     >
       <ControlButton
         name="minimize"
-        onClick={() => context.minimize()}
+        onClick={() => runDesktop(() => window.bunnies.minimize())}
         path={minimizePath}
         title={props.tooltips ? "Minimize" : undefined}
       />
       <ControlButton
         name="maximize"
-        onClick={() => context.toggle_maximize()}
+        onClick={() => runDesktop(() => window.bunnies.toggleMaximize())}
         path={maximizePath}
         title={props.tooltips ? "Maximize" : undefined}
       />
       <ControlButton
         name="close"
-        onClick={() => context.exit()}
+        onClick={() => runDesktop(() => window.bunnies.close())}
         path={closePath}
         title={props.tooltips ? "Close" : undefined}
       />

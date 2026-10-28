@@ -325,3 +325,12 @@ Removidos loaders nativos/relocators/file-loader sem uso, configurações residu
 de Hot Loader/Refresh e maker RPM adiado. Sass e Less coexistem enquanto a UI legada
 for preservada. Detalhes das seis entradas de audit low/moderate e limites em
 [evidências da 2A](../07-testing/foundation-2a.md); versões exatas no manifesto/lock.
+
+## Implementação da matriz na 2B
+
+Instalado mini-css-extract-plugin 2.10.2 para a CSP de produção, com lock e instalação
+limpa verificados. Não foi necessário instalar Zod para o contrato plano desktop
+com comandos/argumentos fechados; avaliar schemas dos módulos quando surgirem.
+Electron 45 funcionou com preload sem cliente HMR/shims e sandbox ativo nos testes
+locais; isso não homologa os demais sistemas/CPUs. Persistem seis entradas de audit
+low/moderate no tooling, conforme [evidências da 2B](../07-testing/desktop-boundary-2b.md).

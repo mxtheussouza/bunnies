@@ -22,7 +22,8 @@ npm run smoke:package
 ```
 
 O pacote é gerado em `out/` para o SO/CPU local. O smoke abre esse executável com
-um perfil temporário, sem conectar ao RabbitMQ. Ele não homologa os outros sistemas
+um perfil temporário, sem conectar ao RabbitMQ. Inclui verificações da fronteira
+Electron, CSP, IPC e recriação da janela. Ele não homologa os outros sistemas
 ou a segurança de release. Não há publicação automática.
 
 Consultar [comandos e convenções](docs/06-development/coding-standards.md),
@@ -34,3 +35,5 @@ em [AGENTS.md](AGENTS.md).
 ## Licença
 
 [MIT](LICENSE).
+
+Resultados locais e limitações: [Etapa 2B](docs/07-testing/desktop-boundary-2b.md).

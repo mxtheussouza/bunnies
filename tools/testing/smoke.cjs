@@ -4,6 +4,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
 const { version } = require("../../package.json");
+const verifySecurity = require("./security.cjs");
 
 async function smoke() {
   const artifact = path.resolve(
@@ -55,8 +56,14 @@ async function smoke() {
     assert.equal(await realpath(runtime.userData), await realpath(userData));
     assert.deepEqual(errors, []);
     await page.screenshot({ path: path.resolve("out/smoke-package.png") });
+    const security = await verifySecurity(application, page);
     console.log(
-      JSON.stringify({ result: "passed", ...runtime, userData: "temporary" }),
+      JSON.stringify({
+        result: "passed",
+        ...runtime,
+        userData: "temporary",
+        security,
+      }),
     );
   } finally {
     try {

@@ -11,7 +11,7 @@ module.exports = {
     name: "Bunnies",
     executableName: "bunnies",
     // Set application copyright
-    appCopyright: "Copyright (C) 2023 Matheus Souza, @matheusdearaujo",
+    appCopyright: "Copyright (C) 2023 Matheus Souza, @mxtheussouza",
     // Set application icon
     ...(process.platform === "win32"
       ? { icon: path.join(rootDir, "assets/images/appIcon.ico") }
@@ -45,9 +45,9 @@ module.exports = {
     {
       name: "@electron-forge/plugin-webpack",
       config: {
-        // Fix content-security-policy error when image or video src isn't same origin
-        // Remove 'unsafe-eval' to get rid of console warning in development mode.
-        devContentSecurityPolicy: `default-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-inline' data:`,
+        // Development-only style injection/HMR; production CSP is served by the local protocol.
+        devContentSecurityPolicy:
+          "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src http://localhost:3000 ws://localhost:3000; object-src 'none'; base-uri 'none'; frame-src 'none'; frame-ancestors 'none'; form-action 'none'",
         // Ports
         port: 3000, // Webpack Dev Server port
         loggerPort: 9000, // Logger port
@@ -69,7 +69,8 @@ module.exports = {
               // Main Window
               // Preload
               preload: {
-                js: path.join(rootDir, "src/renderer/preload.tsx"),
+                js: path.join(rootDir, "src/preload/index.ts"),
+                config: path.join(rootDir, "tools/webpack/webpack.preload.js"),
               },
             },
           ],

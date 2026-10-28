@@ -6,6 +6,7 @@ module.exports = {
     rules,
   },
   plugins: plugins,
+  output: { publicPath: "/" },
   resolve: {
     extensions: [".js", ".ts", ".jsx", ".tsx", ".css"],
     alias: {

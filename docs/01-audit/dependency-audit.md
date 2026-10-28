@@ -6,8 +6,8 @@ recomendações e versões de destino pendentes de aprovação.
 
 ## Método e limites
 
-Foram lidos [package.json](../../package.json),
-[package-lock.json](../../package-lock.json) e [.nvmrc](../../.nvmrc). O lockfile v3
+Foram lidos [package.json](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/package.json),
+[package-lock.json](https://github.com/mxtheussouza/bunnies/blob/52077522486403a3d0351341c952ebb69e00b954/package-lock.json) e [.nvmrc](../../.nvmrc). O lockfile v3
 contém 910 entradas de pacotes e 750 nomes distintos, além da entrada raiz. Há três
 dependências de execução e 35 de desenvolvimento; os mapas da raiz do lockfile
 correspondem ao manifesto. `node_modules` está ausente: as versões resolvidas não
@@ -188,3 +188,10 @@ Na fundação, após aprovação de matriz e instalação, repetir a análise co
 efetiva, revisar alcance no build e pacote, executar checks e registrar o relatório.
 Priorizar atualização de dependências superiores; overrides transitivos ou troca de
 ferramentas precisam de justificativa. Nenhuma correção foi executada nesta etapa.
+
+## Navegação do registro histórico
+
+Os links de código acima apontam para o commit auditado, preservando o conteúdo dos
+achados mesmo após remoções/movimentações do legado. O status de remediação atual
+está nas [evidências da 2B](../07-testing/desktop-boundary-2b.md); o texto desta
+auditoria não é uma reavaliação do código atual.

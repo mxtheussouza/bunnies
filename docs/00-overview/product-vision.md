@@ -105,4 +105,14 @@ até comprovação por alvo. Salvar/selecionar não testa nem ativa conexão.
 
 Sem integração RabbitMQ, CA customizada ou sessão nesta subetapa. M01 e MVP ainda
 não completos. Contrato: [Connection Manager](../04-modules/01-connection-manager.md).
-A entrega e suas limitações serão submetidas à aprovação de conclusão antes de commit.
+Conclusão/commit da 4A.1 aprovados e registrados em `fe4a252`, com limites mantidos.
+
+## Guia e Ajuda offline — DOC.1
+
+Por solicitação explícita do proprietário, o [guia do usuário](../10-user-guide/README.md)
+explica funções reais, todos os campos do formulário, senhas, temas/menus e solução
+de problemas. A mesma fonte é incluída na Ajuda do aplicativo, acessível pela barra
+lateral sem internet. Funções de broker continuam identificadas como indisponíveis.
+O histórico vivo [PROJECTS_STATUS.md](../../PROJECTS_STATUS.md) passa a ser leitura
+e atualização obrigatórias em toda Task. Conclusão/commit DOC.1 aceitos por
+“Aprovado”, mantendo as indisponibilidades e limitações apresentadas.

@@ -1,0 +1,168 @@
+# Guia do usuário — Bunnies
+
+<!-- Gerado de guide.json por npm run docs:generate. Não editar este Markdown diretamente. -->
+
+Use este guia para organizar perfis locais de RabbitMQ e entender os controles disponíveis. O mesmo conteúdo está na aba Ajuda do aplicativo, sem precisar de internet.
+
+## Índice
+
+- [O que está disponível nesta versão](#disponibilidade)
+- [Primeiros passos e distribuição](#primeiros-passos)
+- [Criar um perfil local](#criar-perfil)
+- [Selecionar um perfil e recarregar a lista](#selecionar-e-recarregar)
+- [Editar um perfil e descartar alterações](#editar-e-cancelar)
+- [Remover um perfil local](#remover-perfil)
+- [Senhas, privacidade e encerramento](#senhas-e-privacidade)
+- [Temas, navegação e janela](#temas-e-navegacao)
+- [Menus e teclado](#menus-e-teclado)
+- [Resolver problemas](#resolver-problemas)
+- [Funções de broker ainda indisponíveis](#funcoes-de-broker)
+
+<a id="disponibilidade"></a>
+
+## O que está disponível nesta versão
+
+Esta é uma versão em desenvolvimento. Você já pode cadastrar, listar, selecionar, editar e remover perfis locais; usar temas; ajustar a janela e consultar a Ajuda. O Bunnies ainda não se conecta ao RabbitMQ.
+
+Salvar ou selecionar um perfil não testa endereços, certificados, usuário ou senha. Não inicia sessão e não altera recursos do broker. Os estados Sem sessão ativa, HTTPS não iniciado e AMQPS não iniciado são esperados.
+
+Visão geral, Filas, Exchanges e Publicar permanecem indisponíveis. Senhas protegidas salvas no dispositivo também estão desabilitadas; use somente nesta execução.
+
+<a id="primeiros-passos"></a>
+
+## Primeiros passos e distribuição
+
+O Bunnies é um aplicativo desktop para Windows, Linux e macOS. A validação local atual foi feita em macOS arm64; os demais sistemas e arquiteturas ainda precisam de homologação. Não existe versão web.
+
+Ainda não há instaladores publicados ou um fluxo de atualização automática. Se receber um pacote de desenvolvimento do responsável pelo projeto, confirme a compatibilidade com seu sistema e arquitetura antes de abrir. Este guia não representa uma homologação de instalador ou assinatura.
+
+1. Abra o aplicativo e acesse Conexões na barra lateral.
+2. Clique em Novo perfil e preencha os dados do seu ambiente. Os exemplos deste guia são fictícios; confirme os valores com o responsável pelo broker.
+3. Salve o perfil e selecione-o na lista para consultar o resumo. O aplicativo continuará sem sessão ativa.
+4. Abra Ajuda na barra lateral sempre que precisar revisar uma função. Em janela estreita, o ícone de ajuda continua disponível; Expandir navegação mostra os nomes dos destinos.
+
+<a id="criar-perfil"></a>
+
+## Criar um perfil local
+
+Um perfil reúne os endereços e a identificação de um ambiente. Ele fica neste dispositivo; não cria um broker, usuário, fila ou recurso no RabbitMQ.
+
+Em Conexões, clique em Novo perfil. Complete o formulário descrito a seguir e clique em Salvar perfil. Aguarde o resultado antes de repetir a operação.
+
+| Campo ou função | Como usar / para que serve | Exemplo fictício |
+| --- | --- | --- |
+| Nome do perfil | Use um nome que identifique claramente o ambiente. É obrigatório, tem limite de 120 e não aceita espaços no início ou fim nem caracteres de controle. | Equipe — Homologação |
+| Ambiente | Escolha Desenvolvimento, Homologação, Produção ou Outro. Produção aparece com texto e símbolo de alerta para ajudar a reconhecer o contexto; a escolha não muda permissões do broker. | Homologação |
+| Endpoint HTTPS | Informe a URL HTTPS do acesso administrativo, com host e porta corretos. É independente do endpoint AMQPS; pode incluir um prefixo de caminho. Limite de 2048. Não use usuário/senha na URL, espaços, barra invertida, query (?) ou fragmento (#). | https://broker.exemplo:15671 |
+| Endpoint AMQPS | Informe a URL AMQPS para mensageria, com host e porta corretos. Limite de 2048 e as mesmas restrições de credenciais, espaços, query e fragmento do HTTPS. Informe o endpoint separadamente; ele não é deduzido do HTTPS. | amqps://broker.exemplo:5671 |
+| Usuário | Informe o nome de usuário do broker, respeitando maiúsculas, minúsculas e espaços que façam parte dele. É obrigatório, tem limite de 256 e não aceita caracteres de controle. Salvar não cria o usuário nem valida suas permissões. | usuario_da_equipe |
+| Senha | No cadastro, escolha Informar senha ou Sem senha por enquanto. Na edição, escolha Manter senha atual, Substituir senha ou Remover senha. Essa seleção define se o próximo salvamento mantém, troca ou remove o segredo local. | — |
+| Armazenamento da senha | Quando Informar/Substituir senha estiver selecionado, use Somente nesta execução. A senha fica temporariamente no aplicativo e precisa ser redigitada após sair completamente. Protegida pelo sistema operacional permanece desabilitada enquanto a proteção do dispositivo não estiver comprovada. | — |
+| Nova senha | Digite a senha quando escolher Informar/Substituir senha. O campo é obrigatório nesse modo, tem limite de 4096 e não aceita o caractere NUL. O valor fica mascarado e é descartado do formulário após envio, inclusive quando salvar falha; redigite-o para tentar novamente. Nenhuma senha existente é preenchida de volta. | — |
+
+- Nome, endereços e usuário são armazenados localmente. A senha no modo em memória não é gravada no arquivo de perfis.
+- Há limite de 50 perfis e 2 MiB de configuração. Os limites de texto contam unidades de texto; alguns símbolos podem ocupar mais de uma.
+- Os números de porta dos exemplos não configuram o seu servidor. Confirme os endereços reais. CA customizada, teste TLS, autenticação e ativação de sessão ainda não estão disponíveis.
+
+<a id="selecionar-e-recarregar"></a>
+
+## Selecionar um perfil e recarregar a lista
+
+Clique em um perfil para ver nome, ambiente, endpoints, usuário e situação da senha. Selecionado identifica apenas o item da tela; não significa Conectado.
+
+Disponível somente nesta execução significa que o aplicativo ainda mantém uma senha temporária. Não disponível nesta execução significa que você deve informar uma senha ao editar, se quiser mantê-la na execução atual. Nenhuma dessas indicações comprova autenticação no broker.
+
+Recarregar lista lê novamente os perfis locais. Não consulta o RabbitMQ e não é um teste de conectividade. A seleção pode desaparecer se o perfil tiver sido removido. Alterações externas na configuração invalidam senhas transitórias para evitar reaproveitá-las em um perfil modificado.
+
+<a id="editar-e-cancelar"></a>
+
+## Editar um perfil e descartar alterações
+
+Selecione o perfil e clique em Editar perfil. O formulário mostra os dados locais, sem revelar a senha atual. Ajuste os campos e clique em Salvar perfil.
+
+Manter senha atual preserva o segredo existente, se houver. Essa opção não recupera uma senha perdida ao encerrar o aplicativo. Substituir senha exige digitar uma nova senha e escolher o armazenamento. Remover senha só remove o segredo local após salvar; não altera a senha do usuário no RabbitMQ.
+
+1. Para desistir, clique em Cancelar ou pressione Escape. Se houver alterações, o aplicativo oferece Continuar editando ou Descartar alterações.
+2. A senha digitada é descartada já na tentativa de fechar. Mesmo ao escolher Continuar editando, será necessário redigitá-la se você quiser substituí-la.
+3. Descartar alterações fecha o formulário sem salvar os dados editados. Após salvar ou fechar, você pode voltar a outras páginas. O formulário aberto mantém o foco dentro dele.
+
+- Antes de usar Recarregar ou Forçar recarga no menu Visualizar, salve o que desejar manter. Recarregar a janela descarta formulários não salvos; a confirmação de descarte do formulário não protege contra toda recarga ou encerramento.
+
+<a id="remover-perfil"></a>
+
+## Remover um perfil local
+
+Selecione o perfil e clique em Remover perfil. Confira nome, ambiente e endpoints no diálogo do sistema. Cancelar é a opção padrão; confirme Remover perfil somente se quiser excluí-lo deste dispositivo.
+
+A remoção apaga o cadastro local e o segredo associado. Não remove filas, mensagens, exchanges, usuários ou qualquer recurso do broker. Não há desfazer ou lixeira de perfis; para voltar a usá-lo, cadastre-o novamente.
+
+Se a configuração mudar enquanto o diálogo estiver aberto, a remoção poderá falhar com conflito. Recarregue a lista e confira novamente o perfil, sem presumir que ele foi removido.
+
+<a id="senhas-e-privacidade"></a>
+
+## Senhas, privacidade e encerramento
+
+Nesta versão, a senha é mantida somente em memória durante a execução. Após reiniciar completamente o aplicativo, os dados do perfil continuam salvos, mas a senha precisa ser informada novamente. A senha digitada não é exibida no resumo nem devolvida para edição.
+
+No macOS, fechar a janela pode manter o aplicativo em execução e conservar as senhas temporárias. Para encerrar o processo, use Arquivo → Sair. Nos outros sistemas, fechar a última janela encerra o aplicativo.
+
+O campo mascarado não impede que alguém com acesso ao seu computador ou processo capture dados. Evite incluir senhas em nomes, endereços, capturas de tela ou relatos de problemas. A configuração de perfis contém nomes, endpoints e usuários; não trate esses metadados como um cofre criptografado.
+
+Se um perfil já contiver uma senha protegida salva, a indicação não garante que ela esteja disponível nesta execução. Manter preserva esse registro sem mostrar seu conteúdo; a proteção real continua indisponível nesta versão.
+
+<a id="temas-e-navegacao"></a>
+
+## Temas, navegação e janela
+
+Use Tema na barra lateral para escolher Sistema, Claro ou Escuro. Sistema acompanha a preferência de cores do sistema operacional. A escolha é lembrada neste dispositivo; se o armazenamento da preferência não estiver disponível, você ainda poderá usar o tema durante a execução.
+
+Ao reduzir a janela, a barra lateral fica compacta e mostra ícones. Passe o ponteiro ou foque um ícone para identificar a ação. Expandir navegação ou Abrir preferências de tema abre um painel com nomes e seletor de tema; Escape fecha o painel.
+
+Ajuda abre este guia local, sem navegador ou internet. O índice leva aos tópicos sem trocar a página da aplicação. Voltar ao índice devolve o foco ao primeiro tópico. Sobre o Bunnies mostra versão, licença e autor; Conhecer o autor abre a página do autor no navegador externo.
+
+<a id="menus-e-teclado"></a>
+
+## Menus e teclado
+
+Use Tab e Shift+Tab para percorrer controles e Enter ou Espaço para acionar botões. Pular para o conteúdo leva ao conteúdo principal. O foco visível indica o controle atual; formulários e painéis abertos contêm a navegação por foco.
+
+Ctrl+5 no Windows/Linux ou Cmd+5 no macOS abre Conexões quando você não está digitando em um campo. O atalho não fecha o formulário modal de perfil.
+
+Arquivo → Sair encerra o aplicativo. Editar abre o menu nativo de edição para ações como copiar, colar e selecionar texto no controle em foco.
+
+Visualizar oferece Recarregar, Forçar recarga, Tamanho real, Aumentar zoom, Diminuir zoom e Alternar tela cheia. Janela oferece Minimizar e Fechar janela. Também existem botões na barra superior para minimizar, maximizar/restaurar e fechar.
+
+Os atalhos mostrados ao lado de alguns itens de menu não garantem um atalho global implementado. Para essas ações, use os itens de menu; os atalhos de edição nativos dependem do sistema. Controles nativos, leitores de tela e outras plataformas ainda precisam de revisão manual completa.
+
+<a id="resolver-problemas"></a>
+
+## Resolver problemas
+
+Leia o resultado de cada operação. Um erro não significa que os dados foram salvos ou removidos. Se o estado ficar incerto, use Recarregar lista para conferir o arquivo local antes de tentar outra alteração.
+
+| Situação | O que fazer |
+| --- | --- |
+| Novo perfil está desabilitado | Aguarde o carregamento ou a operação atual. Confira se há erro de leitura ou se já existem 50 perfis. Em caso de arquivo inválido, o cadastro fica bloqueado para preservar o original. |
+| Revise os campos, protocolos e limites do perfil | Confira nome sem espaços nas pontas, campos obrigatórios, protocolos https:// e amqps://, limites e ausência de credenciais/query/fragmento nas URLs. Se estiver substituindo a senha, digite-a novamente antes de salvar. |
+| Os perfis foram alterados ou estão em uso | Feche ou descarte a edição, recarregue a lista e confira os dados antes de editar novamente. Se outra instância estiver gravando, aguarde. Se persistir após encerrar e reabrir o app, solicite suporte; não apague arquivos de bloqueio por tentativa. |
+| Arquivo inválido ou versão desconhecida | O aplicativo preserva o original e não faz reset automático. Não exclua o arquivo para contornar o erro. Solicite suporte ao responsável pelo projeto e não compartilhe senhas ou a configuração integral sem revisar os dados. |
+| Não foi possível acessar ou gravar os perfis | Confira espaço livre e acesso à pasta de dados do aplicativo. Recarregue a lista para conferir o estado. Se persistir, solicite suporte; não presuma que a gravação ocorreu. |
+| Senha desapareceu após reiniciar | É esperado no modo Somente nesta execução. Selecione o perfil, abra Editar perfil, escolha Substituir senha e informe-a novamente. Fechar só a janela no macOS pode não encerrar o processo. |
+| Proteção pelo sistema indisponível | Use Somente nesta execução. A opção persistente está desabilitada até validação da proteção por plataforma; não é necessário alterar configurações de segurança ou certificados para cadastrar perfis locais. |
+| Sem sessão ativa mesmo após salvar | É esperado. Os perfis são locais e os testes de conexão e a ativação de sessão ainda não estão implementados. Recarregar a lista ou trocar a senha não inicia conexão. |
+| Texto ou botões não cabem na janela | Use a rolagem do conteúdo ou do formulário. Ajuste o tamanho da janela ou use Visualizar → Tamanho real para restaurar o zoom. O painel compacto permite acessar os nomes dos destinos. |
+
+<a id="funcoes-de-broker"></a>
+
+## Funções de broker ainda indisponíveis
+
+Os itens a seguir descrevem o propósito planejado das funções, não instruções de uso de funções já entregues. Seus formulários e efeitos serão documentados junto de cada implementação aprovada.
+
+| Campo ou função | Como usar / para que serve | Exemplo fictício |
+| --- | --- | --- |
+| Testar conexão e ativar sessão | Verificar acesso HTTPS e AMQPS, certificados, autenticação e contexto de trabalho. Não há botão operacional, configuração de CA ou sessão ativa nesta versão. | — |
+| Visão geral e monitoramento | Apresentar informações e métricas do broker com estado e atualidade claros. Ainda não há métricas reais, gráficos ou histórico no aplicativo. | — |
+| Filas | Listar, criar e inspecionar filas e, em operações específicas futuras, excluir ou executar purge com confirmação. Nenhuma dessas operações está disponível agora. | — |
+| Exchanges e bindings | Organizar exchanges, relacionamentos de roteamento e routing keys. Ainda não existem formulários ou operações implementados. | — |
+| Publicar mensagens | Preparar payloads e propriedades para publicação com resultado explícito. Publicação, consumo e inspeção de mensagens não estão disponíveis; inspeção/consumo ficam fora do MVP aprovado. | — |
+| Administração avançada e produtividade | Usuários, permissões, policies, operações em lote, favoritos e ferramentas avançadas dependem de planejamento e entregas posteriores. Não estão disponíveis nesta versão. | — |

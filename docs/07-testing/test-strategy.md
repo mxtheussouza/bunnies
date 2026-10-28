@@ -190,3 +190,17 @@ sequencial. Não usar o userData real nem brokers externos. Revisão visual dos
 formulários/resumos nos dois temas e zoom não certifica WCAG. Menu de tema e
 confirmação nativa visual requerem revisão manual por alvo. Resultados efetivos,
 checksum e pendências: [evidências 4A.1](profiles-4a1.md).
+
+## Histórico/guia/Ajuda — DOC.1
+
+Autorizada pelo pedido direto do proprietário após a aprovação 4A.1. Testes de
+componente cobrem campos, disponibilidade real, ciclo de senha, índice/foco/retorno,
+URL fixa e destino local sem consulta de metadados. `docs:check` verifica Markdown
+contra a fonte JSON; caso negativo executado em cópia temporária, sem modificar o
+guia do usuário real.
+
+Smoke base agora também verifica Ajuda com contexto offline após reload: todo o
+conteúdo, 11 tópicos, temas, teclado, painel compacto e zoom 200%. O modo offline é
+restaurado antes das negativas de segurança para não mascarar bloqueios reais.
+Smoke de perfis reexecutado separadamente. Não homologa leitores de tela, controles
+nativos/SOs adicionais, brokers ou release. [Resultados](help-doc1.md).

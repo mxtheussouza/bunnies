@@ -115,3 +115,22 @@ nativa são simuladas exclusivamente no main pelo harness, sem API de teste no
 produto; isso não homologa o diálogo visual do SO. Não rodar os dois smokes em
 paralelo, pois foco de janelas pode interferir nas verificações.
 Ver [M01](../04-modules/01-connection-manager.md) e [4A.1](../07-testing/profiles-4a1.md).
+
+## Histórico vivo e guia do usuário
+
+Antes de qualquer Task, ler [PROJECTS_STATUS.md](../../PROJECTS_STATUS.md) junto do
+AGENTS. Registrar cada Task/fase/alteração: escopo/autorizações, mudanças, decisões,
+resultados realmente executados, pendências e próxima ação. Preservar histórico e
+sincronizar o resumo com current-stage/progress; não incluir segredos.
+
+Ao mudar uma funcionalidade/formulário, atualizar
+`docs/10-user-guide/guide.json`, fonte única usada pela Ajuda React offline. Executar
+`npm run docs:generate` e revisar o [Markdown gerado](../10-user-guide/README.md).
+Não editar o Markdown diretamente. `npm run docs:check` confere sincronismo e faz
+parte de `npm run check`, inclusive na CI já existente, sem modificar o workflow.
+
+A Ajuda não carrega páginas/HTML remoto nem usa hashes. Não instalar um parser ou
+expor filesystem/IPC para exibi-la. `tools/testing/help.cjs`, integrado ao smoke
+base, confere todo o conteúdo no executável em modo offline e navegação/foco/zoom.
+Resultados locais/capturas: `out/help-doc1-results.json` e `out/help-doc1-*.png`.
+[Evidências DOC.1](../07-testing/help-doc1.md).

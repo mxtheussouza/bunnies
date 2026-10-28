@@ -10,6 +10,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
 const { version } = require("../../package.json");
+const verifyHelp = require("./help.cjs");
 const verifySecurity = require("./security.cjs");
 
 const entry = "bunnies://app/app_window/index.html";
@@ -459,6 +460,7 @@ async function smoke() {
     assert.deepEqual(errors, []);
     assert.deepEqual(unexpectedRequests, []);
     await page.screenshot({ path: "out/smoke-package.png" });
+    const help = await verifyHelp(page, window, { resize, captureNative });
     const security = await verifySecurity(application, page);
     const result = {
       result: "passed",
@@ -480,11 +482,26 @@ async function smoke() {
         layout,
       },
       security,
+      help,
       measuredContrast,
     };
     await writeFile(
       "out/ui-3b-results.json",
       JSON.stringify(result, null, 2) + "\n",
+    );
+    await writeFile(
+      "out/help-doc1-results.json",
+      JSON.stringify(
+        {
+          result: "passed",
+          ...help,
+          platform: runtime.platform,
+          arch: runtime.arch,
+          security,
+        },
+        null,
+        2,
+      ) + "\n",
     );
     console.log(JSON.stringify(result));
   } finally {

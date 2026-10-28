@@ -350,3 +350,28 @@ A restauração/rotação do adapter foi testada com fakes; não foi habilitada 
 nem ligada a transportes inexistentes. Não há provider real comprovado, senha
 persistida em texto puro, API genérica ou alteração das políticas CSP/protocolo/sandbox.
 Resultados: [4A.1](../07-testing/profiles-4a1.md).
+
+## Ajuda local e documentação — DOC.1
+
+Solicitada diretamente pelo proprietário após aprovar a 4A.1 (`fe4a252`). A entrega
+DOC.1 implementa um terceiro destino local, Ajuda, sem novas APIs privilegiadas.
+`src/renderer/pages/Help.tsx` importa somente o JSON versionado
+`docs/10-user-guide/guide.json`. Renderiza texto, listas e definições com React;
+nenhum parser HTML/Markdown ou conteúdo remoto no renderer.
+
+O gerador `tools/docs/user-guide.cjs` produz `docs/10-user-guide/README.md`, linkado
+no README principal. `docs:check`, incluído em `check`, falha se houver divergência.
+Uma fonte mantém conteúdo equivalente no repositório e no executável offline.
+Alterar funções/formulários exige revisar o guia e regenerá-lo. O índice do app
+usa botões, foco e scroll; a URL não recebe hash ou caminho novo.
+
+Navegação/ícone seguem tokens/componentes existentes. Informações sobre recursos
+indisponíveis foram ajustadas no sidebar/Sobre para refletir o estado real.
+Sem mudança de main/preload/shared/IPC, CSP, protocolo, sandbox ou dependências.
+O JSON é incluído no bundle; não é servido por um endpoint nem copiado todo o
+acervo de engenharia para o pacote. Histórico vivo fica na raiz como
+[PROJECTS_STATUS.md](../../PROJECTS_STATUS.md), leitura/atualização exigida no AGENTS.
+[Evidências](../07-testing/help-doc1.md).
+
+Conclusão/commit DOC.1 aceitos posteriormente por “Aprovado”, mantendo os limites
+registrados. Esse aceite não autoriza integração RabbitMQ ou outra fase.

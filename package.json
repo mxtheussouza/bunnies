@@ -18,8 +18,10 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,cjs,mts,json,yml,yaml,scss,less,html}\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run format:check",
-    "smoke:package": "node tools/testing/smoke.cjs"
+    "check": "npm run typecheck && npm run lint && npm run test && npm run format:check && npm run docs:check",
+    "smoke:package": "node tools/testing/smoke.cjs",
+    "docs:generate": "node tools/docs/user-guide.cjs --write",
+    "docs:check": "node tools/docs/user-guide.cjs --check"
   },
   "keywords": [
     "rabbit",

@@ -89,7 +89,7 @@ describe("offline application shell", () => {
     expect(queues.getAttribute("aria-describedby")).toBe("sidebar-unavailable");
     expect(
       document.getElementById("sidebar-unavailable")?.textContent,
-    ).toContain("Ative uma conexão");
+    ).toContain("ainda não estão disponíveis");
     expect(location.href).toBe(url);
   });
   it("navigates locally to About, presents real metadata and returns focus to the heading", async () => {
@@ -118,6 +118,33 @@ describe("offline application shell", () => {
     await user.tab();
     await user.keyboard("{Enter}");
     expect(document.activeElement).toBe(screen.getByRole("main"));
+    expect(location.href).toBe(url);
+  });
+  it("opens Help as a local destination, focuses its heading and keeps broker pages unavailable", async () => {
+    renderApp();
+    const user = userEvent.setup();
+    const url = location.href;
+    const help = screen.getByRole("button", { name: "Ajuda" });
+    help.focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Ajuda");
+    expect(document.activeElement).toBe(
+      screen.getByRole("heading", { level: 1 }),
+    );
+    expect(help.getAttribute("aria-current")).toBe("page");
+    expect(
+      screen.getByRole("article", { name: "Guia do usuário — Bunnies" }),
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("button", { name: "Filas" })
+        .getAttribute("aria-disabled"),
+    ).toBe("true");
+    expect(getInfo).not.toHaveBeenCalled();
+    await user.keyboard("{Control>}5{/Control}");
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
+      "Conexões",
+    );
     expect(location.href).toBe(url);
   });
 });

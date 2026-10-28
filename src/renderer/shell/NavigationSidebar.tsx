@@ -4,7 +4,7 @@ import { useThemeContext } from "@src/common/hooks";
 import type { ThemePreference } from "@src/providers/ThemeMode";
 import Icon from "../components/Icon";
 
-export type LocalPage = "connections" | "about";
+export type LocalPage = "connections" | "about" | "help";
 type Props = {
   page: LocalPage;
   onNavigate(page: LocalPage): void;
@@ -60,14 +60,14 @@ export default function NavigationSidebar({
               {unavailable && <Icon name="lock" className="nav-lock" />}
               <span className="nav-tooltip" aria-hidden="true">
                 {label}
-                {unavailable ? " · Requer conexão ativa" : ""}
+                {unavailable ? " · Ainda indisponível" : ""}
               </span>
             </button>
           );
         })}
       </nav>
       <p id={`${id}-unavailable`} className="navigation-reason">
-        Ative uma conexão para acessar os recursos do broker.
+        Os recursos do broker ainda não estão disponíveis nesta versão.
       </p>
       <div className="sidebar-preferences">
         <div className="theme-picker">
@@ -101,6 +101,19 @@ export default function NavigationSidebar({
             </span>
           </button>
         )}
+        <button
+          type="button"
+          className={`nav-button ${page === "help" ? "nav-button--active" : ""}`}
+          aria-label="Ajuda"
+          aria-current={page === "help" ? "page" : undefined}
+          onClick={() => onNavigate("help")}
+        >
+          <Icon name="help" />
+          <span className="nav-label">Ajuda</span>
+          <span className="nav-tooltip" aria-hidden="true">
+            Ajuda
+          </span>
+        </button>
         <button
           type="button"
           className={`nav-button ${page === "about" ? "nav-button--active" : ""}`}

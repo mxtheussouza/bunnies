@@ -604,3 +604,41 @@ Conferidos os hashes dos 41 arquivos apresentados antes da sincronização do ac
 sem implementação adicional na 4A.1. Resultados/checksum apresentados mantidos,
 sem repetir testes funcionais por mudança documental. A mesma mensagem autoriza
 uma Task separada de histórico vivo/guia/Ajuda; não autoriza 4A.2 ou push.
+
+## DOC.1 — histórico vivo, guia do usuário e Ajuda offline
+
+Após “Aprovado!” para conclusão/commit da 4A.1, o proprietário solicitou explicitamente
+PROJECTS_STATUS vivo, leitura/atualização no AGENTS e guia no README/no aplicativo.
+A 4A.1 foi registrada em `fe4a252`; sua implementação apresentada foi preservada.
+DOC.1 é entrega separada, executada por essa autorização direta, sem iniciar 4A.2.
+
+Criados histórico vivo e regras obrigatórias, guia JSON com 11 tópicos, gerador
+Markdown e docs:check integrado ao check. Ajuda React usa a mesma fonte offline,
+sem HTML arbitrário/URL nova/rede/IPC/dependências. Navegação/ícone/estado de
+indisponibilidade e Sobre acompanham os componentes aprovados.
+
+Check passou com 133 testes em 18 arquivos; package, smoke base com Ajuda offline
+completa/foco/teclado/painel/zoom e smoke de perfis passaram em macOS arm64.
+Checagem negativa de Markdown divergente passou em cópia temporária. Capturas dos
+dois temas/zoom revisadas. [Evidências DOC.1](../07-testing/help-doc1.md).
+Limites de provider/nativos/assistivas/outros alvos e gates de release mantidos.
+Conclusão/commit DOC.1 pendentes; nenhum push. Detalhes de cada bloco passam a ser
+registrados em [PROJECTS_STATUS.md](../../PROJECTS_STATUS.md), sem apagar este histórico.
+
+Conferência DOC.1: 37 Markdown, 279 links locais, 99 tabelas e 11 âncoras válidos; 47 arquivos protegidos preservados. Index vazio, HEAD `fe4a252`; sem commit DOC.1/push. Registro detalhado no PROJECTS_STATUS.
+
+### DOC.1 — conclusão e commit aprovados
+
+O proprietário respondeu **“Aprovado”** ao pedido explícito de conclusão DOC.1 e do
+commit `feat(help): add offline user guide and project status tracking`.
+Conferidos os 27 arquivos apresentados e o checksum do ASAR, preservados antes da
+sincronização documental do aceite. Código/guia/ferramentas não alterados; resultados
+de 133 testes/18 arquivos, check/package/smokes e caso negativo mantidos, sem nova
+execução funcional por mudança apenas documental.
+
+PROJECTS_STATUS, instruções e registros sincronizados. Este registro integra o
+commit aprovado; seu hash pode ser consultado no Git, com pai `fe4a252`.
+Limitações anteriores mantidas; sem push ou execução da 4A.2. Nova etapa exige
+contrato/aceite próprios, sem repetir o aceite já concedido da DOC.1.
+
+Conferência do aceite DOC.1: docs:check aprovado, 37 Markdown/280 links locais/99 tabelas/11 âncoras válidos e whitespace conferido. Código/guia/ferramentas apresentados preservados; nenhuma repetição funcional ou nova fase.

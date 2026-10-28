@@ -2,7 +2,8 @@
 
 Data: 2026-10-28. Status: Etapas 0, 1A, 1B, 2A, 2B, 3A e 3B concluídas e aprovadas;
 sete ADRs e D3A-01–08 aceitos. Conclusão/commit da 3B aprovados por “Aprovado”.
-4A.1 concluída e aprovada por “Aprovado!”; commit autorizado. 4A.2 sem autorização.
+4A.1 concluída/aprovada e registrada em `fe4a252`. DOC.1 concluída/aprovada por
+“Aprovado”; commit autorizado. 4A.2 sem autorização.
 
 ## Sequência proposta
 
@@ -16,6 +17,7 @@ sete ADRs e D3A-01–08 aceitos. Conclusão/commit da 3B aprovados por “Aprova
 | 3A | Navegação, tokens e componentes para aprovação | Concluída e aprovada; D3A-01–08 Accepted e commit autorizado |
 | 3B | Interface base acessível, temas e estados | Concluída e aprovada; commit autorizado por “Aprovado” |
 | 4A.1 | Perfis locais e proteção condicionada de credenciais | Concluída e aprovada; commit autorizado |
+| DOC.1 | Histórico vivo, guia e Ajuda offline | Concluída e aprovada por “Aprovado”; commit autorizado |
 | 4A.2 | Testes HTTPS/AMQPS, CA customizada e ciclo de sessão | Proposta; contrato e autorização próprios pendentes |
 | 4B | Management API, capacidades e consultas de leitura | Proposta |
 | 5 | Filas e proteção das operações destrutivas | Proposta |
@@ -483,3 +485,37 @@ limitação prevista no ADR; qualquer alternativa arquitetural exige decisão pr
 em todos os alvos, conforme alternativa aprovada; não houve acesso ao cofre real.
 Conclusão e commit aprovados por “Aprovado!”. A 4A.2 continua dependente de contrato e
 autorização próprios, sem execução automática após o aceite desta entrega.
+
+## Contrato autorizado — DOC.1: histórico vivo, guia e Ajuda offline
+
+Status: **concluída e aprovada por “Aprovado”; commit autorizado**.
+Execução autorizada diretamente pela mensagem “Aprovado! Quero também…” após a
+4A.1. Conclusão e commit posteriormente aceitos por “Aprovado”; limitações
+apresentadas mantidas. O aceite não autoriza a 4A.2.
+
+| Campo | Escopo autorizado |
+| --- | --- |
+| Identificador/nome | DOC.1 — Histórico vivo, guia do usuário e Ajuda offline |
+| Objetivo | Registrar toda Task e oferecer instruções de uso no README e no app instalado |
+| Justificativa | Pedido explícito do proprietário; perfis locais e formulários precisam de orientação acessível sem repositório/rede |
+| Escopo | PROJECTS_STATUS.md central, leitura/atualização obrigatórias no AGENTS, guia PT-BR por funcionalidade/formulário e destino Ajuda na navegação existente |
+| Tarefas | Inventariar uso real; escrever fonte única estruturada; gerar Markdown e checar sincronismo; exibir conteúdo sem HTML arbitrário; índice local e foco/teclado; documentar/validar/registrar resultados |
+| Módulos | Governança, M01/documentação, M08/navegação local; sem novos casos de uso de broker |
+| Arquivos previstos | PROJECTS_STATUS.md, AGENTS.md, README.md, docs/10-user-guide, tools/docs, src/renderer/pages/Help.tsx e estilos; shell/sidebar/ícone; testes e tools/testing; docs de arquitetura/navegação/desenvolvimento/testes/estado/progresso |
+| Dependências | Stack instalada; JSON/React e APIs Node já disponíveis; nenhuma nova dependência ou acesso remoto |
+| Riscos | Documentar recurso inexistente, divergência entre guia/app, link por hash quebrar URL fixa, perda de acessibilidade/scroll; mitigar por fonte única/checagens/UI local |
+| Aceitação | Histórico atualizado e exigido no AGENTS; README aponta guia completo; Ajuda inclui o mesmo conteúdo offline e campos atuais; navegação/foco/temas/reflow funcionam sem mudar URL ou IPC; testes/check/package/smokes pertinentes passam com limitações registradas |
+| Testes | Checar conteúdo/sincronização e links; componente por navegação/teclado; check; package/smoke Ajuda offline e regressões base/perfis; inspeção visual local |
+| Resultado | Guia utilizável de funções reais e Ajuda empacotada; histórico vivo com tarefas/decisões/pendências/testes |
+| Documentação | Atualizar PROJECTS a cada bloco/Task; sincronizar demais referências; não avançar 4A.2 ou commit desta Task sem aceite |
+
+Escolha de implementação: conteúdo JSON local estruturado como fonte única,
+Markdown gerado sem parser HTML e React sem dangerouslySetInnerHTML. Índice da
+Ajuda usa botões/foco, preservando a URL canônica; não abre páginas remotas. O guia
+informa limites e recursos indisponíveis. Sem alteração da stack, identidade ou
+fronteira privilegiada.
+
+Aprovação DOC.1: “Aprovado” aceitou a conclusão e o commit
+`feat(help): add offline user guide and project status tracking`.
+[Estado e histórico vivo](../../PROJECTS_STATUS.md) sincronizados; sem nova
+implementação, push ou avanço de etapa neste aceite.

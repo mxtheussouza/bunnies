@@ -49,14 +49,14 @@ operação destrutiva só podem usar brokers/recursos isolados e reproduzíveis.
 
 | Módulo | Status | Documento especializado planejado | Pendências específicas |
 | --- | --- | --- | --- |
-| M01 | CRUD local 4A.1 aprovado; sem rede/sessão | [Connection Manager](01-connection-manager.md) | Aprovação final; provider real; CA/autenticação; timeout/reconexão |
+| M01 | CRUD local 4A.1 aprovado; sem rede/sessão | [Connection Manager](01-connection-manager.md) | Provider real; CA/autenticação; timeout/reconexão |
 | M02 | Planejado; não implementado | `02-dashboard.md` | Conjunto de métricas; fonte, atualização e layout |
 | M03 | Planejado; não implementado | `03-queue-management.md` | Catálogo de argumentos/tipos; confirmações e conflitos |
 | M04 | Planejado; não implementado | `04-exchange-management.md` | Tipos/plugins; identidade de binding; restrições de recursos |
 | M05 | Planejado; não implementado | `05-message-management.md` | Propriedades/headers; limites; confirms e semântica de resultado |
 | M06 | Planejado; não implementado | `06-administration.md` | Matriz de permissão/capacidade e recorte pós-MVP |
 | M07 | Planejado; não implementado | `07-monitoring.md` | Frequência, backoff, retenção em memória e diagnóstico |
-| M08 | Temas/teclado base na 3B; demais ferramentas planejadas | `08-productivity-tools.md` | Homologação por SO; privacidade e prioridade das ferramentas posteriores |
+| M08 | Temas/teclado 3B; Ajuda offline DOC.1 aprovada; demais ferramentas planejadas | `08-productivity-tools.md` | Homologação por SO; privacidade e prioridade das ferramentas posteriores |
 
 Os oito documentos especializados não foram criados na 1A ou 1B; o planejamento
 atual detalha requisitos e contratos transversais. Serão criados quando necessário e autorizado; cada
@@ -124,3 +124,11 @@ M01 ganhou contrato especializado e implementação local na 4A.1, autorizada po
 Não declara M01/MVP completos; todos os providers reais continuam sem habilitação.
 [Resultados e limitações](../07-testing/profiles-4a1.md). Os outros sete documentos
 individuais continuam planejados e não foram criados sem necessidade/autorização.
+
+DOC.1 acrescenta Ajuda local ao M08 e documentação de uso do M01; não acrescenta
+operações de broker. [Guia do usuário](../10-user-guide/README.md) e
+[evidências](../07-testing/help-doc1.md). Demais documentos especializados permanecem
+sujeitos à necessidade/contrato de suas etapas.
+
+Conclusão/commit DOC.1 aprovados por “Aprovado”; nenhuma funcionalidade de broker
+ou homologação pendente foi autorizada/resolvida por esse aceite.

@@ -15,9 +15,9 @@ export default function About() {
         Mais clareza para trabalhar com RabbitMQ.
       </p>
       <p>
-        Aplicativo desktop para administração e observabilidade de brokers. A
-        interface base está disponível; conexões e operações de broker ainda não
-        estão disponíveis nesta versão.
+        Aplicativo desktop para administração e observabilidade de brokers. Você
+        pode organizar perfis locais e consultar a Ajuda. Conectividade e
+        operações de broker ainda não estão disponíveis nesta versão.
       </p>
       <dl className="about-details">
         <div>

@@ -234,3 +234,15 @@ O painel compacto usa dialog HTML com contenção de foco e Escape/retorno ao ga
 Isso não implementa confirmações destrutivas do main. Os fluxos de broker acima
 continuam requisitos aprovados para as próximas etapas. Ver
 [evidências e limites](../07-testing/interface-3b.md); conclusão/commit da 3B aprovados.
+
+## Incremento autorizado DOC.1 — Ajuda
+
+O pedido do proprietário após o aceite 4A.1 autorizou Ajuda na barra lateral,
+junto de Sobre/tema, preservando os cinco destinos principais. Ajuda é destino
+local adicional, com índice e tópicos offline; sem sessão, rede ou alteração da
+URL canônica. Abrir foca h1; selecionar tópico foca seu h2; Voltar ao índice foca
+o primeiro tópico. Painel compacto oferece a mesma entrada e fecha ao navegar.
+
+Campos/formulários são documentados a partir do uso real; recursos ainda ausentes
+ficam claramente identificados. O formulário modal de perfil continua bloqueando
+navegação externa e atalho durante edição. Fonte e fluxo: [guia do usuário](../10-user-guide/README.md).

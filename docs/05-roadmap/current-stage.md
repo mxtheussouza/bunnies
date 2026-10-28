@@ -1,47 +1,50 @@
 # Estado atual do projeto
 
-Atualizado em: 2026-10-28.
+Atualizado em: 2026-10-28. Ler também o histórico vivo
+[PROJECTS_STATUS.md](../../PROJECTS_STATUS.md) antes de toda Task; atualizá-lo em
+cada alteração/fase e registrar resultados reais.
 
 | Campo | Estado |
 | --- | --- |
-| Etapa atual | 4A.1 — Perfis locais e proteção de credenciais |
-| Status | Concluída e aprovada por “Aprovado!”; commit autorizado |
-| Última etapa concluída | 4A.1 — Perfis locais, aprovada |
-| Último commit | eb535d7 feat(desktop): implement application shell and themes |
-| Decisões aprovadas | ADRs 0001–0007, requisitos/MVP/limites, D3A-01–08 e contrato 4A.1 |
-| Decisões pendentes | Conclusão da Task adicional histórico/guia/Ajuda; contrato/autorização da 4A.2 |
-| Tarefas concluídas | CRUD local/JSON/segredo em memória, proteção condicionada, IPC/UI, testes e documentação |
-| Tarefas pendentes | Registrar commit aprovado; executar Task adicional em entrega própria |
-| Problemas conhecidos | Seletor nativo de tema exige revisão manual; demais SOs/CPUs, tecnologias assistivas e gates de release não homologados; avisos de dependências anteriores mantidos |
-| Próxima ação autorizada | Registrar commit da 4A.1 e executar a Task adicional solicitada; não iniciar 4A.2 |
+| Etapa atual | DOC.1 — Histórico vivo, guia do usuário e Ajuda offline |
+| Status | Concluída e aprovada por “Aprovado”; registro integra este commit |
+| Última etapa concluída | DOC.1 — Histórico vivo, guia e Ajuda offline; aprovada |
+| Último commit | Entrega DOC.1 que contém este estado; hash em git log -1; pai fe4a252 |
+| Decisões aprovadas | ADRs/requisitos/MVP/D3A, 4A.1 e conclusão/commit DOC.1 por “Aprovado” |
+| Decisões pendentes | Contrato e autorização próprios da próxima etapa; 4A.2 não autorizada |
+| Tarefas concluídas | Histórico vivo/regras no AGENTS; guia por função/formulário; README; Ajuda offline com fonte única; checks/package/smokes e revisão visual |
+| Tarefas pendentes | Contrato e autorização próprios da próxima fase; sem nova implementação autorizada |
+| Problemas conhecidos | Providers reais e release sem homologação; senha persistente desligada; controles nativos/assistivas e outros SOs/CPUs pendentes; avisos de dependências anteriores mantidos |
+| Próxima ação autorizada | Conferir Git ao retomar, manter PROJECTS atualizado e aguardar contrato/aceite de nova fase |
 
-## Autorização e limites
+## Autorizações e execução
 
-“Autorizo”, após a apresentação do contrato em `eb535d7`, autoriza a 4A.1,
-sem rede/brokers, dependências novas, push ou commit antecipado.
-A proteção persistente permanece desligada quando provider e gates não forem
-comprovados. Testes usam diretórios temporários e segredos sintéticos.
-Não confundir perfil salvo/selecionado com sessão ativa. A 4A.2 não está autorizada.
+O proprietário respondeu “Aprovado!” à conclusão/commit da 4A.1 e solicitou
+explicitamente histórico vivo, leitura/atualização no AGENTS, documentação no
+README e Ajuda no aplicativo. A 4A.1 foi registrada em `fe4a252`; nenhum push.
+A resposta posterior “Aprovado” aceitou conclusão DOC.1 e o commit apresentado;
+este registro integra essa entrega, sem implementação adicional.
+A 4A.2 não está autorizada.
 
-Retomar por AGENTS, arquitetura, roadmap, progresso e Git. Preservar os logos e
-controles desktop aprovados; a pendência do teclado do seletor nativo herdada da
-3B continua aberta. Evidências anteriores: [interface 3B](../07-testing/interface-3b.md).
+Guia canônico: `docs/10-user-guide/guide.json`, incluído no bundle renderer e
+convertido para [guia Markdown](../10-user-guide/README.md) por `docs:generate`.
+`docs:check` integra `npm run check`. Ajuda usa texto/React, sem HTML arbitrário,
+rede, novo IPC ou mudança da URL fixa. Sem alteração de dependências/lock/assets.
 
-## Entrega aprovada
+## Evidências e limites
 
-[M01 implementado parcialmente](../04-modules/01-connection-manager.md) e
-[evidências 4A.1](../07-testing/profiles-4a1.md): perfis persistidos sem rede,
-senhas em memória, ações keep/replace/remove, conflitos/corrupção preservados,
-confirmação local no main, ponte com 12 métodos específicos e UI/temas/zoom.
+DOC.1: check com 133 testes/18 arquivos, package e smokes de Ajuda/segurança e
+perfis passaram em macOS 27.0.1 arm64. Teste negativo de Markdown divergente passou
+em cópia temporária; capturas revisadas em dois temas e zoom 200%.
+[Evidências DOC.1](../07-testing/help-doc1.md) e
+[evidências 4A.1](../07-testing/profiles-4a1.md).
 
-Check com 130 testes em 17 arquivos; package e smokes locais verificados em macOS
-27.0.1 arm64. A conferência final de artefato fica nas evidências. Senha persistente
-segue desligada em todos os alvos; nenhuma prova de provider real foi produzida.
-Diálogo nativo de remoção tem conteúdo/defaults/respostas verificados com simulação
-exclusiva no main; revisão visual/manual do SO permanece pendente, assim como o
-seletor nativo de tema herdado da 3B e demais SOs/CPUs/tecnologias assistivas.
+A Ajuda documenta funções atuais e indisponibilidades; não implementa rede/CA/TLS,
+sessão de broker, operações RabbitMQ ou armazenamento persistente de senha.
+Limitações nativas/de plataforma anteriores continuam abertas. M01/MVP não completos.
 
-O proprietário respondeu **“Aprovado!”**, aprovando conclusão e commit da 4A.1.
-O commit conterá este aceite; consultar seu hash no Git. A mesma mensagem autoriza
-Task própria de histórico vivo e documentação/Ajuda, sem autorizar a 4A.2.
-Nenhum push solicitado ou executado.
+## Retomada
+
+Ler AGENTS, PROJECTS, arquitetura, roadmap/estado/progresso e conferir Git.
+Conferir o commit DOC.1 aprovado e aguardar contrato/aceite da próxima fase. Não inferir
+que pendências/funções descritas no guia estejam autorizadas para implementação.

@@ -3,6 +3,7 @@ import NavigationSidebar, { type LocalPage } from "./NavigationSidebar";
 import SessionContextBar from "./SessionContextBar";
 import IconButton from "../components/IconButton";
 import Connections from "../pages/Connections";
+import Help from "../pages/Help";
 import About from "../pages/About";
 import "./shell.scss";
 
@@ -114,15 +115,27 @@ export default function ApplicationShell({
             <div className="page-heading">
               <p className="eyebrow">SEU WORKSPACE RABBITMQ</p>
               <h1 tabIndex={-1} ref={heading}>
-                {page === "connections" ? "Conexões" : "Sobre o Bunnies"}
+                {page === "connections"
+                  ? "Conexões"
+                  : page === "help"
+                    ? "Ajuda"
+                    : "Sobre o Bunnies"}
               </h1>
               <p>
                 {page === "connections"
                   ? "Um contexto claro para cada ambiente."
-                  : "Uma experiência desktop para trabalhar com RabbitMQ."}
+                  : page === "help"
+                    ? "Orientações para cada função, disponíveis offline."
+                    : "Uma experiência desktop para trabalhar com RabbitMQ."}
               </p>
             </div>
-            {page === "connections" ? <Connections /> : <About />}
+            {page === "connections" ? (
+              <Connections />
+            ) : page === "help" ? (
+              <Help />
+            ) : (
+              <About />
+            )}
           </main>
           <footer className="workspace-footer">
             <span className="offline-dot" aria-hidden="true" />

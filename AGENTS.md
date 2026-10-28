@@ -1,5 +1,23 @@
 # Bunnies — instruções operacionais
 
+## Leitura obrigatória e histórico vivo
+
+Ao ler este AGENTS, **ler também [PROJECTS_STATUS.md](PROJECTS_STATUS.md) antes de
+iniciar qualquer Task, alteração ou fase**. Esse arquivo é o histórico vivo do
+projeto: consultar estado atual, tarefas concluídas/pendentes, decisões, aprovações
+e testes executados antes de agir.
+
+**Atualizar PROJECTS_STATUS.md em toda Task/fase/alteração/atualização**: registrar
+o início e o escopo autorizado; ao alterar a execução ou concluir um bloco de
+trabalho, acrescentar o que mudou, decisões, testes realmente executados, limitações
+e próxima ação. Preservar entradas históricas, mantendo o resumo atual sincronizado
+com current-stage/progress. Não declarar teste aprovado sem execução nem registrar
+segredos. Atualizar também ao preparar/registrar commits e ao retomar a sessão.
+
+Guia do usuário e Ajuda devem acompanhar cada funcionalidade ou mudança de
+formulário. Manter uma fonte única de conteúdo e verificar sincronização com o
+Markdown linkado ao README; não documentar funcionalidade futura como disponível.
+
 ## Projeto e escopo
 
 Bunnies é uma aplicação exclusivamente desktop para administração e observabilidade
@@ -88,14 +106,13 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **4A.1 concluída e aprovada; commit autorizado**.
-- Última etapa concluída e aprovada: **4A.1 — perfis locais e credenciais transitórias**.
-- Etapa autorizada: **4A.1 — perfis locais e proteção de credenciais**.
-- Próxima ação autorizada: registrar o commit aprovado da 4A.1; a Task adicional
-  de histórico vivo/guia/Ajuda recebeu autorização própria na mesma mensagem.
-  A 4A.2 não está autorizada.
+- Etapa atual: **DOC.1 concluída e aprovada; commit autorizado**.
+- Última etapa concluída e aprovada: **DOC.1 — histórico vivo, guia e Ajuda offline**.
+- Entrega aprovada: **DOC.1**, conclusão/commit aceitos por “Aprovado”.
+- Próxima ação: conferir o registro DOC.1 no Git ao retomar; nenhuma implementação
+  nova autorizada. Nova etapa exige contrato/autorização próprios; a 4A.2 não está autorizada.
 
-Ao retomar, ler este arquivo, a avaliação tecnológica, o
+Ao retomar, ler este arquivo, [PROJECTS_STATUS.md](PROJECTS_STATUS.md), a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
 e o [progresso](docs/05-roadmap/progress.md). Verificar Git, identificar a última
 aprovação e continuar apenas o trabalho autorizado. Não reiniciar o planejamento
@@ -166,3 +183,12 @@ O proprietário respondeu **“Aprovado!”** após a apresentação da 4A.1, ap
 sua conclusão e o commit `feat(connections): implement local profiles and transient credentials`.
 Mantêm-se os gates/limitações apresentados; não autoriza a 4A.2. A solicitação
 adicional de histórico vivo e documentação/Ajuda terá entrega própria.
+
+## Conclusão DOC.1 aprovada
+
+O proprietário respondeu **“Aprovado”** à solicitação de conclusão DOC.1 e do commit
+`feat(help): add offline user guide and project status tracking`. Aceite registrado
+no PROJECTS/estado/evidências; limitações mantidas. Registrar somente a entrega
+apresentada e a sincronização documental do aceite. Não repetir implementação,
+fazer push ou iniciar 4A.2 sem autorização própria. Guia e histórico permanecem
+obrigações de toda Task posterior.

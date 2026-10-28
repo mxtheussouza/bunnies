@@ -49,7 +49,7 @@ operação destrutiva só podem usar brokers/recursos isolados e reproduzíveis.
 
 | Módulo | Status | Documento especializado planejado | Pendências específicas |
 | --- | --- | --- | --- |
-| M01 | CRUD local 4A.1 aprovado; sem rede/sessão | [Connection Manager](01-connection-manager.md) | Provider real; CA/autenticação; timeout/reconexão |
+| M01 | CRUD 4A.1 aprovado; CA/teste HTTPS 4A.2A em revisão, sem sessão | [Connection Manager](01-connection-manager.md) | Aprovação 4A.2A; RabbitMQ real; AMQPS/sessão/reconexão |
 | M02 | Planejado; não implementado | `02-dashboard.md` | Conjunto de métricas; fonte, atualização e layout |
 | M03 | Planejado; não implementado | `03-queue-management.md` | Catálogo de argumentos/tipos; confirmações e conflitos |
 | M04 | Planejado; não implementado | `04-exchange-management.md` | Tipos/plugins; identidade de binding; restrições de recursos |
@@ -132,3 +132,6 @@ sujeitos à necessidade/contrato de suas etapas.
 
 Conclusão/commit DOC.1 aprovados por “Aprovado”; nenhuma funcionalidade de broker
 ou homologação pendente foi autorizada/resolvida por esse aceite.
+
+4A.2A implementa CA/probe HTTPS de M01 por autorização própria, com guia/Ajuda
+atualizados. Sem AMQP, sessão, métricas ou operações de recurso. [Evidências](../07-testing/https-4a2a.md).

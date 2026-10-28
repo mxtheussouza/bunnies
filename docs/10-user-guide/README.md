@@ -12,6 +12,7 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 - [Selecionar um perfil e recarregar a lista](#selecionar-e-recarregar)
 - [Editar um perfil e descartar alterações](#editar-e-cancelar)
 - [Remover um perfil local](#remover-perfil)
+- [Configurar CA e testar HTTPS](#ca-e-teste-https)
 - [Senhas, privacidade e encerramento](#senhas-e-privacidade)
 - [Temas, navegação e janela](#temas-e-navegacao)
 - [Menus e teclado](#menus-e-teclado)
@@ -22,11 +23,11 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 
 ## O que está disponível nesta versão
 
-Esta é uma versão em desenvolvimento. Você já pode cadastrar, listar, selecionar, editar e remover perfis locais; usar temas; ajustar a janela e consultar a Ajuda. O Bunnies ainda não se conecta ao RabbitMQ.
+Esta é uma versão em desenvolvimento. Você pode cadastrar, listar, selecionar, editar e remover perfis locais; configurar uma CA pública por perfil; testar autenticação HTTPS; usar temas e consultar a Ajuda. O Bunnies ainda não ativa uma sessão de trabalho no RabbitMQ.
 
-Salvar ou selecionar um perfil não testa endereços, certificados, usuário ou senha. Não inicia sessão e não altera recursos do broker. Os estados Sem sessão ativa, HTTPS não iniciado e AMQPS não iniciado são esperados.
+Salvar ou selecionar um perfil não testa endereços, certificados, usuário ou senha e não envia dados ao broker. Testar HTTPS é uma ação explícita que verifica TLS e a resposta de autenticação do endpoint salvo, encerrando sua conexão ao terminar. Sem sessão ativa, HTTPS sem sessão e AMQPS não iniciado são estados esperados.
 
-Visão geral, Filas, Exchanges e Publicar permanecem indisponíveis. Senhas protegidas salvas no dispositivo também estão desabilitadas; use somente nesta execução.
+Visão geral, Filas, Exchanges e Publicar permanecem indisponíveis. Teste AMQPS e ativação de sessão ainda não estão disponíveis. Senhas protegidas salvas no dispositivo também estão desabilitadas; use somente nesta execução.
 
 <a id="primeiros-passos"></a>
 
@@ -38,7 +39,7 @@ Ainda não há instaladores publicados ou um fluxo de atualização automática.
 
 1. Abra o aplicativo e acesse Conexões na barra lateral.
 2. Clique em Novo perfil e preencha os dados do seu ambiente. Os exemplos deste guia são fictícios; confirme os valores com o responsável pelo broker.
-3. Salve o perfil e selecione-o na lista para consultar o resumo. O aplicativo continuará sem sessão ativa.
+3. Salve o perfil e selecione-o na lista para consultar o resumo. Se houver senha disponível nesta execução, clique em Testar HTTPS para verificar o acesso administrativo. O resultado não ativa sessão nem verifica AMQPS.
 4. Abra Ajuda na barra lateral sempre que precisar revisar uma função. Em janela estreita, o ícone de ajuda continua disponível; Expandir navegação mostra os nomes dos destinos.
 
 <a id="criar-perfil"></a>
@@ -53,26 +54,32 @@ Em Conexões, clique em Novo perfil. Complete o formulário descrito a seguir e 
 | --- | --- | --- |
 | Nome do perfil | Use um nome que identifique claramente o ambiente. É obrigatório, tem limite de 120 e não aceita espaços no início ou fim nem caracteres de controle. | Equipe — Homologação |
 | Ambiente | Escolha Desenvolvimento, Homologação, Produção ou Outro. Produção aparece com texto e símbolo de alerta para ajudar a reconhecer o contexto; a escolha não muda permissões do broker. | Homologação |
-| Endpoint HTTPS | Informe a URL HTTPS do acesso administrativo, com host e porta corretos. É independente do endpoint AMQPS; pode incluir um prefixo de caminho. Limite de 2048. Não use usuário/senha na URL, espaços, barra invertida, query (?) ou fragmento (#). | https://broker.exemplo:15671 |
+| Endpoint HTTPS | Informe a URL base HTTPS do acesso administrativo, com host e porta corretos. Pode incluir o prefixo do seu proxy, por exemplo /rabbitmq; o teste acrescenta /api/whoami a esse prefixo. Não informe a URL final /api/whoami neste campo. É independente do AMQPS e tem limite de 2048. Não use usuário/senha na URL, espaços, barra invertida, query (?) ou fragmento (#). | https://broker.exemplo:15671 |
 | Endpoint AMQPS | Informe a URL AMQPS para mensageria, com host e porta corretos. Limite de 2048 e as mesmas restrições de credenciais, espaços, query e fragmento do HTTPS. Informe o endpoint separadamente; ele não é deduzido do HTTPS. | amqps://broker.exemplo:5671 |
-| Usuário | Informe o nome de usuário do broker, respeitando maiúsculas, minúsculas e espaços que façam parte dele. É obrigatório, tem limite de 256 e não aceita caracteres de controle. Salvar não cria o usuário nem valida suas permissões. | usuario_da_equipe |
+| Confiança TLS | Escolha CAs padrão do aplicativo ou CA personalizada (PEM). Na edição, Manter configuração atual preserva a escolha salva. O modo padrão usa as CAs do runtime do aplicativo, que podem diferir das do sistema; o personalizado usa exclusivamente o bundle escolhido, sem alterar o sistema. | — |
+| Selecionar CA PEM | No modo CA personalizada (PEM), clique para escolher pelo diálogo do sistema um arquivo contendo apenas certificados CA públicos. Até 256 KiB e 16 certificados. Não selecione chave privada, certificado de cliente, PFX/PKCS#12 ou certificado de servidor que não seja CA. Confira a origem da CA antes de confiar nela. | — |
+| Fingerprints da CA selecionada | Compare os identificadores SHA-256 com os fornecidos pelo responsável pelo ambiente. A seleção não grava o perfil: clique em Salvar perfil para importar uma cópia. Ela expira em dez minutos e é descartada ao fechar o formulário. Cancelar o seletor não altera a seleção anterior. | — |
+| Usuário | Informe o nome de usuário do broker, respeitando maiúsculas, minúsculas e espaços que façam parte dele. É obrigatório, tem limite de 256 e não aceita caracteres de controle. Salvar não cria o usuário nem valida suas permissões. Para testar HTTPS com Basic, o usuário não pode conter dois-pontos e usuário/senha precisam ser texto UTF-8 válido; valores incompatíveis geram erro antes da rede. | usuario_da_equipe |
 | Senha | No cadastro, escolha Informar senha ou Sem senha por enquanto. Na edição, escolha Manter senha atual, Substituir senha ou Remover senha. Essa seleção define se o próximo salvamento mantém, troca ou remove o segredo local. | — |
 | Armazenamento da senha | Quando Informar/Substituir senha estiver selecionado, use Somente nesta execução. A senha fica temporariamente no aplicativo e precisa ser redigitada após sair completamente. Protegida pelo sistema operacional permanece desabilitada enquanto a proteção do dispositivo não estiver comprovada. | — |
 | Nova senha | Digite a senha quando escolher Informar/Substituir senha. O campo é obrigatório nesse modo, tem limite de 4096 e não aceita o caractere NUL. O valor fica mascarado e é descartado do formulário após envio, inclusive quando salvar falha; redigite-o para tentar novamente. Nenhuma senha existente é preenchida de volta. | — |
 
 - Nome, endereços e usuário são armazenados localmente. A senha no modo em memória não é gravada no arquivo de perfis.
 - Há limite de 50 perfis e 2 MiB de configuração. Os limites de texto contam unidades de texto; alguns símbolos podem ocupar mais de uma.
-- Os números de porta dos exemplos não configuram o seu servidor. Confirme os endereços reais. CA customizada, teste TLS, autenticação e ativação de sessão ainda não estão disponíveis.
+- Os números de porta dos exemplos não configuram o seu servidor. Confirme os endereços reais e a configuração HTTPS/Management. O teste só usa dados salvos; nenhuma sessão ou conexão AMQPS é aberta.
+- Salvar perfis nesta versão usa um novo formato de configuração, que versões anteriores podem não ler. Ao converter um arquivo antigo válido, o aplicativo preserva um backup do original. Não tente voltar de versão regravando o arquivo manualmente; solicite orientação ao responsável pelo projeto.
 
 <a id="selecionar-e-recarregar"></a>
 
 ## Selecionar um perfil e recarregar a lista
 
-Clique em um perfil para ver nome, ambiente, endpoints, usuário e situação da senha. Selecionado identifica apenas o item da tela; não significa Conectado.
+Clique em um perfil para ver nome, ambiente, endpoints, usuário, confiança TLS e situação da senha. Selecionado identifica apenas o item da tela; não significa Conectado. O resumo mostra as fingerprints de CAs personalizadas, sem expor o caminho do arquivo.
 
 Disponível somente nesta execução significa que o aplicativo ainda mantém uma senha temporária. Não disponível nesta execução significa que você deve informar uma senha ao editar, se quiser mantê-la na execução atual. Nenhuma dessas indicações comprova autenticação no broker.
 
 Recarregar lista lê novamente os perfis locais. Não consulta o RabbitMQ e não é um teste de conectividade. A seleção pode desaparecer se o perfil tiver sido removido. Alterações externas na configuração invalidam senhas transitórias para evitar reaproveitá-las em um perfil modificado.
+
+O resultado de Testar HTTPS vale para o perfil salvo e o instante indicados. Ao editar, remover ou trocar de perfil, sair da página ou fechar/recarregar a janela, testes em andamento são cancelados ou invalidados e o resultado antigo deixa de ser apresentado como válido. Alterações externas são detectadas ao ler a configuração ou concluir o teste.
 
 <a id="editar-e-cancelar"></a>
 
@@ -81,6 +88,8 @@ Recarregar lista lê novamente os perfis locais. Não consulta o RabbitMQ e não
 Selecione o perfil e clique em Editar perfil. O formulário mostra os dados locais, sem revelar a senha atual. Ajuste os campos e clique em Salvar perfil.
 
 Manter senha atual preserva o segredo existente, se houver. Essa opção não recupera uma senha perdida ao encerrar o aplicativo. Substituir senha exige digitar uma nova senha e escolher o armazenamento. Remover senha só remove o segredo local após salvar; não altera a senha do usuário no RabbitMQ.
+
+A confiança TLS é independente da senha. Manter configuração atual preserva a CA salva. Para removê-la, escolha CAs padrão do aplicativo e salve; para substituir, escolha CA personalizada (PEM), selecione outro arquivo e salve. A remoção só muda o perfil, sem remover certificados do sistema.
 
 1. Para desistir, clique em Cancelar ou pressione Escape. Se houver alterações, o aplicativo oferece Continuar editando ou Descartar alterações.
 2. A senha digitada é descartada já na tentativa de fechar. Mesmo ao escolher Continuar editando, será necessário redigitá-la se você quiser substituí-la.
@@ -98,11 +107,32 @@ A remoção apaga o cadastro local e o segredo associado. Não remove filas, men
 
 Se a configuração mudar enquanto o diálogo estiver aberto, a remoção poderá falhar com conflito. Recarregue a lista e confira novamente o perfil, sem presumir que ele foi removido.
 
+<a id="ca-e-teste-https"></a>
+
+## Configurar CA e testar HTTPS
+
+O teste HTTPS verifica o acesso administrativo de um perfil salvo. Requer Management API acessível por HTTPS e autenticação usuário/senha. Consulta somente /api/whoami, esperando a identidade cadastrada; não cria ou remove recursos, publica/consome mensagens ou ativa uma sessão.
+
+CAs padrão e CA personalizada são opções de confiança distintas. No modo personalizado, apenas o bundle escolhido é usado; ele substitui as CAs padrão para esse perfil. Escolher um arquivo não importa certificados no sistema. Salvar copia seu conteúdo público validado, sem depender do caminho original nas próximas execuções.
+
+O aplicativo usa validação de cadeia, validade e identidade do servidor, com TLS 1.2 ou superior. Não há opção de certificado inválido, downgrade para HTTP ou promessa de verificação automática de revogação. Importar um PEM válido não comprova TLS de um servidor; essa verificação acontece no teste.
+
+1. Cadastre ou selecione um perfil e abra Editar perfil. Configure os endpoints e o usuário corretos; mantenha uma senha disponível em Somente nesta execução.
+2. Para uma CA própria, escolha CA personalizada (PEM), clique em Selecionar CA PEM e confira as fingerprints. Cancelar o diálogo mantém a seleção anterior; Cancelar/Descartar o formulário não grava o perfil.
+3. Clique em Salvar perfil. A senha digitada é descartada do formulário e fica somente no aplicativo durante a execução. A CA pública pode persistir; a senha em memória não fica no arquivo nem no backup.
+4. No resumo do perfil salvo, clique em Testar HTTPS. Nada é testado automaticamente ao abrir, selecionar ou salvar.
+5. Aguarde o resultado ou clique em Cancelar teste HTTPS. O teste tem prazo total de dez segundos. Alterar/remover perfil, sair da página ou fechar/recarregar janela cancela ou invalida uma execução antiga.
+6. Em caso de sucesso, confira a data do último teste. Autenticação HTTPS verificada não significa sessão ativa, saúde do cluster, versão homologada, acesso AMQPS ou permissão sobre recursos.
+
+- Apenas uma execução HTTPS por janela. Não há retry automático; uma nova tentativa exige ação explícita.
+- Não há proxy corporativo configurável, mTLS ou OAuth neste recorte. Respostas comprimidas ou fora dos limites/formato do probe inicial são rejeitadas com diagnóstico, sem alegar sucesso.
+- Na edição, mudar ou remover a CA não altera o segredo se Senha estiver em Manter senha atual. O limite total continua sendo 50 perfis/2 MiB, incluindo certificados; bundles grandes podem atingir o tamanho máximo antes de chegar a 50 perfis.
+
 <a id="senhas-e-privacidade"></a>
 
 ## Senhas, privacidade e encerramento
 
-Nesta versão, a senha é mantida somente em memória durante a execução. Após reiniciar completamente o aplicativo, os dados do perfil continuam salvos, mas a senha precisa ser informada novamente. A senha digitada não é exibida no resumo nem devolvida para edição.
+Nesta versão, a senha é mantida somente em memória durante a execução. Após reiniciar completamente o aplicativo, os dados do perfil continuam salvos, mas a senha precisa ser informada novamente. A senha digitada não é exibida no resumo nem devolvida para edição. No teste HTTPS, a senha é enviada ao endpoint salvo através de TLS para autenticação. Confira o endereço e a origem da CA antes de testar.
 
 No macOS, fechar a janela pode manter o aplicativo em execução e conservar as senhas temporárias. Para encerrar o processo, use Arquivo → Sair. Nos outros sistemas, fechar a última janela encerra o aplicativo.
 
@@ -149,8 +179,14 @@ Leia o resultado de cada operação. Um erro não significa que os dados foram s
 | Não foi possível acessar ou gravar os perfis | Confira espaço livre e acesso à pasta de dados do aplicativo. Recarregue a lista para conferir o estado. Se persistir, solicite suporte; não presuma que a gravação ocorreu. |
 | Senha desapareceu após reiniciar | É esperado no modo Somente nesta execução. Selecione o perfil, abra Editar perfil, escolha Substituir senha e informe-a novamente. Fechar só a janela no macOS pode não encerrar o processo. |
 | Proteção pelo sistema indisponível | Use Somente nesta execução. A opção persistente está desabilitada até validação da proteção por plataforma; não é necessário alterar configurações de segurança ou certificados para cadastrar perfis locais. |
-| Sem sessão ativa mesmo após salvar | É esperado. Os perfis são locais e os testes de conexão e a ativação de sessão ainda não estão implementados. Recarregar a lista ou trocar a senha não inicia conexão. |
 | Texto ou botões não cabem na janela | Use a rolagem do conteúdo ou do formulário. Ajuste o tamanho da janela ou use Visualizar → Tamanho real para restaurar o zoom. O painel compacto permite acessar os nomes dos destinos. |
+| CA inválida, grande ou seleção expirada | Use apenas CA pública em PEM, até 256 KiB/16 certificados, sem chave privada ou dados extras. Se a seleção expirou, escolha novamente e salve. Importar uma CA não comprova que um servidor específico seja confiável. |
+| Validação TLS falhou | Confira a CA, a cadeia, a validade e se o nome ou IP do endereço corresponde ao certificado do servidor. O aplicativo não oferece ignorar certificado. CAs padrão do aplicativo podem diferir das instaladas no sistema; peça o bundle correto ao responsável pelo ambiente. |
+| Autenticação recusada ou permissão negada | Para autenticação recusada, confira usuário/senha e informe novamente a senha nesta execução. Permissão negada indica que o servidor recusou o acesso; consulte o administrador. O teste não concede privilégios nem comprova permissão sobre filas/vhosts. |
+| Redirecionamento ou resposta incompatível | Confira a URL base e o prefixo da Management API HTTPS. O teste não segue redirecionamentos. HTML, compressão inesperada, JSON fora do formato/limites ou identidade diferente não são aceitos como autenticação aprovada. |
+| Teste cancelado, prazo excedido ou falha de rede | O prazo total é dez segundos, sem repetição automática. Confira disponibilidade/rede e tente novamente manualmente quando apropriado. Cancelar interrompe o teste; não desfaz uma tentativa de login que já tenha chegado ao servidor. |
+| Sem sessão ativa mesmo após teste HTTPS | É esperado. Testar HTTPS consulta apenas a identidade autenticada e encerra a conexão; não ativa sessão, testa AMQPS ou libera páginas de broker. O resultado tem data e não é um indicador contínuo de disponibilidade. |
+| Conflito ou erro ao converter configuração antiga | O original e um backup válido são preservados. Recarregue a lista e procure suporte se persistir. O aplicativo não sobrescreve backup diferente nem reinicia arquivos inválidos automaticamente; não remova arquivos por tentativa. |
 
 <a id="funcoes-de-broker"></a>
 
@@ -160,7 +196,7 @@ Os itens a seguir descrevem o propósito planejado das funções, não instruç�
 
 | Campo ou função | Como usar / para que serve | Exemplo fictício |
 | --- | --- | --- |
-| Testar conexão e ativar sessão | Verificar acesso HTTPS e AMQPS, certificados, autenticação e contexto de trabalho. Não há botão operacional, configuração de CA ou sessão ativa nesta versão. | — |
+| Teste AMQPS e ativação de sessão | Verificar acesso AMQPS, vhost e contexto de trabalho depende de entregas posteriores. O teste HTTPS e a configuração de CA já existem; não ativam sessão nem comprovam acesso a mensagens. | — |
 | Visão geral e monitoramento | Apresentar informações e métricas do broker com estado e atualidade claros. Ainda não há métricas reais, gráficos ou histórico no aplicativo. | — |
 | Filas | Listar, criar e inspecionar filas e, em operações específicas futuras, excluir ou executar purge com confirmação. Nenhuma dessas operações está disponível agora. | — |
 | Exchanges e bindings | Organizar exchanges, relacionamentos de roteamento e routing keys. Ainda não existem formulários ou operações implementados. | — |

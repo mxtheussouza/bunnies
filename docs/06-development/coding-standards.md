@@ -134,3 +134,20 @@ expor filesystem/IPC para exibi-la. `tools/testing/help.cjs`, integrado ao smoke
 base, confere todo o conteúdo no executável em modo offline e navegação/foco/zoom.
 Resultados locais/capturas: `out/help-doc1-results.json` e `out/help-doc1-*.png`.
 [Evidências DOC.1](../07-testing/help-doc1.md).
+
+## Testes HTTPS — 4A.2A
+
+Após package e smokes base/perfis, executar `node tools/testing/https.cjs`.
+Usa fixture TLS efêmera de `tls-fixture.cjs` com OpenSSL/LibreSSL no PATH e dados
+próprios. Cria CA/leaf/hostname incorreto/expiração sintéticos e limpa o diretório.
+Não usar certificados/chaves ou brokers reais do usuário. Sem nova dependência npm.
+
+O smoke configura proxy apenas no processo filho de teste e usa uma trap loopback
+para comprovar que o agente do produto ignora proxy herdado. Picker nativo é
+interceptado somente pelo harness no main; parser/arquivo/IPC reais continuam
+executados. Nenhuma API de teste deve ser exposta ao renderer.
+
+Novos comandos da ponte são selectProfileCa/discardProfileCa/testProfileHttps/
+cancelProfileHttpsTest; ao alterá-los, sincronizar allowlist/preload/testes e guia.
+Schema v2 pode não ser legível por versão antiga do app; preservar backup v1 e
+nunca apagar configuração/lock para contornar falha de teste. [Resultados](../07-testing/https-4a2a.md).

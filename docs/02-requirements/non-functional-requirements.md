@@ -88,3 +88,18 @@ Não há SLA de broker, alta disponibilidade de cluster ou entrega exatamente um
 prometidos pelo aplicativo. A [estratégia de testes](../07-testing/test-strategy.md)
 e o [modelo de segurança](../08-security/security-model.md) definem verificações
 planejadas. Nenhuma métrica de desempenho ou teste funcional foi executado na 1B.
+
+## Sublimites aceitos para 4A.2A
+
+A resposta “Autorizo” ao contrato 4A.2A aprovou os limites específicos abaixo;
+eles não ampliam os tetos gerais anteriores e não constituem homologação de broker.
+
+| ID | Parâmetro específico | Limite aceito |
+| --- | --- | --- |
+| NFR-031 | CA pública por perfil / seleção temporária | Bundle PEM até 256 KiB/16 certificados CA; uma seleção por janela; validade de dez minutos; material público copiado no main, sem chave privada/trust global |
+| NFR-032 | Probe whoami HTTPS | Headers até 16 KiB/corpo até 64 KiB, UTF-8/JSON profundidade até 16, somente identity; TLS mínimo 1.2, cadeia/validade/hostname obrigatórios, sem redirect/retry/proxy herdado |
+| NFR-033 | Execução do teste / contexto | Uma operação em voo por janela, deadline total 10 s (NFR-013); cancelamento/invalidação e resultado datado sem ativar sessão |
+
+Schema v2/backup v1 implementam NFR-011; arquivo principal e backup individual
+continuam limitados a 2 MiB, sem segredo em memória. Regressão e limites efetivamente
+executados: [4A.2A](../07-testing/https-4a2a.md).

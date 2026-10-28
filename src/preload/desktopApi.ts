@@ -1,3 +1,4 @@
+import type { ConnectionRequest, ConnectionsApi } from "../shared/connections";
 import {
   profileErrorMessages,
   type ProfileRequest,
@@ -14,6 +15,7 @@ import {
 export function createDesktopApi(
   invoke: (request: DesktopRequest) => Promise<unknown>,
   invokeProfiles: (request: ProfileRequest) => Promise<unknown>,
+  invokeConnections: (request: ConnectionRequest) => Promise<unknown>,
 ): DesktopApi {
   async function call<T = undefined>(
     request: DesktopRequest,
@@ -32,10 +34,15 @@ export function createDesktopApi(
     }
   }
   async function profileCall<T>(
-    request: ProfileRequest,
+    request: ProfileRequest | ConnectionRequest,
   ): Promise<ProfileResult<T>> {
     try {
-      return (await invokeProfiles(request)) as ProfileResult<T>;
+      return (await (request.command === "selectProfileCa" ||
+      request.command === "discardProfileCa" ||
+      request.command === "testProfileHttps" ||
+      request.command === "cancelProfileHttpsTest"
+        ? invokeConnections(request as ConnectionRequest)
+        : invokeProfiles(request as ProfileRequest))) as ProfileResult<T>;
     } catch {
       return {
         ok: false,
@@ -54,7 +61,17 @@ export function createDesktopApi(
     getSecretProtectionStatus: () =>
       profileCall({ command: "getSecretProtectionStatus" }),
   };
+  const connections: ConnectionsApi = {
+    selectProfileCa: () => profileCall({ command: "selectProfileCa" }),
+    discardProfileCa: selectionId =>
+      profileCall({ command: "discardProfileCa", selectionId }),
+    testProfileHttps: input =>
+      profileCall({ command: "testProfileHttps", input }),
+    cancelProfileHttpsTest: operationId =>
+      profileCall({ command: "cancelProfileHttpsTest", operationId }),
+  };
   return Object.freeze({
+    ...connections,
     ...profiles,
     getInfo: () => call({ command: "info" }),
     close: () => call({ command: "close" }),

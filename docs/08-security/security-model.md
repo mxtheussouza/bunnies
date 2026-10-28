@@ -198,3 +198,32 @@ energia ou homologação de ACL Windows. Fechar janela macOS mantém processo/se
 até sair do app. Diálogo nativo visual ainda exige revisão manual por SO.
 [Contrato M01](../04-modules/01-connection-manager.md) e
 [evidências/limitações](../07-testing/profiles-4a1.md).
+
+## Controles parciais executados — 4A.2A
+
+O contrato autorizado implementa parte de SEC-04/05/08/09/10: CA pública pelo
+seletor nativo, JSON v2 com backup v1, senha somente no main, probe HTTPS explícito,
+TLS validado e limites. Renderer mantém connect-src none; o main faz uma operação
+específica para endpoint salvo, sem aceitar URL/header/path no pedido de teste.
+Não se implementou um cliente HTTP genérico nem uma sessão RabbitMQ.
+
+PEM limitado e X509 CA com DER completo; rejeitar chave/leaf/dados extras. Apenas
+fingerprints/token voltam à UI. Default usa runtime; custom substitui pelo bundle
+salvo, sem importar certificados no SO. Token expira/libera ao encerrar janela;
+consumo só após gravação bem-sucedida. Backup v1 não é sobrescrito se divergente;
+sem reset/corrupção silenciosa e sem senha transitória em arquivo.
+
+Agente dedicado, proxyEnv vazio, TLS >=1.2, rejectUnauthorized true e verificação
+padrão de identidade. Basic só para o endpoint salvo; whoami precisa corresponder
+ao usuário. 3xx/401/403/timeout/erro TLS/rede/protocolo retornam códigos fixos, sem
+corpo/certificado/path/Authorization. Sem retry, compressão inesperada ou confiança
+global alterada. Código e limites: [M01](../04-modules/01-connection-manager.md).
+
+Cancelamento/invalidação destrói sockets/timers/agente e descarta resultado antigo.
+Revalidação de origem/revision não transforma IDs fornecidos pela UI em autoridade.
+Resolução DNS/I/O já iniciada no SO não é cancelamento físico garantido nem rollback
+de login já recebido pelo servidor. Os testes usam apenas infraestrutura própria.
+
+Testes locais de TLS e proxy/IPC/pacote passaram; não equivalem a RabbitMQ real,
+revogação CRL/OCSP, pentest, provider seguro ou release. Nativos/assistivas/outros
+alvos continuam pendentes. [Evidências](../07-testing/https-4a2a.md).

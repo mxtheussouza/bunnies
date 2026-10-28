@@ -30,6 +30,7 @@ const profile = (): StoredProfile => ({
   amqpsUrl: "amqps://localhost:5671",
   username: "tester",
   secret: { mode: "memory" },
+  trust: { mode: "default" },
 });
 beforeEach(async () => {
   directory = await mkdtemp(join(tmpdir(), "bunnies-repo-"));
@@ -47,7 +48,7 @@ describe("bounded atomic profile JSON", () => {
     const saved = await repository.write("absent", [profile()]);
     expect(await new ProfileRepository(directory).read()).toEqual(saved);
     expect(await readFile(repository.file, "utf8")).toContain(
-      '"schemaVersion": 1',
+      '"schemaVersion": 2',
     );
     expect(await readdir(directory)).toEqual(["profiles.json"]);
     if (process.platform !== "win32")
@@ -98,10 +99,10 @@ describe("bounded atomic profile JSON", () => {
     if (process.platform !== "win32") {
       await symlink(target, repository.file);
       await expect(repository.read()).rejects.toMatchObject({
-        code: "UNAVAILABLE",
+        code: "CORRUPT",
       });
       await expect(repository.write("absent", [])).rejects.toMatchObject({
-        code: "UNAVAILABLE",
+        code: "CORRUPT",
       });
       expect(await readFile(target, "utf8")).toBe("preserve");
     }
@@ -121,7 +122,7 @@ describe("bounded atomic profile JSON", () => {
     await writeFile(
       repository.file,
       JSON.stringify({
-        schemaVersion: 1,
+        schemaVersion: 2,
         writeId: randomUUID(),
         profiles: [p, p],
       }),
@@ -131,10 +132,10 @@ describe("bounded atomic profile JSON", () => {
   it("preserves the previous file when the final conflict check fails and cleans its own temporary file", async () => {
     const saved = await repository.write("absent", [profile()]);
     const original = await readFile(repository.file, "utf8");
-    const realRead = repository.read.bind(repository);
-    vi.spyOn(repository, "read")
-      .mockImplementationOnce(realRead)
-      .mockResolvedValueOnce({ ...saved, revision: "changed" });
+    vi.spyOn(repository, "read").mockResolvedValueOnce({
+      ...saved,
+      revision: "changed",
+    });
     await expect(repository.write(saved.revision, [])).rejects.toMatchObject({
       code: "CONFLICT",
     });

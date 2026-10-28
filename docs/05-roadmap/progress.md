@@ -642,3 +642,62 @@ Limitações anteriores mantidas; sem push ou execução da 4A.2. Nova etapa exi
 contrato/aceite próprios, sem repetir o aceite já concedido da DOC.1.
 
 Conferência do aceite DOC.1: docs:check aprovado, 37 Markdown/280 links locais/99 tabelas/11 âncoras válidos e whitespace conferido. Código/guia/ferramentas apresentados preservados; nenhuma repetição funcional ou nova fase.
+
+## Preparação 4A.2 após DOC.1
+
+O proprietário pediu “Pode seguir para a próxima etapa”. Git limpo em `66183f7`,
+com DOC.1 aprovada/registrada. Conforme o fluxo de contrato antes da implementação,
+preparada proposta detalhada da **4A.2A — CA personalizada e teste HTTPS**, com
+subdivisão Proposed em A (CA/HTTPS), B (AMQPS) e C (sessão), sem execuções automáticas.
+
+Contrato no roadmap: 13 campos, limites e migração propostos, nove critérios de
+aceitação, testes de TLS/IPC/credenciais/cancelamento e guia/Ajuda. Fontes oficiais
+consultadas; limitações de acesso/versionamento registradas. Sem novos ADRs Accepted,
+dependências, código, migração, conexão a broker ou teste funcional. Guia preservado.
+AGENTS/PROJECTS/estado sincronizados para apreciação. Nenhum commit ou push.
+
+Conferência da proposta 4A.2A: docs:check aprovado; 37 Markdown/281 links locais/101 tabelas válidos, 13 campos do contrato e whitespace conferidos. Apenas cinco arquivos documentais alterados; fonte/guia preservados, index vazio. Sem novo teste funcional, commit ou push.
+
+## 4A.2A — execução autorizada
+
+Após apresentação do contrato detalhado, “Autorizo” aprovou CA/teste HTTPS,
+sublimites, schema/migração e verificações isoladas. Preparação documental
+preservada em 66183f7 sem commit novo. Sem autorização de 4A.2B/C ou push.
+
+## 4A.2A — implementação verificada, pronta para revisão
+
+CA pública por perfil, tokens vinculados à janela/expiração, JSON v2 com leitura
+v1 sem mutação/backup exato na gravação explícita, teste de autenticação HTTPS
+whoami no main e UI com cancelamento/resultado datado. Ponte com 16 métodos
+específicos; sem sessão ativa, AMQP ou persistência de senha habilitada.
+Guia/README/Ajuda sincronizados (12 tópicos), NFR-031–033 e documentação atualizados.
+
+Check final aprovado com 166 testes/24 arquivos; package darwin-arm64 e três
+smokes sequenciais (base/Ajuda/segurança, perfis, HTTPS) aprovados. Revisão do ASAR
+sem fixtures/segredos e capturas de temas/zoom concluída. Harness passou a usar sua
+própria janela em tela cheia para 1440x900, pois o host oferece área útil 1440x870;
+nenhuma alteração no produto ou resolução global. Dimensões exigidas preservadas.
+
+[Evidências 4A.2A](../07-testing/https-4a2a.md) distinguem TLS Node real isolado de
+RabbitMQ real não executado (Docker sem daemon). Nativos manuais, assistivas,
+outros SOs/CPUs e gates de provider/release permanecem pendentes. Conclusão/commit
+aguardam aprovação explícita; nenhum push ou trabalho 4A.2B/C.
+
+Conferência final documental 4A.2A: 38 Markdown/288 links locais/105 tabelas/12
+âncoras válidos; docs:check/format:check/whitespace aprovados. 36 arquivos protegidos
+preservados contra o início; HEAD 66183f7 e index vazio. Detalhes no PROJECTS_STATUS.
+
+## 4A.2A — conclusão e commit aprovados
+
+O proprietário respondeu **“Aprovado”** à solicitação explícita de conclusão 4A.2A
+e do commit `feat(connections): add custom CA and HTTPS authentication tests`.
+Conferidos os 58 arquivos apresentados e o SHA-256 do ASAR antes de sincronizar
+os documentos do aceite. Código/guia/ferramentas apresentados preservados;
+resultados de 166 testes/24 arquivos, check/package/três smokes mantidos, sem
+repetição funcional para alteração exclusivamente documental.
+
+Alteração posterior em misc/window/components/Titlebar/index.tsx preservada fora
+desse commit; não integra o pacote/testes aprovados. PROJECTS/AGENTS/estado e
+referências sincronizados. Registro da conclusão integra o commit autorizado com
+pai 66183f7; consultar hash no Git. Sem push ou início de 4A.2B/C. Limitações de
+broker real, nativos, assistivas, outros alvos e providers/release mantidas.

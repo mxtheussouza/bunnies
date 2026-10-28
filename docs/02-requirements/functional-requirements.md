@@ -85,3 +85,11 @@ automática, assinatura e publicação exigem infraestrutura e aprovação espec
    correto sem concatenar caminhos sem codificação.
 
 Esses fluxos definem verificações futuras; nenhum foi executado na Etapa 1B.
+
+## Incremento implementado — 4A.2A
+
+Autorizado por “Autorizo”: FR-001/002/003/028 recebem CA pública por perfil e teste
+HTTPS explícito, com validação/cancelamento/resultado datado. Parte HTTPS de FR-003
+é verificada localmente com fixtures, sem afirmar suporte real às versões de broker.
+AMQPS, sessão/reconexão e demais operações permanecem futuras. [M01](../04-modules/01-connection-manager.md)
+e [evidências](../07-testing/https-4a2a.md). Conclusão/commit aprovados por “Aprovado”.

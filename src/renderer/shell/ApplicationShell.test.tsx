@@ -66,7 +66,7 @@ describe("offline application shell", () => {
         name: "Nenhuma conexão configurada",
       }),
     ).toBeTruthy();
-    expect(screen.getByText("HTTPS não iniciado")).toBeTruthy();
+    expect(screen.getByText("HTTPS sem sessão")).toBeTruthy();
     expect(screen.getByText("AMQPS não iniciado")).toBeTruthy();
     for (const name of ["Visão geral", "Filas", "Exchanges", "Publicar"])
       expect(

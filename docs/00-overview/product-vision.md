@@ -116,3 +116,12 @@ lateral sem internet. Funções de broker continuam identificadas como indispon�
 O histórico vivo [PROJECTS_STATUS.md](../../PROJECTS_STATUS.md) passa a ser leitura
 e atualização obrigatórias em toda Task. Conclusão/commit DOC.1 aceitos por
 “Aprovado”, mantendo as indisponibilidades e limitações apresentadas.
+
+## Incremento 4A.2A — CA e teste administrativo explícito
+
+Execução autorizada por “Autorizo”. O usuário pode configurar CA pública por perfil
+e testar autenticação HTTPS, com cancelamento/resultado datado, sem ativar sessão
+ou abrir AMQP. Perfis antigos são preservados em leitura e convertidos somente em
+gravação explícita com backup. Guia e Ajuda passam a documentar os novos campos.
+A conclusão/commit foram aprovados por “Aprovado”; RabbitMQ real e outros alvos não homologados.
+[Evidências](../07-testing/https-4a2a.md).

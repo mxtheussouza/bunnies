@@ -7,9 +7,11 @@ describe("preload API", () => {
     const invoke = vi
       .fn()
       .mockResolvedValue({ ok: true, value: undefined, requestId: "id" });
-    const api = createDesktopApi(invoke, invoke);
+    const api = createDesktopApi(invoke, invoke, invoke);
     expect(Object.keys(api).sort()).toEqual([
+      "cancelProfileHttpsTest",
       "close",
+      "discardProfileCa",
       "getInfo",
       "getSecretProtectionStatus",
       "listProfiles",
@@ -18,7 +20,9 @@ describe("preload API", () => {
       "quit",
       "removeProfile",
       "saveProfile",
+      "selectProfileCa",
       "showEditMenu",
+      "testProfileHttps",
       "toggleMaximize",
       "view",
     ]);
@@ -34,7 +38,7 @@ describe("preload API", () => {
     const reject = async () => {
       throw new Error("private /secret/path token sentinel");
     };
-    const api = createDesktopApi(reject, reject);
+    const api = createDesktopApi(reject, reject, reject);
     const result = await api.getInfo();
     expect(result.ok).toBe(false);
     expect(JSON.stringify(result)).not.toMatch(/private|secret|sentinel|stack/);
@@ -45,7 +49,7 @@ describe("preload API", () => {
     const profiles = vi
       .fn()
       .mockResolvedValue({ ok: true, requestId: "id", value: {} });
-    const api = createDesktopApi(desktop, profiles);
+    const api = createDesktopApi(desktop, profiles, profiles);
     await api.listProfiles();
     await api.getSecretProtectionStatus();
     await api.removeProfile({ id: "synthetic-id", revision: "absent" });

@@ -375,3 +375,41 @@ acervo de engenharia para o pacote. Histórico vivo fica na raiz como
 
 Conclusão/commit DOC.1 aceitos posteriormente por “Aprovado”, mantendo os limites
 registrados. Esse aceite não autoriza integração RabbitMQ ou outra fase.
+
+## CA e probe HTTPS implementados — 4A.2A
+
+Execução autorizada por “Autorizo” ao contrato detalhado; conclusão/commit aprovados
+posteriormente por “Aprovado”. Os limites apresentados permanecem registrados.
+Doze métodos anteriores preservados; quatro específicos de conexão/CA levam a
+`bunnies:connections`, com a mesma autoridade de janela/frame/URL integral.
+
+```mermaid
+flowchart LR
+    UI[Conexões e formulário] --> P[Preload: métodos nomeados]
+    P --> I[Main: IPC autorizado e DTO estrito]
+    I --> CA[ProfileCaSelections: diálogo/arquivo/PEM/token]
+    I --> T[HttpsTestService: operação por janela/deadline]
+    T --> S[ProfileService: snapshot e senha no main]
+    S --> R[JSON v1/v2: lock/revision/backup]
+    T --> H[httpsProbe: agente TLS dedicado e limitado]
+    H --> E[Endpoint salvo: GET whoami]
+```
+
+- `security/boundedFile.ts` e `profileCa.ts`: tipo/tamanho, X509/CA/DER estritos,
+  seleção opaca por janela, expiração e fingerprints sem caminho/bytes no renderer.
+- `profiles/repository.ts`: lê v1/v2, grava v2 explicitamente com backup v1 exato;
+  mantém limites/lock/revision. `ProfileService` resolve confiança/token e senha;
+  notifica mudanças para invalidar operações, sem event bus genérico.
+- `connections/httpsProbe.ts`: somente GET no prefixo do perfil, Basic, validação
+  TLS e limites de corpo/headers/JSON; sem sessão, redirect/retry ou proxy herdado.
+- `connections/httpsTestService.ts`: reserva de uma operação por janela, deadline,
+  AbortController, snapshot/revision e resultado datado. Credencial nunca é DTO de retorno.
+- `ipc/connections.ts`: seletor nativo no main, revalidação após await, limpeza em
+  reload/crash/fechamento/quit e descarte dos handlers/listeners. Não recebe filepath.
+- UI `HttpsTest.tsx` e campos em ProfileForm/Connections; URL fixa e tema/CSP
+  preservados. Ajuda usa guia atualizado, sem interpretar corpo de resposta do broker.
+
+CA armazenada é pública; default/custom têm semântica explícita. Não há amqplib,
+cliente AMQP, sessão ativa, vhost, polling/reconexão ou mudança do gate de senhas.
+Detalhamento: [M01](../04-modules/01-connection-manager.md) e
+[evidências/limites](../07-testing/https-4a2a.md).

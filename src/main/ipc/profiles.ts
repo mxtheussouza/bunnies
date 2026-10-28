@@ -35,7 +35,7 @@ export function registerProfilesIpc(
             value = await service.protection.status();
             break;
           case "saveProfile":
-            value = await service.save(request.input);
+            value = await service.save(request.input, window.webContents.id);
             break;
           case "removeProfile":
             value = await service.remove(request.input, async profile => {

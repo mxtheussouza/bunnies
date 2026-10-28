@@ -3,7 +3,7 @@
 Data: 2026-10-28. Status: Etapas 0, 1A, 1B, 2A, 2B, 3A e 3B concluídas e aprovadas;
 sete ADRs e D3A-01–08 aceitos. Conclusão/commit da 3B aprovados por “Aprovado”.
 4A.1 concluída/aprovada e registrada em `fe4a252`. DOC.1 concluída/aprovada por
-“Aprovado”; commit autorizado. 4A.2 sem autorização.
+“Aprovado”; registrada em `66183f7`. Conclusão/commit 4A.2A aprovados por “Aprovado”.
 
 ## Sequência proposta
 
@@ -17,8 +17,8 @@ sete ADRs e D3A-01–08 aceitos. Conclusão/commit da 3B aprovados por “Aprova
 | 3A | Navegação, tokens e componentes para aprovação | Concluída e aprovada; D3A-01–08 Accepted e commit autorizado |
 | 3B | Interface base acessível, temas e estados | Concluída e aprovada; commit autorizado por “Aprovado” |
 | 4A.1 | Perfis locais e proteção condicionada de credenciais | Concluída e aprovada; commit autorizado |
-| DOC.1 | Histórico vivo, guia e Ajuda offline | Concluída e aprovada por “Aprovado”; commit autorizado |
-| 4A.2 | Testes HTTPS/AMQPS, CA customizada e ciclo de sessão | Proposta; contrato e autorização próprios pendentes |
+| DOC.1 | Histórico vivo, guia e Ajuda offline | Concluída e aprovada; commit 66183f7 |
+| 4A.2 | Testes HTTPS/AMQPS, CA customizada e ciclo de sessão | 4A.2A autorizada/em verificação; 4A.2B/C exigem contratos próprios |
 | 4B | Management API, capacidades e consultas de leitura | Proposta |
 | 5 | Filas e proteção das operações destrutivas | Proposta |
 | 6 | Exchanges e bindings | Proposta |
@@ -519,3 +519,163 @@ Aprovação DOC.1: “Aprovado” aceitou a conclusão e o commit
 `feat(help): add offline user guide and project status tracking`.
 [Estado e histórico vivo](../../PROJECTS_STATUS.md) sincronizados; sem nova
 implementação, push ou avanço de etapa neste aceite.
+
+## Proposta de subdivisão — 4A.2
+
+Após DOC.1 (`66183f7`), o proprietário pediu “Pode seguir para a próxima etapa”.
+Foi preparado o contrato abaixo para apreciação antes de implementar. O roadmap
+anterior trazia apenas o título da 4A.2, sem contrato detalhado. Esta preparação
+não registra as novas escolhas como aprovadas nem habilita operações no produto.
+
+| Incremento proposto | Entrega | Gate |
+| --- | --- | --- |
+| 4A.2A | CA personalizada e teste explícito HTTPS | Execução autorizada por Autorizo; conclusão/commit aprovados por Aprovado |
+| 4A.2B | Teste AMQPS/autenticação/vhost e cliente AMQP | Contrato próprio; verificar versão/tipos do cliente aceito no ADR-0002 |
+| 4A.2C | Ativar/encerrar sessão e ciclo de recuperação | Contrato próprio; usar resultados/capacidades dos dois transportes |
+
+A divisão mantém o escopo da 4A.2 e produz entregas menores. Não autoriza executar
+os três incrementos em sequência. A matriz de referência aceita permanece sem
+homologação; patches e imagens serão revalidados antes de testes reais de broker.
+
+## Contrato autorizado — 4A.2A: CA personalizada e teste HTTPS
+
+Status: **Execução autorizada por “Autorizo”; conclusão/commit aprovados por “Aprovado”**.
+A preparação original alterou somente documentação. A implementação autorizada
+segue o contrato abaixo; ADRs aceitos preservados. [Evidências](../07-testing/https-4a2a.md).
+
+| Campo | Proposta para aprovação |
+| --- | --- |
+| Identificador/nome | 4A.2A — CA personalizada e teste HTTPS |
+| Objetivo | Configurar confiança TLS por perfil e testar autenticação na Management API mediante ação explícita |
+| Justificativa | Perfis locais e Ajuda estão prontos; ainda não há transporte, leitura de credenciais para rede ou configuração de CA. Validar primeiro essa fronteira limita o incremento |
+| Escopo | Importar/manter/remover CA pública PEM pelo main; persistência versionada compatível com perfis v1; teste HTTPS de perfil salvo com usuário/senha em memória; resultado datado, cancelamento e erros sanitizados; sem sessão ativa |
+| Tarefas | Detalhar DTOs/schema; importar certificados por diálogo nativo limitado; preservar/migrar v1 em gravação explícita; obter snapshot de perfil/credencial só no main; implementar probe HTTPS limitado/cancelável; integrar UI; atualizar guia/Ajuda/histórico; executar testes e revisão |
+| Módulos afetados | M01 Connection Manager, configuração, TLS/credenciais, IPC e UI Conexões; documentação/M08 Ajuda; sem funcionalidades de filas/exchanges/mensagens |
+| Arquivos previstos | Novos módulos pequenos src/main/connections/httpsProbe.ts e serviço correspondente; src/main/security/profileCa.ts; ajustes em profiles/repository/service/validation, ipc/profiles e app; contratos src/shared/connections.ts e profiles; extensão explícita do preload/desktop; páginas Conexões/ProfileForm e testes próximos; tools/testing; guia e documentos listados abaixo |
+| Dependências | DOC.1 em 66183f7; ADRs 0002/0003/0004/0005 e NFRs aceitos; APIs instaladas Node/Electron. Nenhuma biblioteca nova, instalação de AMQP, troca de stack ou mudança de dependências prevista |
+| Riscos | CA indevida/chave privada, leitura arbitrária de arquivo, migração que perca configuração, vazamento de Authorization/senha, deadline incompleto, redirecionamento, resultado obsoleto ou interpretado como sessão ativa; mitigações abaixo |
+| Critérios de aceitação | Os nove critérios verificáveis abaixo, guia sincronizado e resultados/limitações efetivos apresentados para aprovação de conclusão |
+| Estratégia de testes | Unitários de CA/DTO/credenciais/cancelamento; integração de arquivo e servidor HTTPS efêmero com certificados sintéticos; IPC negativas; componentes; check/package/smokes de segurança/perfis/Ajuda; broker isolado quando viável, sem usar endpoints de usuário/produção |
+| Resultado esperado | Usuário salva configuração TLS e executa/cancela teste HTTPS, recebe diagnóstico fiel e datado; nenhum teste ao abrir/salvar/selecionar perfil e nenhuma sessão RabbitMQ ativada |
+| Impacto documental | Atualizar M01, arquitetura/segurança/NFRs para sub-limites aprovados, requisitos/estado de implementação, roadmap/current-stage/progress, testes/evidências, AGENTS e PROJECTS; atualizar guide.json, gerar Markdown e conferir Ajuda/README após implementar |
+
+### Confiança TLS e configuração local propostas
+
+1. Modo padrão utiliza a confiança padrão do runtime Node no main, sem prometer
+   que seja idêntica ao armazenamento de certificados do SO. Modo personalizado
+   usa exclusivamente o bundle escolhido; sem alteração de trust store, variáveis
+   globais TLS, bypass de certificado ou downgrade para HTTP.
+2. Diálogo assíncrono de arquivo no main, vinculado à janela autorizada. Ler somente
+   o arquivo escolhido pelo SO, com limite de **256 KiB**, no máximo **16 certificados
+   CA PEM**; rejeitar dados extras, chave privada, PFX/PKCS#12 e certificados que
+   não sejam CA. A extensão não comprova validade. Esses sub-limites foram aprovados
+   pelo aceite do contrato e estão registrados em NFR-031–033.
+3. Renderer recebe identificador opaco temporário, quantidade/fingerprints e estado
+   de seleção; nunca caminho completo, bytes de certificado ou chave. Uma seleção
+   pendente por janela, expiração de dez minutos; substituir/descartar/fechar janela
+   libera a seleção. Salvar consome a seleção apenas depois de gravar com sucesso.
+4. No arquivo, guardar o conteúdo público validado como snapshot por perfil,
+   sem depender do caminho original. Os limites de 50 perfis/2 MiB continuam
+   obrigatórios, incluindo certificados/ciphertext. Bundle grande pode atingir o
+   limite total antes dos 50 perfis; explicar a falha e preservar o original.
+5. Propor schema v2. Ler v1 sem regravar ao iniciar, usando confiança padrão em
+   memória; migrar somente na próxima gravação explícita e sob o lock/revision.
+   Preservar um backup v1 privado antes da primeira conversão; backup existente
+   só é reutilizado se corresponder aos bytes de origem, caso contrário informar
+   conflito. Falha de backup/gravação mantém o arquivo anterior. Schema desconhecido
+   ou inválido nunca é resetado. Versão anterior do app não terá garantia de ler v2.
+6. Keep/remove/replace de senha e confiança são ações distintas. Falha de importação,
+   migração, provider ou escrita não apaga senha/CA anterior. O gate de persistência
+   de senha continua fechado; nenhum acesso ao cofre real está incluído.
+
+### Probe HTTPS e IPC propostos
+
+- Uma ação **Testar HTTPS**, somente para perfil salvo, resolve ID/revision no main;
+  não aceita URL, cabeçalhos, usuário/senha ou caminho de arquivo como argumentos
+  do teste. Se não houver senha nesta execução, falhar antes de rede, sem guest
+  automático. Validar a representação do usuário para Basic; caracteres incompatíveis
+  geram erro explícito, sem alterar silenciosamente a identidade cadastrada.
+- Fazer apenas **GET /api/whoami**, anexado ao prefixo de caminho administrativo
+  configurado e preservando o mesmo destino. Basic segue em header somente ao host
+  TLS validado. Corpo JSON deve identificar o usuário esperado; não devolver corpo
+  bruto, tags arbitrárias ou cabeçalhos ao renderer. A resposta não prova versão,
+  permissões de recursos/vhosts, saúde do cluster ou disponibilidade AMQP.
+- Agente dedicado e descartável, sem herdar proxy/agent global. Exigir cadeia,
+  validade e identidade do servidor; TLS mínimo proposto 1.2. Não substituir a
+  checagem de hostname por uma função permissiva. Não prometer CRL/OCSP automáticos.
+- Deadline total de **10 s** inclui resolução, handshake e leitura (NFR-013),
+  sem retry automático; rejeitar todo 3xx sem seguir Location. Uma operação em voo
+  por janela, abaixo do teto geral de quatro leituras por sessão. Solicitar
+  resposta sem compressão e rejeitar codificação inesperada neste probe inicial.
+- Sublimites propostos: **64 KiB de corpo** e **16 KiB de headers**; JSON UTF-8 com
+  profundidade até 16. São limites específicos do probe, sem ampliar os 10 MiB
+  gerais do futuro adapter administrativo. Corpo/tipos/conteúdo inválidos produzem
+  erro de protocolo, sem alegar conectividade aprovada.
+- Operações candidatas adicionais da ponte: selecionar CA, descartar seleção de CA,
+  testar HTTPS e cancelar teste. Métodos específicos e DTOs fechados; atualizar a
+  allowlist finita, sem invoke/send ou API de arquivo/transporte genéricos.
+- ID de correlação do teste é validado e vinculado no main à janela/perfil/revision;
+  conhecer/enviar um ID não concede autoridade. Cancelar só alcança a operação
+  dessa janela. Revalidar origem após diálogo e snapshot ao concluir; edição/remoção
+  do perfil, mudança de configuração ou fechamento da janela cancela/invalida o teste.
+- Fechar sockets/timers/seleções no cancelamento/encerramento. Resultado atrasado não
+  substitui estado novo. Informar separadamente cancelamento, timeout, rede, TLS,
+  401, 403 e resposta incompatível, sempre com mensagem fixa e requestId.
+
+### Interface, guia e limites de escopo
+
+Conexões terá resumo da confiança, seleção/remoção de CA no formulário e teste
+HTTPS com estado em andamento/cancelar/resultado datado no perfil salvo. Salvar,
+selecionar ou abrir o app não gera rede. Alterações de formulário precisam ser
+salvas antes do teste. A UI mantém **Sem sessão ativa**, sem dar sucesso AMQPS ou
+liberar páginas de broker por um teste HTTPS bem-sucedido.
+
+Não inclui AMQP/amqplib, sessão ativa, vhost/polling/reconexão, dashboard, filas,
+exchanges, mensagens, autenticação OAuth/mTLS, proxy corporativo configurável,
+assinatura, instaladores, publicação ou push. A 4A.2B/C e a 4B exigirão contratos
+próprios; não são autorizadas por aceitar somente a 4A.2A.
+
+### Critérios verificáveis da 4A.2A
+
+1. UI cadastra/edita/remove CA sem expor caminho/bytes; cancelamento do seletor
+   não altera o perfil. Chave privada/PEM inválido/não-CA e limites são rejeitados.
+2. Perfis v1 continuam legíveis sem mutação automática; migração explícita v2 e
+   backup funcionam sob conflito/falha, mantendo segredo/arquivo anterior nos erros.
+3. Sem senha, teste falha sem request; senha disponível só é obtida/consumida no
+   main. Disco/DTO/log/storage/pacote não contêm sentinela de senha em claro.
+4. TLS real rejeita CA desconhecida, cadeia/certificado inválido/expirado e hostname
+   divergente; CA correta permite o handshake. Nenhum bypass ou trust global alterado.
+5. Request usa somente o destino/prefixo de perfil salvo; verifica identidade, trata
+   401/403/404/3xx/JSON inválido/oversize/deadline/cancelamento sem redirecionar ou repetir.
+6. Alteração/remoção de perfil, janela fechada e resultado atrasado não mantêm sockets,
+   timers ou indicação válida de teste antigo. Conexões/perfis/Ajuda continuam acessíveis.
+7. Novos IPCs negam janela/frame/URL/DTO/tamanho indevidos; allowlist explícita e
+   controles 2B/3B/4A.1/DOC.1 preservados no pacote.
+8. Dois temas, teclado/foco/erros, layout mínimo e zoom 200% revisados; guia/Ajuda
+   explicam todos os novos campos/efeitos sem prometer sessão ou suporte homologado.
+9. Check (inclui docs:check), package, smokes/regressões e cenários TLS isolados
+   executados e registrados. Distinguir fixture Node de RabbitMQ real e SO efetivo;
+   impossibilidade de executar parte da matriz é limitação explícita, nunca teste aprovado.
+
+### Evidências de preparação e fontes
+
+Em 2026-10-28, o repositório está em `66183f7`, sem transporte de broker. Tipos
+Node instalados declaram opções CA/verificação TLS, limite de headers e X509Certificate.
+Executáveis Docker e OpenSSL foram localizados; daemon, imagens e geração de
+certificados não foram executados ou validados nesta preparação. Nenhum broker,
+cofre ou arquivo de certificado do usuário foi acessado.
+
+A API oficial documenta /api/whoami como consulta do usuário autenticado;
+[Management HTTP API](https://www.rabbitmq.com/docs/http-api-reference#get-apiwhoami).
+[Electron dialog](https://www.electronjs.org/docs/latest/api/dialog) oferece o
+seletor assíncrono no main. Referências de
+[HTTPS](https://nodejs.org/api/https.html), [TLS](https://nodejs.org/api/tls.html) e
+[X509 Node 24](https://nodejs.org/docs/latest-v24.x/api/crypto.html#class-x509certificate)
+embasam o desenho; as páginas HTTPS/TLS acessíveis reportaram Node 26.13.0, não
+homologam o runtime Electron. Os links específicos HTTPS/TLS v24 e API RabbitMQ 4.3
+não ficaram acessíveis pela ferramenta; validar o runtime/duas versões em testes
+continua gate da implementação. A página da API consultada é a de RabbitMQ 4.4.
+
+Não foi instalada dependência, gerado certificado, executado teste TLS ou homologada
+compatibilidade. O proprietário autorizou a execução por “Autorizo”; apresentar evidências e
+solicitar aprovação de conclusão antes de commit.

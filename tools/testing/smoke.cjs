@@ -69,15 +69,60 @@ async function smoke() {
       .waitFor();
     const window = await application.browserWindow(page);
     async function resize(width, height) {
-      await window.evaluate(
-        (win, size) => win.setContentSize(size.width, size.height),
-        { width, height },
+      const display = await application.evaluate(({ screen }) =>
+        screen.getPrimaryDisplay(),
       );
-      await page.waitForFunction(
-        ({ width, height }) =>
-          window.innerWidth === width && window.innerHeight === height,
-        { width, height },
-      );
+      const fullscreen =
+        width > display.workAreaSize.width ||
+        height > display.workAreaSize.height;
+      assert.ok(width <= display.size.width && height <= display.size.height);
+      // macOS clamps normal windows to the work area. The harness uses only its
+      // own window's fullscreen mode for exact screen-sized layout assertions.
+      await window.evaluate(async (win, fullscreen) => {
+        if (win.isFullScreen() === fullscreen) return;
+        await new Promise((resolve, reject) => {
+          const event = fullscreen ? "enter-full-screen" : "leave-full-screen";
+          const timeout = setTimeout(() => {
+            win.removeListener(event, done);
+            reject(new Error("Smoke fullscreen transition timed out"));
+          }, 10_000);
+          function done() {
+            clearTimeout(timeout);
+            resolve();
+          }
+          win.once(event, done);
+          win.setFullScreen(fullscreen);
+        });
+      }, fullscreen);
+      if (!fullscreen)
+        await window.evaluate(
+          (win, size) => win.setContentSize(size.width, size.height),
+          { width, height },
+        );
+      try {
+        await page.waitForFunction(
+          ({ width, height }) =>
+            window.innerWidth === width && window.innerHeight === height,
+          { width, height },
+        );
+      } catch (error) {
+        console.error(
+          JSON.stringify({
+            resizeExpected: { width, height },
+            actual: await window.evaluate(win => ({
+              content: win.getContentSize(),
+              bounds: win.getBounds(),
+              zoom: win.webContents.getZoomFactor(),
+              maximized: win.isMaximized(),
+              fullscreen: win.isFullScreen(),
+            })),
+            display: await application.evaluate(
+              ({ screen }) => screen.getPrimaryDisplay().workAreaSize,
+            ),
+          }),
+        );
+        throw error;
+      }
     }
     async function theme(value) {
       await page.waitForFunction(
@@ -426,6 +471,7 @@ async function smoke() {
         ),
       "no-drag",
     );
+    await resize(1200, 800);
     for (const [name, state] of [
       ["Minimizar", "isMinimized"],
       ["Maximizar ou restaurar", "isMaximized"],

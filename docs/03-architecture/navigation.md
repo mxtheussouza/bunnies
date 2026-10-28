@@ -246,3 +246,12 @@ o primeiro tópico. Painel compacto oferece a mesma entrada e fecha ao navegar.
 Campos/formulários são documentados a partir do uso real; recursos ainda ausentes
 ficam claramente identificados. O formulário modal de perfil continua bloqueando
 navegação externa e atalho durante edição. Fonte e fluxo: [guia do usuário](../10-user-guide/README.md).
+
+## Incremento 4A.2A — CA e teste HTTPS
+
+Formulário mantém fluxo de descarte/foco e acrescenta Confiança TLS, seleção PEM
+pelo SO e fingerprints. Resumo do perfil salvo tem botão Testar HTTPS, cancelar,
+resultado datado e diagnóstico. Salvar/selecionar/abrir não gera rede; AMQPS e
+sessão continuam ausentes. Contexto passa a HTTPS sem sessão para não confundir
+a ausência de sessão com inexistência de uma tentativa de teste temporária.
+Guia/Ajuda explicam as ações e seus efeitos. [M01](../04-modules/01-connection-manager.md).

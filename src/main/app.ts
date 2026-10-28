@@ -3,6 +3,8 @@ import squirrelStartup from "electron-squirrel-startup";
 import { resolve } from "node:path";
 import { createAppWindow, getAppWindow, rendererEntry } from "./appWindow";
 import { registerDesktopIpc } from "./ipc/desktop";
+import { HttpsTestService } from "./connections/httpsTestService";
+import { registerConnectionsIpc } from "./ipc/connections";
 import { registerProfilesIpc } from "./ipc/profiles";
 import { ProfileRepository } from "./profiles/repository";
 import { ProfileService } from "./profiles/service";
@@ -49,9 +51,18 @@ if (squirrelStartup) {
         entry,
         profiles,
       );
+      const httpsTests = new HttpsTestService(profiles);
+      const disposeConnections = registerConnectionsIpc(
+        getAppWindow,
+        entry,
+        profiles,
+        httpsTests,
+      );
       app.once("will-quit", () => {
         dispose();
         disposeProfiles();
+        disposeConnections();
+        httpsTests.dispose();
         profiles.dispose();
       });
       Menu.setApplicationMenu(

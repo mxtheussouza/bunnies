@@ -106,11 +106,11 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **DOC.1 concluída e aprovada; commit autorizado**.
-- Última etapa concluída e aprovada: **DOC.1 — histórico vivo, guia e Ajuda offline**.
-- Entrega aprovada: **DOC.1**, conclusão/commit aceitos por “Aprovado”.
-- Próxima ação: conferir o registro DOC.1 no Git ao retomar; nenhuma implementação
-  nova autorizada. Nova etapa exige contrato/autorização próprios; a 4A.2 não está autorizada.
+- Etapa atual: **4A.2A concluída e aprovada; registro do commit autorizado**.
+- Última etapa concluída e aprovada: **4A.2A — CA personalizada e teste HTTPS**.
+- Entrega aprovada: `feat(connections): add custom CA and HTTPS authentication tests`,
+  com pai `66183f7`; consultar o hash no Git.
+- Próxima ação: registrar/conferir somente o commit aprovado. Não executar 4A.2B/C.
 
 Ao retomar, ler este arquivo, [PROJECTS_STATUS.md](PROJECTS_STATUS.md), a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -192,3 +192,40 @@ no PROJECTS/estado/evidências; limitações mantidas. Registrar somente a entre
 apresentada e a sincronização documental do aceite. Não repetir implementação,
 fazer push ou iniciar 4A.2 sem autorização própria. Guia e histórico permanecem
 obrigações de toda Task posterior.
+
+## Preparação da próxima etapa
+
+Após DOC.1 em `66183f7`, o pedido “Pode seguir para a próxima etapa” iniciou a
+preparação do contrato 4A.2A (CA personalizada/teste HTTPS). O contrato detalhado
+foi inicialmente Proposed no roadmap; o aceite posterior abaixo autorizou A e
+seus sub-limites. B/C continuam dependentes de contratos próprios. Registrar toda
+Task no PROJECTS; guia acompanha apenas o comportamento implementado.
+
+## Autorização vigente — 4A.2A
+
+Após apresentar o contrato detalhado no roadmap, o proprietário respondeu
+**“Autorizo”**. Estão aprovados para implementação os limites/CA/schema/teste HTTPS
+desse contrato, usando APIs instaladas e testes isolados. Atualizar PROJECTS e guia.
+Permite ampliar IPC com operações específicas; preservar autoridade/CSP/sandbox.
+Não inclui AMQP/sessão ativa, persistência de senha, novas dependências ou push.
+Não registrar commit antes de aprovação de conclusão.
+
+Implementação 4A.2A: a ponte agora tem **16 métodos específicos**, incluindo
+selectProfileCa/discardProfileCa/testProfileHttps/cancelProfileHttpsTest em canal
+bunnies:connections. A regra histórica de 12 métodos foi ampliada por esse contrato.
+Nunca expor URL/path/header/senha recuperada. JSON v2 preserva leitura v1 e backup
+exato em gravação explícita; tokens CA expiram por janela e não voltam como PEM.
+Node probe só faz whoami no perfil salvo, TLS validado, sem sessão/AMQP; policy
+Chromium/CSP preservada. Rodar check, package e smokes base/perfis/https em sequência.
+[Evidências 4A.2A](docs/07-testing/https-4a2a.md); Docker sem daemon limita RabbitMQ
+real. Guia e PROJECTS devem acompanhar este e todos os incrementos.
+
+## Conclusão 4A.2A aprovada
+
+O proprietário respondeu **“Aprovado”** à solicitação explícita de conclusão e do
+commit `feat(connections): add custom CA and HTTPS authentication tests`.
+Conferidos os 58 arquivos apresentados e o ASAR antes da sincronização documental
+do aceite. Resultados/limitações apresentados permanecem válidos; não ampliar a etapa.
+Uma alteração posterior em `misc/window/components/Titlebar/index.tsx` é trabalho
+local adicional: preservar fora desse commit, sem reverter ou presumir homologação.
+Não fazer push nem iniciar 4A.2B/C sem seus contratos/autorizações próprios.

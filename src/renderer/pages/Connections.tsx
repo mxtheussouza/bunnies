@@ -12,6 +12,7 @@ import Button from "../components/Button";
 import Card from "../components/Card";
 import EmptyState from "../components/EmptyState";
 import StatusMessage from "../components/StatusMessage";
+import HttpsTest from "./HttpsTest";
 import ProfileForm from "./ProfileForm";
 import "./profiles.scss";
 
@@ -222,6 +223,24 @@ export default function Connections() {
               <dd>{profile.amqpsUrl}</dd>
               <dt>Usuário</dt>
               <dd>{profile.username}</dd>
+              <dt>Confiança TLS</dt>
+              <dd>
+                {profile.trust.mode === "default" ? (
+                  "CAs padrão do aplicativo"
+                ) : (
+                  <>
+                    <span>
+                      CA personalizada · {profile.trust.fingerprints.length}{" "}
+                      certificado(s)
+                    </span>
+                    <ul className="ca-fingerprints">
+                      {profile.trust.fingerprints.map((fingerprint, index) => (
+                        <li key={index}>SHA-256: {fingerprint}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </dd>
               <dt>Senha</dt>
               <dd>
                 {profile.secret.saved
@@ -250,16 +269,23 @@ export default function Connections() {
                 Remover perfil
               </Button>
             </div>
+            <HttpsTest
+              key={profile.id + snapshot?.revision}
+              profileId={profile.id}
+              revision={snapshot!.revision}
+              hasPassword={profile.secret.availableThisRun}
+            />
             <p className="profile-hint">
-              Teste dos endpoints e ativação de sessão estarão disponíveis em
-              outra etapa.
+              Teste AMQPS e ativação de sessão estarão disponíveis em outra
+              etapa.
             </p>
           </section>
         )}
       </Card>
-      <StatusMessage title="Nenhuma conexão foi iniciada">
-        HTTPS e AMQPS ainda não foram iniciados. Selecionar ou salvar perfis não
-        envia dados ao broker.
+      <StatusMessage title="Sem sessão ativa">
+        Selecionar ou salvar perfis não envia dados ao broker. Testar HTTPS é
+        uma ação explícita e encerra sua conexão ao terminar. AMQPS permanece
+        não iniciado.
       </StatusMessage>
       {editor && snapshot && (
         <ProfileForm

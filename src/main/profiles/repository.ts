@@ -1,5 +1,4 @@
 import { isUtf8 } from "node:buffer";
-import { constants } from "node:fs";
 import { open, mkdir, rename, rm } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import { join } from "node:path";
@@ -10,12 +9,14 @@ import {
 } from "../../shared/profiles";
 import { exactObject, validFields, validId } from "./validation";
 import { ProfileFailure } from "./errors";
-
+import { FileLimitFailure, readBoundedFile } from "../security/boundedFile";
+import { validStoredTrust, type StoredTrust } from "../security/profileCa";
 export type StoredSecret =
   { mode: "memory" | "none" } | { mode: "protected"; ciphertext: string };
 export type StoredProfile = ProfileFields & {
   id: string;
   secret: StoredSecret;
+  trust: StoredTrust;
 };
 export type StoredSnapshot = { revision: string; profiles: StoredProfile[] };
 export function validStoredSecret(value: unknown): value is StoredSecret {
@@ -34,7 +35,7 @@ export function validStoredSecret(value: unknown): value is StoredSecret {
     /^[A-Za-z0-9+/]+={0,2}$/.test(value.ciphertext)
   );
 }
-function validProfile(value: unknown): value is StoredProfile {
+function validProfile(value: unknown, version: 1 | 2): boolean {
   return (
     exactObject(value, [
       "id",
@@ -44,76 +45,102 @@ function validProfile(value: unknown): value is StoredProfile {
       "amqpsUrl",
       "username",
       "secret",
+      ...(version === 2 ? ["trust"] : []),
     ]) &&
     validId(value.id) &&
     validFields(value) &&
-    validStoredSecret(value.secret)
+    validStoredSecret(value.secret) &&
+    (version === 1 || validStoredTrust(value.trust))
   );
 }
 function code(error: unknown) {
   return (error as NodeJS.ErrnoException)?.code;
 }
-
+const revision = (bytes: Buffer) =>
+  createHash("sha256").update(bytes).digest("hex");
 export class ProfileRepository {
   readonly file: string;
+  readonly backup: string;
   constructor(private readonly directory: string) {
     this.file = join(directory, "profiles.json");
+    this.backup = join(directory, "profiles.v1.backup.json");
   }
-  async read(): Promise<StoredSnapshot> {
+  private async load(): Promise<{
+    snapshot: StoredSnapshot;
+    bytes: Buffer | null;
+    version: 1 | 2 | null;
+  }> {
     let bytes: Buffer;
     try {
-      const file = await open(
-        this.file,
-        constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
-      );
-      try {
-        const stat = await file.stat();
-        if (!stat.isFile() || stat.size > MAX_PROFILE_BYTES)
-          throw new ProfileFailure("CORRUPT");
-        // Read at most the budget + sentinel byte, even if the file grows after stat.
-        const buffer = Buffer.alloc(MAX_PROFILE_BYTES + 1);
-        let length = 0;
-        while (length < buffer.length) {
-          const { bytesRead } = await file.read(
-            buffer,
-            length,
-            buffer.length - length,
-            null,
-          );
-          if (!bytesRead) break;
-          length += bytesRead;
-        }
-        if (length > MAX_PROFILE_BYTES) throw new ProfileFailure("CORRUPT");
-        bytes = buffer.subarray(0, length);
-      } finally {
-        await file.close();
-      }
+      bytes = await readBoundedFile(this.file, MAX_PROFILE_BYTES);
     } catch (error) {
-      if (code(error) === "ENOENT") return { revision: "absent", profiles: [] };
-      if (error instanceof ProfileFailure) throw error;
-      throw new ProfileFailure("UNAVAILABLE");
+      if (code(error) === "ENOENT")
+        return {
+          snapshot: { revision: "absent", profiles: [] },
+          bytes: null,
+          version: null,
+        };
+      throw new ProfileFailure(
+        error instanceof FileLimitFailure ? "CORRUPT" : "UNAVAILABLE",
+      );
     }
     try {
-      if (!isUtf8(bytes)) throw new ProfileFailure("CORRUPT");
+      if (!isUtf8(bytes)) throw new Error();
       const data: unknown = JSON.parse(bytes.toString("utf8"));
       if (
         !exactObject(data, ["schemaVersion", "writeId", "profiles"]) ||
-        data.schemaVersion !== 1 ||
+        (data.schemaVersion !== 1 && data.schemaVersion !== 2) ||
         !validId(data.writeId) ||
         !Array.isArray(data.profiles) ||
         data.profiles.length > MAX_PROFILES ||
-        !data.profiles.every(validProfile) ||
+        !data.profiles.every(profile =>
+          validProfile(profile, data.schemaVersion as 1 | 2),
+        ) ||
         new Set(data.profiles.map(profile => profile.id)).size !==
           data.profiles.length
       )
-        throw new ProfileFailure("CORRUPT");
+        throw new Error();
+      const profiles: StoredProfile[] = data.profiles.map(profile =>
+        data.schemaVersion === 1
+          ? { ...profile, trust: { mode: "default" } }
+          : profile,
+      );
       return {
-        revision: createHash("sha256").update(bytes).digest("hex"),
-        profiles: data.profiles,
+        snapshot: { revision: revision(bytes), profiles },
+        bytes,
+        version: data.schemaVersion,
       };
     } catch {
       throw new ProfileFailure("CORRUPT");
     }
+  }
+  async read(): Promise<StoredSnapshot> {
+    return (await this.load()).snapshot;
+  }
+  private async preserveV1(bytes: Buffer) {
+    let output;
+    try {
+      output = await open(this.backup, "wx", 0o600);
+    } catch (error) {
+      if (code(error) !== "EEXIST") throw error;
+      let backup: Buffer;
+      try {
+        backup = await readBoundedFile(this.backup, MAX_PROFILE_BYTES);
+      } catch {
+        throw new ProfileFailure("CONFLICT");
+      }
+      if (!backup.equals(bytes)) throw new ProfileFailure("CONFLICT");
+      return;
+    }
+    try {
+      await output.writeFile(bytes);
+      await output.sync();
+    } catch (error) {
+      await output.close();
+      await rm(this.backup, { force: true }).catch(() => undefined);
+      throw error;
+    }
+    await output.close();
   }
   async write(
     expected: string,
@@ -121,13 +148,13 @@ export class ProfileRepository {
   ): Promise<StoredSnapshot> {
     if (profiles.length > MAX_PROFILES) throw new ProfileFailure("LIMIT");
     if (
-      !profiles.every(validProfile) ||
+      !profiles.every(profile => validProfile(profile, 2)) ||
       new Set(profiles.map(profile => profile.id)).size !== profiles.length
     )
       throw new ProfileFailure("VALIDATION");
     const bytes = Buffer.from(
       JSON.stringify(
-        { schemaVersion: 1, writeId: randomUUID(), profiles },
+        { schemaVersion: 2, writeId: randomUUID(), profiles },
         null,
         2,
       ) + "\n",
@@ -145,8 +172,11 @@ export class ProfileRepository {
         if (code(error) === "EEXIST") throw new ProfileFailure("CONFLICT");
         throw error;
       }
-      if ((await this.read()).revision !== expected)
+      const previous = await this.load();
+      if (previous.snapshot.revision !== expected)
         throw new ProfileFailure("CONFLICT");
+      if (previous.version === 1 && previous.bytes)
+        await this.preserveV1(previous.bytes);
       const output = await open(temporary, "wx", 0o600);
       try {
         await output.writeFile(bytes);
@@ -157,15 +187,11 @@ export class ProfileRepository {
       if ((await this.read()).revision !== expected)
         throw new ProfileFailure("CONFLICT");
       await rename(temporary, this.file);
-      return {
-        revision: createHash("sha256").update(bytes).digest("hex"),
-        profiles,
-      };
+      return { revision: revision(bytes), profiles };
     } catch (error) {
       if (error instanceof ProfileFailure) throw error;
       throw new ProfileFailure("STORAGE");
     } finally {
-      // Clean only resources created by this operation. A stale foreign lock is never removed.
       await rm(temporary, { force: true }).catch(() => undefined);
       if (locked) await rm(lock, { recursive: true }).catch(() => undefined);
     }

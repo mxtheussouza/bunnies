@@ -7,6 +7,8 @@ import {
   type SaveProfileInput,
   type SecretProtectionStatus,
 } from "../../shared/profiles";
+import type { CaSelection } from "../../shared/connections";
+import { profileErrorMessages } from "../../shared/profiles";
 import Button from "../components/Button";
 import StatusMessage from "../components/StatusMessage";
 
@@ -49,24 +51,70 @@ export default function ProfileForm({
   );
   const [mode, setMode] = React.useState<"memory" | "protected">("memory");
   const [password, setPassword] = React.useState("");
+  const [trustAction, setTrustAction] = React.useState<
+    "keep" | "default" | "replace"
+  >(profile ? "keep" : "default");
+  const [caSelection, setCaSelection] = React.useState<CaSelection | null>(
+    null,
+  );
+  const selection = React.useRef<CaSelection | null>(null);
+  const alive = React.useRef(false);
+  const [choosing, setChoosing] = React.useState(false);
+  const [caError, setCaError] = React.useState("");
+  function clearSelection() {
+    const id = selection.current?.selectionId;
+    selection.current = null;
+    setCaSelection(null);
+    if (id) void window.bunnies.discardProfileCa(id).catch(() => undefined);
+  }
+  async function chooseCa() {
+    if (choosing || busy) return;
+    setChoosing(true);
+    setCaError("");
+    try {
+      const result = await window.bunnies.selectProfileCa();
+      if (!alive.current) {
+        if (result.ok && result.value)
+          void window.bunnies
+            .discardProfileCa(result.value.selectionId)
+            .catch(() => undefined);
+        return;
+      }
+      if (result.ok && result.value) {
+        selection.current = result.value;
+        setCaSelection(result.value);
+        setTrustAction("replace");
+      } else if (!result.ok)
+        setCaError(profileErrorMessages[result.error.code]);
+    } catch {
+      if (alive.current) setCaError(profileErrorMessages.UNAVAILABLE);
+    } finally {
+      if (alive.current) setChoosing(false);
+    }
+  }
   const [discard, setDiscard] = React.useState(false);
   const dialog = React.useRef<HTMLDialogElement>(null);
   const cancel = React.useRef<HTMLButtonElement>(null);
   const dirty =
     JSON.stringify(fields) !== JSON.stringify(initial) ||
     password.length > 0 ||
-    (profile ? action !== "keep" : action !== "replace");
+    (profile ? action !== "keep" : action !== "replace") ||
+    trustAction !== (profile ? "keep" : "default");
   function requestClose() {
-    if (busy) return;
+    if (busy || choosing) return;
     setPassword("");
     if (dirty) setDiscard(true);
     else onClose();
   }
   React.useEffect(() => {
+    alive.current = true;
     const element = dialog.current;
     const focus = document.activeElement;
     element?.showModal();
     return () => {
+      alive.current = false;
+      const id = selection.current?.selectionId;
+      if (id) void window.bunnies.discardProfileCa(id).catch(() => undefined);
       if (element?.open) element.close();
       if (focus instanceof HTMLElement && focus.isConnected) focus.focus();
     };
@@ -90,6 +138,11 @@ export default function ProfileForm({
       <form
         onSubmit={event => {
           event.preventDefault();
+          if (busy || choosing || discard) return;
+          if (trustAction === "replace" && !caSelection) {
+            setCaError("Selecione uma CA PEM antes de salvar.");
+            return;
+          }
           const secret =
             action === "replace" ? { action, mode, password } : { action };
           const input: SaveProfileInput = {
@@ -97,6 +150,10 @@ export default function ProfileForm({
             revision,
             ...(profile ? { id: profile.id } : {}),
             secret,
+            trust:
+              trustAction === "replace" && caSelection
+                ? { action: "replace", selectionId: caSelection.selectionId }
+                : { action: trustAction as "keep" | "default" },
           };
           setPassword("");
           onSave(input);
@@ -115,7 +172,7 @@ export default function ProfileForm({
           </div>
         )}
         <fieldset
-          disabled={busy || discard}
+          disabled={busy || discard || choosing}
           className="profile-fields"
           aria-describedby={error ? "profile-form-error" : undefined}
         >
@@ -179,9 +236,75 @@ export default function ProfileForm({
             />
           </label>
           <p id="profile-endpoint-hint" className="profile-hint">
-            Sem usuário/senha nas URLs, query ou fragmento. CA customizada e
-            teste TLS estarão disponíveis em outra etapa.
+            Sem usuário/senha nas URLs, query ou fragmento. Testar HTTPS usa os
+            dados já salvos e acrescenta /api/whoami ao prefixo informado.
           </p>
+          <div className="profile-field">
+            <label htmlFor="profile-trust">Confiança TLS</label>
+            <select
+              id="profile-trust"
+              value={trustAction}
+              onChange={e => {
+                const action = e.target.value as typeof trustAction;
+                setTrustAction(action);
+                setCaError("");
+                if (action !== "replace") clearSelection();
+              }}
+              aria-describedby={
+                caError ? "profile-ca-hint profile-ca-error" : "profile-ca-hint"
+              }
+            >
+              {profile && (
+                <option value="keep">Manter configuração atual</option>
+              )}
+              <option value="default">CAs padrão do aplicativo</option>
+              <option value="replace">CA personalizada (PEM)</option>
+            </select>
+          </div>
+          <p id="profile-ca-hint" className="profile-hint">
+            Uma CA personalizada substitui as CAs padrão neste perfil. A
+            confiança padrão é a do runtime do aplicativo e pode diferir da
+            configuração do sistema.
+          </p>
+          {trustAction === "keep" && (
+            <p className="profile-hint">
+              {profile?.trust.mode === "custom"
+                ? `CA personalizada salva: ${profile.trust.fingerprints.length} certificado(s).`
+                : "CAs padrão do aplicativo."}
+            </p>
+          )}
+          {trustAction === "replace" && (
+            <>
+              <Button
+                onClick={() => {
+                  void chooseCa();
+                }}
+                loading={choosing}
+              >
+                Selecionar CA PEM
+              </Button>
+              <p className="profile-hint">
+                Até 256 KiB e 16 certificados CA públicos. Não selecione chave
+                privada. A seleção expira em 10 minutos; Salvar perfil importa
+                uma cópia validada.
+              </p>
+              {caSelection && (
+                <ul
+                  className="ca-fingerprints"
+                  aria-label="Fingerprints da CA selecionada"
+                >
+                  {caSelection.fingerprints.map((fingerprint, index) => (
+                    <li key={index}>SHA-256: {fingerprint}</li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+          {caError && (
+            <div id="profile-ca-error">
+              <StatusMessage tone="danger" title={caError} />
+            </div>
+          )}
           <label>
             Usuário
             <input
@@ -269,6 +392,10 @@ export default function ProfileForm({
               : "Salvar senha no dispositivo está indisponível: proteção do sistema ainda não comprovada. Use somente nesta execução."}
           </p>
         </fieldset>
+        <p className="profile-hint">
+          Perfis salvos nesta versão podem não ser lidos por versões anteriores
+          do Bunnies.
+        </p>
         {discard ? (
           <div className="discard-confirmation" role="alert">
             <p>
@@ -284,10 +411,15 @@ export default function ProfileForm({
           </div>
         ) : (
           <div className="profile-actions">
-            <Button onClick={requestClose} disabled={busy}>
+            <Button onClick={requestClose} disabled={busy || choosing}>
               Cancelar
             </Button>
-            <Button variant="primary" type="submit" loading={busy}>
+            <Button
+              variant="primary"
+              type="submit"
+              loading={busy}
+              disabled={choosing || (trustAction === "replace" && !caSelection)}
+            >
               Salvar perfil
             </Button>
           </div>

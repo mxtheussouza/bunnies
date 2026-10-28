@@ -99,12 +99,27 @@ export function validFields(
 const fields = ["name", "environment", "httpsUrl", "amqpsUrl", "username"];
 export function validSave(value: unknown): value is SaveProfileInput {
   if (
-    !exactObject(value, [...fields, "revision", "secret"], ["id"]) ||
+    !exactObject(value, [...fields, "revision", "secret"], ["id", "trust"]) ||
     !validFields(value) ||
     !validRevision(value.revision) ||
     (Object.hasOwn(value, "id") && !validId(value.id))
   )
     return false;
+  if (Object.hasOwn(value, "trust")) {
+    const trust = value.trust;
+    if (
+      !(
+        exactObject(trust, ["action"]) &&
+        (trust.action === "keep" || trust.action === "default")
+      ) &&
+      !(
+        exactObject(trust, ["action", "selectionId"]) &&
+        trust.action === "replace" &&
+        validId(trust.selectionId)
+      )
+    )
+      return false;
+  }
   const secret = value.secret;
   if (
     exactObject(secret, ["action"]) &&

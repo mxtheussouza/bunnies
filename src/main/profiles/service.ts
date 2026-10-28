@@ -13,6 +13,7 @@ import {
   type StoredSecret,
   type StoredSnapshot,
 } from "./repository";
+import { ProfileCaSelections, summarizeTrust } from "../security/profileCa";
 import { ProfileFailure } from "./errors";
 
 export class ProfileService {
@@ -21,13 +22,18 @@ export class ProfileService {
   private revision: string | undefined;
   private closed = false;
   private queued = 0;
+  private changed = new Set<() => void>();
   constructor(
     private readonly repository: ProfileRepository,
     readonly protection: SecretProtection,
+    readonly caSelections = new ProfileCaSelections(),
   ) {}
   dispose() {
     this.closed = true;
     this.passwords.clear();
+    this.notifyChanged();
+    this.changed.clear();
+    this.caSelections.dispose();
   }
   private queue<T>(operation: () => Promise<T>): Promise<T> {
     if (this.closed || this.queued >= 16)
@@ -51,15 +57,19 @@ export class ProfileService {
   private async read() {
     const snapshot = await this.repository.read();
     // External changes invalidate all transient credentials, rather than reuse a password for changed metadata.
-    if (this.revision !== snapshot.revision) this.passwords.clear();
+    if (this.revision !== snapshot.revision) {
+      this.passwords.clear();
+      if (this.revision !== undefined) this.notifyChanged();
+    }
     this.revision = snapshot.revision;
     return snapshot;
   }
   private summary(snapshot: StoredSnapshot): ProfileSnapshot {
     return {
       revision: snapshot.revision,
-      profiles: snapshot.profiles.map(({ secret, ...fields }) => ({
+      profiles: snapshot.profiles.map(({ secret, trust, ...fields }) => ({
         ...fields,
+        trust: summarizeTrust(trust),
         secret: {
           saved: secret.mode === "protected",
           availableThisRun: this.passwords.has(fields.id),
@@ -69,6 +79,38 @@ export class ProfileService {
   }
   list() {
     return this.queue(async () => this.summary(await this.read()));
+  }
+  onChanged(listener: () => void) {
+    this.changed.add(listener);
+    return () => {
+      this.changed.delete(listener);
+    };
+  }
+  private notifyChanged() {
+    for (const listener of this.changed) listener();
+  }
+  connectionSnapshot(id: string, revision: string) {
+    return this.queue(async () => {
+      const snapshot = await this.read();
+      if (snapshot.revision !== revision) throw new ProfileFailure("CONFLICT");
+      const profile = snapshot.profiles.find(item => item.id === id);
+      if (!profile) throw new ProfileFailure("NOT_FOUND");
+      const password = this.passwords.get(id);
+      if (password === undefined) throw new ProfileFailure("CREDENTIALS");
+      return {
+        id,
+        httpsUrl: profile.httpsUrl,
+        username: profile.username,
+        password,
+        trust: profile.trust,
+      };
+    });
+  }
+  assertRevision(revision: string) {
+    return this.queue(async () => {
+      if ((await this.read()).revision !== revision)
+        throw new ProfileFailure("CONFLICT");
+    });
   }
   private async prepare(
     change: SecretChange,
@@ -92,7 +134,7 @@ export class ProfileService {
       keep: false,
     };
   }
-  save(input: SaveProfileInput) {
+  save(input: SaveProfileInput, owner?: number) {
     return this.queue(async () => {
       const snapshot = await this.read();
       if (snapshot.revision !== input.revision)
@@ -108,6 +150,13 @@ export class ProfileService {
         input.secret,
         previous?.secret ?? { mode: "none" },
       );
+      const change = input.trust;
+      const trust =
+        change?.action === "replace"
+          ? this.caSelections.get(owner ?? -1, change.selectionId)
+          : change?.action === "default"
+            ? { mode: "default" as const }
+            : (previous?.trust ?? { mode: "default" as const });
       const profile: StoredProfile = {
         id,
         name: input.name,
@@ -116,6 +165,7 @@ export class ProfileService {
         amqpsUrl: input.amqpsUrl,
         username: input.username,
         secret: prepared.stored,
+        trust,
       };
       const profiles = previous
         ? snapshot.profiles.map(item => (item.id === id ? profile : item))
@@ -128,6 +178,9 @@ export class ProfileService {
           this.passwords.set(id, prepared.password);
       }
       this.revision = saved.revision;
+      if (input.trust?.action === "replace" && owner !== undefined)
+        this.caSelections.discard(owner, input.trust.selectionId);
+      this.notifyChanged();
       return this.summary(saved);
     });
   }
@@ -150,6 +203,7 @@ export class ProfileService {
       );
       this.passwords.delete(input.id);
       this.revision = saved.revision;
+      this.notifyChanged();
       return this.summary(saved);
     });
   }

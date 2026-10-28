@@ -38,7 +38,9 @@ module.exports = async function verifySecurity(application, page) {
   assert.deepEqual(
     await page.evaluate(() => Object.keys(window.bunnies).sort()),
     [
+      "cancelProfileHttpsTest",
       "close",
+      "discardProfileCa",
       "getInfo",
       "getSecretProtectionStatus",
       "listProfiles",
@@ -47,7 +49,9 @@ module.exports = async function verifySecurity(application, page) {
       "quit",
       "removeProfile",
       "saveProfile",
+      "selectProfileCa",
       "showEditMenu",
+      "testProfileHttps",
       "toggleMaximize",
       "view",
     ],
@@ -272,6 +276,20 @@ module.exports = async function verifySecurity(application, page) {
   assert.equal(profilesDenied.ok, false);
   assert.equal(profilesDenied.error.code, "FORBIDDEN");
 
+  const caDenied = await foreign.evaluate(() =>
+    window.bunnies.selectProfileCa(),
+  );
+  assert.equal(caDenied.ok, false);
+  assert.equal(caDenied.error.code, "FORBIDDEN");
+  const testDenied = await foreign.evaluate(() =>
+    window.bunnies.testProfileHttps({
+      profileId: "01234567-89ab-4def-89ab-0123456789ab",
+      revision: "absent",
+      operationId: "01234567-89ab-4def-89ab-0123456789ac",
+    }),
+  );
+  assert.equal(testDenied.ok, false);
+  assert.equal(testDenied.error.code, "FORBIDDEN");
   let current = page;
   for (let index = 0; index < 2; index++) {
     const closed = current.waitForEvent("close");

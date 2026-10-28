@@ -149,3 +149,11 @@ implementação e os testes; não representam funcionalidades ou homologações 
 
 Os cenários estão definidos na [estratégia de testes](../07-testing/test-strategy.md).
 Nenhum desses testes foi executado na 1B; os resultados documentais ficam no progresso.
+
+## Estado parcial após implementação 4A.2A
+
+MVP-C01 tem CRUD/segredo transitório e confiança local, com provider persistente
+real ainda desabilitado. MVP-C02 tem parte HTTPS implementada/testada em fixture
+TLS própria; AMQPS e homologação de broker continuam pendentes. MVP-C03 (sessão/
+reconexão) não é cumprido apenas por cancelamento de probe. M01/MVP não completos;
+conclusão/commit 4A.2A sujeitos a aceite. [Evidências](../07-testing/https-4a2a.md).

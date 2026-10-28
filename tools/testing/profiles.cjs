@@ -169,7 +169,7 @@ async function run() {
     assert.ok(!JSON.stringify(snapshot).includes(sentinel));
     let disk = await readFile(file, "utf8");
     assert.ok(!disk.includes(sentinel));
-    assert.equal(JSON.parse(disk).schemaVersion, 1);
+    assert.equal(JSON.parse(disk).schemaVersion, 2);
     assert.ok(
       !JSON.stringify(
         await page.evaluate(() => ({

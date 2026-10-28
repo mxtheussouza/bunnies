@@ -204,3 +204,21 @@ conteúdo, 11 tópicos, temas, teclado, painel compacto e zoom 200%. O modo offl
 restaurado antes das negativas de segurança para não mascarar bloqueios reais.
 Smoke de perfis reexecutado separadamente. Não homologa leitores de tela, controles
 nativos/SOs adicionais, brokers ou release. [Resultados](help-doc1.md).
+
+## CA/probe HTTPS — 4A.2A
+
+Contrato autorizado por “Autorizo”; T-01/02/04/05/09/10/12 recebem incremento local.
+CA, limites, migração/backup/erros, token por janela e HTTP/TLS usam fixtures próprias.
+Servidores Node TLS reais testam sucesso, CA desconhecida, hostname/expiração,
+Basic/prefixo, status/redirect/identidade/JSON/limites/cancelamento e fechamento.
+Lifecycle usa clock falso para o deadline e snapshot tardio, sem request após aborto.
+
+`node tools/testing/https.cjs` executa o pacote com userData v1 temporário, picker
+simulado só no main, migração, autenticação/status, prazo real/cancelamento, mudança
+em voo, fechamento real da janela, proxy loopback, temas/zoom e senha ausente em
+arquivo/DTO/storage. Base/perfis/Ajuda também são reexecutados em sequência.
+
+A tentativa de docker info falhou por daemon ausente. Nenhum container/broker foi
+iniciado; fixtures Node não homologam RabbitMQ 4.4.0/4.3.6. Fontes oficiais dessas
+versões foram conferidas, sem substituir execução. Outros SOs/CPUs, nativos/leitores
+de tela e gates de release permanecem pendentes. [Resultados](https-4a2a.md).

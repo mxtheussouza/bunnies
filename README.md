@@ -2,19 +2,20 @@
 
 Aplicação exclusivamente desktop para administração do RabbitMQ em Windows, Linux e
 macOS. O projeto está em modernização incremental. Já permite organizar perfis
-locais, usar temas e consultar a Ajuda offline; ainda não se conecta a brokers.
+locais, configurar CA e testar autenticação HTTPS, usar temas e consultar a Ajuda
+offline; sessão AMQP e operações de broker ainda não estão disponíveis.
 
 ## Para usar o aplicativo
 
 Leia o **[Guia do usuário](docs/10-user-guide/README.md)**: primeiros passos,
 explicação de cada campo, cadastro/edição/remoção de perfis, senhas em memória,
-temas, menus, teclado e solução de problemas. O mesmo guia está na aba **Ajuda**,
+CA/teste HTTPS, temas, menus, teclado e solução de problemas. O mesmo guia está na aba **Ajuda**,
 na barra lateral do aplicativo, e funciona offline.
 
 Esta é uma versão em desenvolvimento, sem instaladores publicados ou atualização
 automática. Testes locais foram feitos em macOS arm64; demais alvos ainda precisam
-de homologação. Salvar ou selecionar um perfil não inicia conexão. Recursos de
-broker e persistência protegida de senhas continuam indisponíveis.
+de homologação. Salvar ou selecionar um perfil não inicia conexão. Teste HTTPS é explícito e não ativa sessão; demais recursos de broker e persistência
+protegida de senhas continuam indisponíveis.
 
 ## Estado e histórico
 

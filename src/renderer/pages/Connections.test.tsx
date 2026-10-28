@@ -18,12 +18,15 @@ const profile: ProfileSummary = {
   amqpsUrl: "amqps://localhost:5671",
   username: "tester",
   secret: { saved: false, availableThisRun: true },
+  trust: { mode: "default" },
 };
 const api = {
   listProfiles: vi.fn(),
   saveProfile: vi.fn(),
   removeProfile: vi.fn(),
   getSecretProtectionStatus: vi.fn(),
+  selectProfileCa: vi.fn(),
+  discardProfileCa: vi.fn().mockResolvedValue({ ok: true }),
 };
 const ok = (profiles: ProfileSummary[]) => ({
   ok: true,
@@ -216,5 +219,41 @@ describe("local connection manager", () => {
     expect(
       screen.queryByRole("button", { name: /reset|apagar arquivo/i }),
     ).toBeNull();
+  });
+  it("submits an opaque CA selection, discards it on close and keeps certificate bytes outside the form", async () => {
+    api.selectProfileCa.mockResolvedValue({
+      ok: true,
+      value: {
+        selectionId: "01234567-89ab-4def-89ab-0123456789ab",
+        fingerprints: ["AA:BB:CC"],
+      },
+    });
+    api.saveProfile.mockResolvedValue(ok([profile]));
+    render(<Connections />);
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: "Novo perfil" }),
+    );
+    await fill(user);
+    await user.selectOptions(screen.getByLabelText("Confiança TLS"), "replace");
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Salvar perfil",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+    await user.click(screen.getByRole("button", { name: "Selecionar CA PEM" }));
+    await screen.findByText("SHA-256: AA:BB:CC");
+    await user.click(screen.getByRole("button", { name: "Salvar perfil" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(api.saveProfile.mock.calls[0][0].trust).toEqual({
+      action: "replace",
+      selectionId: "01234567-89ab-4def-89ab-0123456789ab",
+    });
+    expect(api.discardProfileCa).toHaveBeenCalledWith(
+      "01234567-89ab-4def-89ab-0123456789ab",
+    );
+    expect(document.body.textContent).not.toContain("CERTIFICATE");
   });
 });

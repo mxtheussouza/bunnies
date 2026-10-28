@@ -46,77 +46,79 @@ export default function Titlebar({
 
   return (
     <div className="window-titlebar" ref={root}>
-      <div className="titlebar-actions">
-        {icon && <img src={icon} alt="" className="titlebar-symbol" />}
-        <nav aria-label="Ações do aplicativo" className="titlebar-menus">
-          {menus.map((menu, index) => (
-            <div className="titlebar-menu" key={menu.name}>
-              <button
-                type="button"
-                ref={node => {
-                  triggers.current[index] = node;
-                }}
-                aria-expanded={menu.action ? undefined : open === index}
-                aria-controls={
-                  menu.action ? undefined : `titlebar-menu-${index}`
-                }
-                onMouseDown={event => {
-                  if (menu.action) event.preventDefault();
-                }}
-                onClick={() => {
-                  if (menu.action) {
-                    setOpen(null);
-                    menu.action();
-                  } else setOpen(open === index ? null : index);
-                }}
-              >
-                {menu.name}
-              </button>
-              {!menu.action && open === index && (
-                <div
-                  id={`titlebar-menu-${index}`}
-                  className="titlebar-popup"
-                  role="group"
-                  aria-label={menu.name}
-                  onBlur={event => {
-                    if (
-                      !event.currentTarget.parentElement?.contains(
-                        event.relatedTarget as Node | null,
-                      )
-                    )
-                      setOpen(null);
-                  }}
-                >
-                  {menu.items.map((item, itemIndex) =>
-                    item.name === "__" ? (
-                      <hr key={itemIndex} />
-                    ) : (
-                      <button
-                        key={item.name}
-                        type="button"
-                        onClick={() => {
+      {platform !== "darwin" && (
+        <>
+          <div className="titlebar-actions">
+            {icon && <img src={icon} alt="" className="titlebar-symbol" />}
+            <nav aria-label="Ações do aplicativo" className="titlebar-menus">
+              {menus.map((menu, index) => (
+                <div className="titlebar-menu" key={menu.name}>
+                  <button
+                    type="button"
+                    ref={node => {
+                      triggers.current[index] = node;
+                    }}
+                    aria-expanded={menu.action ? undefined : open === index}
+                    aria-controls={
+                      menu.action ? undefined : `titlebar-menu-${index}`
+                    }
+                    onMouseDown={event => {
+                      if (menu.action) event.preventDefault();
+                    }}
+                    onClick={() => {
+                      if (menu.action) {
+                        setOpen(null);
+                        menu.action();
+                      } else setOpen(open === index ? null : index);
+                    }}
+                  >
+                    {menu.name}
+                  </button>
+                  {!menu.action && open === index && (
+                    <div
+                      id={`titlebar-menu-${index}`}
+                      className="titlebar-popup"
+                      role="group"
+                      aria-label={menu.name}
+                      onBlur={event => {
+                        if (
+                          !event.currentTarget.parentElement?.contains(
+                            event.relatedTarget as Node | null,
+                          )
+                        )
                           setOpen(null);
-                          triggers.current[index]?.focus();
-                          item.action?.();
-                        }}
-                      >
-                        <span>{item.name}</span>
-                        <span className="titlebar-shortcut">
-                          {platform === "darwin"
-                            ? item.shortcut?.replaceAll("Ctrl", "Cmd")
-                            : item.shortcut}
-                        </span>
-                      </button>
-                    ),
+                      }}
+                    >
+                      {menu.items.map((item, itemIndex) =>
+                        item.name === "__" ? (
+                          <hr key={itemIndex} />
+                        ) : (
+                          <button
+                            key={item.name}
+                            type="button"
+                            onClick={() => {
+                              setOpen(null);
+                              triggers.current[index]?.focus();
+                              item.action?.();
+                            }}
+                          >
+                            <span>{item.name}</span>
+                            <span className="titlebar-shortcut">
+                              {item.shortcut}
+                            </span>
+                          </button>
+                        ),
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-          ))}
-        </nav>
-      </div>
-      <span className="window-title">{title}</span>
-      <WindowControls platform={platform} tooltips />
+              ))}
+            </nav>
+          </div>
+          <span className="window-title">{title}</span>
+          <WindowControls platform={platform} tooltips />
+        </>
+      )}
     </div>
   );
 }

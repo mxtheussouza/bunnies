@@ -11,6 +11,7 @@ import {
   type AmqpPeer,
 } from "../../../tools/testing/amqp-fixture.cjs";
 import { probeAmqps } from "./amqpsProbe";
+import { openAmqpsConnection, type AmqpsEvent } from "./amqpsConnection";
 let fixture: TlsFixture;
 const peers: AmqpPeer[] = [];
 beforeAll(async () => {
@@ -34,6 +35,25 @@ function input(amqpsUrl: string) {
   };
 }
 describe("owned socket AMQPS probe with real TLS and scripted AMQP peer", () => {
+  it("reports an established transport cut as retryable network failure exactly once", async () => {
+    const p = await peer();
+    const events: AmqpsEvent[] = [];
+    const controller = new AbortController();
+    const connection = await openAmqpsConnection(
+      input(p.url),
+      controller.signal,
+      event => events.push(event),
+    );
+    for (const socket of p.sockets) socket.destroy();
+    await vi.waitFor(() =>
+      expect(events).toEqual([{ kind: "closed", code: "AMQP_NETWORK" }]),
+    );
+    connection.destroy();
+    controller.abort();
+    expect(await connection.close()).toBe(false);
+    expect(events).toHaveLength(1);
+    await vi.waitFor(() => expect(p.sockets.size).toBe(0));
+  });
   it("authenticates only over TLS, preserves vhost once and confirms close without opening channels", async () => {
     const p = await peer();
     expect(
@@ -145,10 +165,21 @@ describe("owned socket AMQPS probe with real TLS and scripted AMQP peer", () => 
     await vi.waitFor(() => expect(p.sockets.size).toBe(0));
   });
   it("does not treat a blocked connection's unconfirmed close as success", async () => {
-    const p = await peer("blocked");
+    const p = await peer("blockedNoClose");
     await expect(
       probeAmqps(input(p.url), AbortSignal.timeout(2000)),
     ).rejects.toMatchObject({ code: "AMQP_CLOSE" });
+    await vi.waitFor(() => expect(p.sockets.size).toBe(0));
+    expect(p.records[0].closeConfirmed).toBe(false);
+  });
+  it("accepts a real CloseOk even if a blocked frame preceded it during close", async () => {
+    const p = await peer("blockedDuringClose");
+    await expect(
+      probeAmqps(input(p.url), AbortSignal.timeout(2000)),
+    ).resolves.toBe("/");
+    expect(p.records[0].closeConfirmed).toBe(true);
+    expect(p.records[0].methods).toEqual(["10.11", "10.31", "10.40", "10.50"]);
+    expect(p.records[0].channels.every(channel => channel === 0)).toBe(true);
     await vi.waitFor(() => expect(p.sockets.size).toBe(0));
   });
   it("rejects invalid input and pre-cancelled requests before network", async () => {

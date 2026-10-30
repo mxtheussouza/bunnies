@@ -1,59 +1,41 @@
 # Estado atual do projeto
 
 Atualizado em: 2026-10-30. Ler [PROJECTS_STATUS.md](../../PROJECTS_STATUS.md) antes
-de toda Task e atualizá-lo a cada bloco/fase/alteração.
+de cada Task; atualizá-lo em cada bloco/fase/alteração.
 
 | Campo | Estado |
 | --- | --- |
-| Etapa atual | 4A.2B — teste AMQPS/autenticação/vhost |
-| Status | Concluída/aprovada em 2026-10-30; commit autorizado |
-| Última etapa concluída | 4A.2B — teste AMQPS/vhost, incluindo verificação real 4.4.0/4.3.6 |
-| Último commit | Entrega feat(connections): add cancellable AMQPS connection tests; pai 9401448; consultar Git |
-| Decisões aprovadas | ADRs/requisitos/MVP/D3A e entregas anteriores; execução/limites/cliente e conclusão 4A.2B |
-| Decisões pendentes | Contrato detalhado e autorização de implementação 4A.2C |
-| Tarefas concluídas | Instalação exata/audit, parser/vhost, probe/coordenação/IPC, UI/guia, check de 216 testes, package/quatro smokes, 40 checks em RabbitMQ real e revisão |
-| Tarefas pendentes | Conferência do commit aprovado; contrato 4A.2C e homologações restantes |
-| Problemas conhecidos | Testes reais HTTPS/AMQPS passaram em RabbitMQ 4.4.0/4.3.6; cluster/HA, nativos manuais/assistivas/outros alvos/providers/releases sem homologação |
-| Próxima ação autorizada | Registrar/conferir commit aprovado e preparar contrato 4A.2C; sem push ou sessão antecipada |
+| Etapa atual | 4A.2C — sessão ativa e recuperação |
+| Status | Concluída/aprovada por “Aprovado”; entrega registrada neste commit |
+| Última etapa concluída | 4A.2C — sessão ativa e recuperação, incluindo ADR-0008 A |
+| Último commit | feat(connections): maintain broker session and bounded recovery — commit deste registro, pai ea116de; identificador em git log -1 |
+| Decisões aprovadas | ADRs 0001–0008 (0008 alternativa A), MVP/requisitos/design, contrato C-01–07 e limites 4A.2C |
+| Decisões pendentes | Contrato/autorização da próxima etapa; nenhuma implementação adicional aprovada |
+| Tarefas concluídas | Patch/verificador/instalação limpa/gate de 30; sessão/IPC/UI/guia; 237 testes + seis Node, package/cinco smokes e 54 checks reais |
+| Tarefas pendentes | Próximas fases e homologações fora do recorte, sujeitas a contrato/aceite próprios |
+| Problemas conhecidos | Cliente requer patch local controlado; demais alvos/providers/cluster/releases e testes nativos manuais não homologados |
+| Próxima ação autorizada | Aguardar instrução para preparar a próxima etapa; sem push/4B autorizados |
 
-## Autorização e escopo
+“Autorizado” aceitou o [contrato 4A.2C](roadmap.md). O gate inicial reprovou e
+interrompeu trabalho dependente; o proprietário então autorizou explicitamente
+aplicar/testar a alternativa A da [ADR-0008](../03-architecture/adr/0008-amqp-lifecycle-safety.md).
+Após 30 cenários sem crash e instalação limpa verificada, a implementação foi
+retomada conforme item 6 da decisão aceita. A falha inicial permanece documentada
+nas [evidências](../07-testing/sessions-4a2c.md), sem confundi-la com o estado atual.
 
-Após o contrato detalhado, **“Autorizo”**, em 2026-10-29, aprovou instalar amqplib
-2.2.0 e executar o recorte de testes AMQPS. Cinco documentos da proposta estavam
-modificados em 9401448 e foram preservados. Sem outra dependência nova/transitiva.
-Audit mantém seis avisos conhecidos de tooling (2 baixos/4 moderados), sem auto-fix.
+Ponte fonte com 22 métodos específicos e eventos sanitizados; sessão única no main,
+sem canais/mensagens/topologia e sem persistência de senha. Guia/Ajuda canônicos
+acompanham a implementação. Sem troca de versão/cliente ou outro hunk.
 
-A mudança macOS em 9401448 permanece preservada. Os smokes do pacote precisam usar
-expectativas atuais por plataforma; resultados anteriores não homologam essa mudança.
+Resultado final: **237 testes/31 arquivos + seis testes Node**, package e cinco
+smokes sequenciais passaram. **54 verificações reais** (27 em cada RabbitMQ
+4.4.0/4.3.6) passaram, incluindo cortes individuais/simultâneos e recuperação sem
+reset de cota; recursos próprios removidos, zero canais/filas/consumidores.
+Guia/Ajuda 14 tópicos/12 campos sincronizados. Capturas/ASAR/links/Git revisados.
 
-## Implementação verificada para revisão
-
-[M01](../04-modules/01-connection-manager.md): parser puro do vhost na URL salva,
-TLS/SASL/abertura/close sem canais, socket próprio com TCP antes de TLS e API callback
-pública para evitar sucesso no atalho blocked sem confirmação. Coordenação única
-por janela entre HTTPS/AMQPS; ponte finita com 18 métodos e políticas preservadas.
-
-UI apresenta vhost, dois testes explícitos/cancelamento/resultados datados; guia e
-Ajuda atualizados com efeitos, exemplos/erros e menus por plataforma. Continua
-Sem sessão ativa. Persistência de senha, AMQP de trabalho e broker pages indisponíveis.
-
-[Evidências 4A.2B](../07-testing/amqps-4a2b.md): check aprovado com **216 testes/27
-arquivos**, typecheck/lint/format/docs:check, package e quatro smokes sequenciais
-(base/Ajuda/segurança, perfis, HTTPS, AMQPS). Runtime Electron 45.1.0/Node 24.22.1
-com DNS/IP, quit/reabertura/credenciais e cleanup exercitados. Artefato/capturas
-revisados; guia/Ajuda de 13 tópicos. Complemento posterior passou em RabbitMQ real
-4.4.0/4.3.6: 20 verificações por versão no mesmo executável, sem alterar o produto.
-Não homologa funcionalidades futuras, cluster/HA ou outro SO/CPU.
-
-## Limites e retomada
-
-Na apresentação inicial, Docker estava indisponível. Após o pedido explícito de
-testes reais e Docker ativo, o harness provisionou instâncias próprias das duas
-versões; TLS/HTTPS/AMQPS/vhosts/recusas/cancelamento/prazo/cleanup passaram.
-Docker Engine 29.8.0/linux arm64; portas host só loopback. Containers/redes/dados
-próprios removidos; recursos de outros projetos preservados. Imagens em cache.
-Menu nativo manual, assistivas, outros SOs/CPUs e gates de provider/release pendentes.
-
-Ler AGENTS/PROJECTS/arquitetura/roadmap/estado e conferir Git. Continuar somente
-4A.2B aprovada ou seu aceite posterior. Conclusão/commit foram aprovados em 2026-10-30. Registrar a entrega e preparar
-contrato detalhado da 4A.2C; aguardar seu aceite antes da implementação. Sem push.
+ASAR: 03ac0e8c251a088ec4ff794db9f15e285d3689214c36d9caeb1f01616f44db25 (975117 bytes).
+Artefatos intermediários têm hashes/recortes próprios; não os confundir com este.
+O proprietário respondeu “Aprovado” à conclusão e ao commit apresentado. Registro
+coeso nesta entrega: feat(connections): maintain broker session and bounded recovery.
+Conferidos os 61 arquivos e o ASAR antes da sincronização documental do aceite;
+nenhum código funcional ou guia mudou nessa sincronização. Sem push/próxima etapa.

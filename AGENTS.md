@@ -36,7 +36,7 @@ Consultar a [visão do produto](docs/00-overview/product-vision.md).
   [inventário](docs/01-audit/repository-inventory.md) descreve a estrutura existente.
 - Organizar por responsabilidades e funcionalidades; evitar dependências
   circulares, camadas artificiais e abstrações sem benefício concreto.
-- Os sete [ADRs](docs/03-architecture/architecture.md) estão Accepted. Os status são
+- Os oito [ADRs](docs/03-architecture/architecture.md) estão Accepted. Os status são
   Proposed, Accepted, Superseded ou Rejected. Somente Accepted
   registra decisão arquitetural aprovada explicitamente pelo proprietário.
 
@@ -106,12 +106,13 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **4A.2B concluída/aprovada; commit autorizado**.
-- Última etapa concluída e aprovada: **4A.2B — teste AMQPS/vhost e matriz real**.
-- Entrega aprovada: `feat(connections): add cancellable AMQPS connection tests`.
-- Base desta entrega: `9401448`, alteração da barra macOS preservada.
-- Próxima ação: registrar/conferir o commit aprovado e preparar contrato 4A.2C;
-  implementação requer aceite específico do contrato.
+- Etapa atual: **4A.2C concluída e aprovada; registro da entrega neste commit**.
+- Última etapa concluída e aprovada: **4A.2C — sessão ativa e recuperação**.
+- Entrega aprovada: `feat(connections): maintain broker session and bounded recovery`
+  (commit deste registro; pai `ea116de`, identificador em `git log -1`).
+- Mudança da barra macOS em `9401448` preservada.
+- Próxima ação: aguardar instrução para preparar a próxima etapa. Sem push/4B
+  ou nova implementação autorizados por este aceite.
 
 Ao retomar, ler este arquivo, [PROJECTS_STATUS.md](PROJECTS_STATUS.md), a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -287,3 +288,90 @@ Registrar somente essa entrega e a sincronização documental do aceite; manter
 limitações apresentadas. O pedido seguinte autoriza preparar/apresentar contrato
 4A.2C, que ainda não foi detalhado/aceito. Não implementar sessão, fazer push ou
 interpretar hipóteses futuras como aprovadas. Consultar estado/PROJECTS na retomada.
+
+## Preparação vigente — 4A.2C
+
+4A.2B registrada/conferida em ea116de (pai 9401448, 57 caminhos; Git limpo após
+commit). O pedido de seguir autorizou preparar a próxima etapa. Contrato Proposed
+no roadmap, com 13 campos/12 critérios e C-01–07: sessão única, AMQPS persistente
+sem canais, whoami periódico datado, recuperação limitada por endpoint, lifecycle
+e quatro métodos específicos (22 no total) propostos. Nenhum código implementado.
+
+Consultar o contrato antes de agir: cotas por ativação, jitter/background/suspend,
+contexto de vhost do perfil e gate de eventos precoces exigem aceite específico.
+A 4B conserva consultas/listagem de vhosts/versão/capacidades. Preservar código,
+guia/Ajuda e dependências nesta preparação. Não instalar, conectar, implementar
+sessão ou fazer commit/push da proposta sem a autorização própria aplicável.
+
+## Autorização vigente — 4A.2C
+
+Em 2026-10-30, “Autorizado” aprovou o contrato 4A.2C/C-01–07 apresentado, incluindo
+22 métodos propostos, sublimites e verificações locais/isoladas. A restrição da
+preparação anterior foi ampliada por esse aceite. Sem nova dependência, 4B,
+provider real, commit/push antecipados. Primeiro provar adapter persistente e
+eventos precoces com APIs públicas; se exigir mudança de cliente/versão, API
+privada ou arquitetura não prevista, interromper trabalho dependente e apresentar
+alternativa para aprovação. PROJECTS registra cada bloco e resultados reais.
+
+## Gate 4A.2C reprovado — decisão adicional pendente
+
+Gate reproduziu seis encerramentos anormais em onze cenários com APIs públicas
+Callback/Promise e Node do Electron, antes de entregar o modelo. Check de 216
+testes passou separadamente; não significa gate/sessão aprovados. Ver
+[evidências](docs/07-testing/sessions-4a2c.md) e
+[ADR-0008 Proposed](docs/03-architecture/adr/0008-amqp-lifecycle-safety.md).
+
+Sete ADRs anteriores continuam Accepted; ADR-0008 é novo e não aceito. Recomenda
+exceção explícita de patch local mínimo/hashes/instalação/build verificáveis.
+Só diff proposto, sem modificar amqplib instalado, produto, guia ou lock.
+Não contornar com captura global, internals ou mudança de cliente/processo
+não aprovada. Aguardar decisão antes do trabalho dependente; sem conclusão/commit
+da 4A.2C ou execução da 4B.
+
+## ADR-0008/A aceita — exceção vigente
+
+Em 2026-10-30, “Autorizo aplicar e testar a alternativa A da ADR-0008” aceitou o
+patch pontual e seu fluxo de aplicação/verificação/instalação limpa. Oito ADRs
+agora Accepted como decisões; não equivale a implementação homologada.
+Aplicar somente o hunk/hash aprovado. Sem novo pacote, modificação de TLS/protocolo,
+handler global ou patch em runtime; conteúdo inesperado deve falhar fechado.
+Check/start/package/build main verificam a instalação modificada; postinstall aplica.
+Executar gates/regressões; só depois de passar retomar a 4A.2C já autorizada.
+Sem ampliar a correção, concluir/commitar/push ou executar 4B automaticamente.
+
+## Retomada autorizada — ADR-0008 A / 4A.2C
+
+O proprietário autorizou aplicar/testar A em 2026-10-30. Gate inicial reprovado
+foi sucedido por 30 cenários aprovados, instalação limpa e regressões do adapter.
+Conforme item 6 da ADR aceita e contrato 4A.2C já autorizado, serviço/IPC/UI/guia
+foram retomados. Conclusão/commit ainda exigem aceite; sem push/4B.
+
+amqplib 2.2.0 recebe somente o hunk em tools/patches/amqplib-2.2.0.patch.
+postinstall aplica e check/start/package/build verificam versão/hash exatos;
+conteúdo inesperado falha fechado. Não remover, ampliar ou ignorar verificação.
+[Evidências](docs/07-testing/sessions-4a2c.md) preservam falha original e testes atuais.
+
+Ponte fonte ampliada para 22 métodos específicos: getSessionState/connectSession/
+disconnectSession/onSessionState. Sessão única no main, generation/sequence, estados
+HTTPS/AMQPS independentes, cinco retries por endpoint/ativação, background/suspend
+conforme contrato; nenhum canal/mensagem/topologia. Após package, smokes existentes
+e tools/testing/sessions.cjs e rabbitmq-real.cjs sequenciais em recursos próprios.
+Resultados finais ainda em coleta; ler PROJECTS/estado antes de agir.
+
+## Resultado vigente — 4A.2C pronta para revisão
+
+237 testes/31 arquivos + seis Node, instalação limpa, gate de 30, package/cinco
+smokes e 54 checks reais (27 por RabbitMQ 4.4.0/4.3.6) passaram no pacote final.
+Guia/Ajuda 14 tópicos/12 campos, ASAR/capturas/links/Git revisados. [Evidências](docs/07-testing/sessions-4a2c.md).
+Conclusão/commit ainda não aprovados. Não repetir implementação, fazer commit/push
+ou iniciar 4B por inferência. Próxima ação: apresentar resultado/solicitar aceite.
+Limitações de outros SOs/CPUs/cluster/nativos/assistivas/providers/releases mantidas.
+
+## Conclusão 4A.2C aprovada
+
+Em 2026-10-30, “Aprovado” aceitou a conclusão apresentada e autorizou o commit
+feat(connections): maintain broker session and bounded recovery. Os 61 arquivos
+revisados e o ASAR foram conferidos antes de sincronizar a documentação do aceite.
+Resultados e limitações apresentados permanecem válidos. Registrar somente essa
+entrega e o aceite; não repetir implementação, fazer push ou avançar à 4B sem
+contrato/autorização próprios. Este registro acompanha o commit de entrega.

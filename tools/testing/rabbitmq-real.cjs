@@ -109,6 +109,16 @@ async function runVersion({ version, digest }) {
     }
     throw new Error("Broker retained a connection after test completion");
   }
+  async function oneConnection() {
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const connections = await api("connections");
+      if (connections.length === 1) return connections;
+      await sleep(200);
+    }
+    throw new Error(
+      "Management API did not register exactly one established connection",
+    );
+  }
   try {
     await mkdir(config, { mode: 0o755 });
     await mkdir(userData, { mode: 0o700 });
@@ -405,6 +415,194 @@ async function runVersion({ version, digest }) {
     await edit({ Usuário: username });
     await test("AMQPS", success);
     checks.push("recovery-by-explicit-new-test");
+    // Only these loopback relays and the harness-owned broker are interrupted.
+    const forwarders = [];
+    async function forward(port) {
+      const state = { blocked: false, sockets: new Set() };
+      state.server = net.createServer(client => {
+        if (state.blocked) {
+          client.destroy();
+          return;
+        }
+        const upstream = net.connect(port, "127.0.0.1");
+        for (const socket of [client, upstream]) {
+          state.sockets.add(socket);
+          socket.on("error", () => undefined);
+          socket.once("close", () => state.sockets.delete(socket));
+        }
+        client.pipe(upstream);
+        upstream.pipe(client);
+        client.once("close", () => upstream.destroy());
+        upstream.once("close", () => client.destroy());
+      });
+      forwarders.push(state);
+      await new Promise(resolve =>
+        state.server.listen(0, "127.0.0.1", resolve),
+      );
+      state.port = state.server.address().port;
+      state.cut = () => {
+        state.blocked = true;
+        for (const socket of state.sockets) socket.destroy();
+      };
+      return state;
+    }
+    async function sessionState() {
+      const result = await page.evaluate(() =>
+        window.bunnies.getSessionState(),
+      );
+      assert.equal(result.ok, true);
+      return result.value;
+    }
+    async function awaitSession(predicate, limit = 25000, foreground = true) {
+      const end = Date.now() + limit;
+      while (!(await predicate(await sessionState()))) {
+        assert.ok(Date.now() < end, "Real session transition timed out");
+        if (foreground && (await sessionState()).paused) {
+          await app.evaluate(({ app }) => app.focus({ steal: true }));
+          const window = await app.browserWindow(page);
+          await window.evaluate(w => {
+            w.restore();
+            w.show();
+            w.focus();
+          });
+        }
+        await sleep(50);
+      }
+    }
+    try {
+      const amqpForward = await forward(amqpsPort),
+        httpsForward = await forward(httpsPort);
+      await edit({
+        "Endpoint AMQPS": `amqps://127.0.0.1:${amqpForward.port}/%2F`,
+        "Endpoint HTTPS": `https://127.0.0.1:${httpsForward.port}`,
+      });
+      const win = await app.browserWindow(page);
+      await win.evaluate(window => {
+        window.restore();
+        window.show();
+        window.focus();
+      });
+      await page.getByRole("button", { name: "Conectar", exact: true }).click();
+      await awaitSession(s => s.state === "ready");
+      const first = await sessionState();
+      assert.equal(first.flow, "unknown");
+      const holdUntil = Date.now() + 22000;
+      while (Date.now() < holdUntil) {
+        if ((await sessionState()).paused) {
+          await app.evaluate(({ app }) => app.focus({ steal: true }));
+          await win.evaluate(window => window.focus());
+        }
+        await sleep(400);
+      }
+      assert.equal((await sessionState()).state, "ready");
+      const connections = await api("connections");
+      assert.equal(connections.length, 1);
+      assert.equal(connections[0].vhost, "/");
+      assert.equal(connections[0].timeout, 10);
+      assert.equal(connections[0].channels, 0);
+      assert.equal(connections[0].frame_max, 131072);
+      assert.ok((await sessionState()).https.checkedAt > first.https.checkedAt);
+      const busy = await page.evaluate(async () => {
+        const p = (await window.bunnies.listProfiles()).value;
+        return window.bunnies.testProfileHttps({
+          profileId: p.profiles[0].id,
+          revision: p.revision,
+          operationId: window.crypto.randomUUID(),
+        });
+      });
+      assert.equal(busy.error.code, "UNAVAILABLE");
+      checks.push(
+        "real-session-22-second-heartbeats-zero-channels-periodic-HTTPS-probe-exclusion",
+      );
+      await win.evaluate(window => window.minimize());
+      await awaitSession(s => s.paused, 25000, false);
+      const paused = (await sessionState()).https.checkedAt;
+      await sleep(8000);
+      assert.equal((await sessionState()).https.checkedAt, paused);
+      assert.equal((await oneConnection()).length, 1);
+      await win.evaluate(window => {
+        window.restore();
+        window.show();
+        window.focus();
+      });
+      await awaitSession(s => !s.paused && s.https.checkedAt > paused);
+      checks.push("real-background-retains-AMQP-pauses-HTTPS-and-resumes");
+      amqpForward.cut();
+      await awaitSession(
+        s => s.amqps.phase === "failed" && s.https.phase === "available",
+      );
+      await sleep(2500);
+      amqpForward.blocked = false;
+      await awaitSession(s => s.state === "ready");
+      const recovered = await sessionState();
+      assert.ok(recovered.generation > first.generation);
+      assert.ok(recovered.amqps.retries > 0 && recovered.amqps.retries <= 5);
+      assert.equal((await oneConnection()).length, 1);
+      checks.push(
+        "real-AMQP-cut-independent-partial-state-bounded-recovery-new-generation",
+      );
+      httpsForward.cut();
+      await awaitSession(
+        s => s.https.phase === "failed" && s.amqps.phase === "available",
+      );
+      assert.equal((await oneConnection()).length, 1);
+      httpsForward.blocked = false;
+      await awaitSession(s => s.state === "ready");
+      assert.ok((await sessionState()).https.retries > 0);
+      checks.push("real-HTTPS-cut-preserves-AMQP-independent-recovery");
+      amqpForward.cut();
+      httpsForward.cut();
+      await awaitSession(
+        s => s.amqps.phase === "failed" && s.https.phase === "failed",
+        30000,
+      );
+      const bothFailed = await sessionState();
+      assert.equal(bothFailed.state, "reconnecting");
+      amqpForward.blocked = false;
+      httpsForward.blocked = false;
+      await awaitSession(s => s.state === "ready");
+      const bothRecovered = await sessionState();
+      assert.ok(
+        bothRecovered.amqps.retries > recovered.amqps.retries &&
+          bothRecovered.amqps.retries <= 5,
+      );
+      assert.ok(
+        bothRecovered.https.retries > 0 && bothRecovered.https.retries <= 5,
+      );
+      await oneConnection();
+      checks.push(
+        "real-simultaneous-cuts-recovery-without-resetting-retry-budgets",
+      );
+      await page
+        .getByRole("button", { name: "Desconectar", exact: true })
+        .click();
+      await awaitSession(s => s.state === "closed" && !s.stopping);
+      assert.equal((await sessionState()).closeConfirmed, true);
+      await noConnections();
+      checks.push("real-session-close-ack-and-zero-retained-connections");
+      await edit({
+        "Endpoint AMQPS": `amqps://127.0.0.1:${amqpsPort}/%2F`,
+        "Endpoint HTTPS": `https://127.0.0.1:${httpsPort}`,
+      });
+    } catch (error) {
+      report.sessionFailure = error.message;
+      throw error;
+    } finally {
+      const cleaned = await Promise.allSettled(
+        forwarders.map(async f => {
+          for (const socket of f.sockets) socket.destroy();
+          await new Promise(resolve => f.server.close(resolve));
+          for (let attempt = 0; f.sockets.size; attempt++) {
+            assert.ok(attempt < 100, "Forwarding relay retained sockets");
+            await sleep(20);
+          }
+        }),
+      );
+      assert.ok(
+        cleaned.every(result => result.status === "fulfilled"),
+        "Forwarding relay cleanup failed",
+      );
+    }
     // Opaque TCP relay: the real broker receives the client's TLS hello but
     // replies are held, making cancellation/deadline reproducible before SASL.
     relay = net.createServer(client => {
@@ -487,6 +685,15 @@ async function runVersion({ version, digest }) {
     await test("AMQPS", tlsFailure);
     await test("HTTPS", tlsFailure);
     checks.push("default-trust-rejects-private-CA-both-real-endpoints");
+    await page.getByRole("button", { name: "Conectar", exact: true }).click();
+    await awaitSession(s => s.state === "closed");
+    const rejected = await sessionState();
+    assert.equal(rejected.https.error, "TEST_TLS");
+    assert.equal(rejected.amqps.error, "TEST_TLS");
+    assert.equal(rejected.https.retries, 0);
+    assert.equal(rejected.amqps.retries, 0);
+    await noConnections();
+    checks.push("real-session-untrusted-CA-terminal-no-retry-both-endpoints");
     // Inspect actual server events as well as the application's visible results.
     const logs = (await docker("logs", container))
       .replaceAll(password, "[REDACTED]")
@@ -580,7 +787,7 @@ async function run() {
   const reports = [];
   for (const version of versions) reports.push(await runVersion(version));
   await writeFile(
-    "out/rabbitmq-real-4a2b-results.json",
+    "out/rabbitmq-real-4a2c-results.json",
     JSON.stringify(
       {
         platform: process.platform,

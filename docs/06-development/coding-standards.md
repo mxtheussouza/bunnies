@@ -151,3 +151,23 @@ Novos comandos da ponte são selectProfileCa/discardProfileCa/testProfileHttps/
 cancelProfileHttpsTest; ao alterá-los, sincronizar allowlist/preload/testes e guia.
 Schema v2 pode não ser legível por versão antiga do app; preservar backup v1 e
 nunca apagar configuração/lock para contornar falha de teste. [Resultados](../07-testing/https-4a2a.md).
+
+## Patch controlado e sessão — 4A.2C
+
+amqplib 2.2.0 tem alteração local de uma linha aceita na ADR-0008. npm ci executa
+postinstall para aplicar; precheck/prestart/prepackage e build main verificam versão
++ hash e recusam conteúdo desconhecido. Ignorar scripts exige aplicar explicitamente
+com node tools/patches/amqplib.cjs --apply antes de verificar; não há bypass de build.
+Não expandir hunk nem atualizar versão sem revisão/aceite e nova prova upstream.
+
+node tools/testing/patch-install.cjs testa instalação em diretório próprio;
+node tools/testing/amqps-lifecycle.cjs testa APIs públicas em filhos descartáveis.
+Após check/package, executar base/perfis/https/amqps/sessions/rabbitmq-real
+sequencialmente. Smokes conectam apenas recursos isolados criados pelo harness.
+O último exige Docker ativo, imagens oficiais fixadas por digest e OpenSSL; não
+interrompe broker do usuário. Relatórios locais em out; nunca incluir segredos.
+A nova matriz combinada usa out/rabbitmq-real-4a2c-results.json.
+
+A licença/copyright originais e identificação da modificação ficam em
+tools/patches/amqplib-NOTICE.txt, incorporados pelo BannerPlugin ao main e ao
+index.cjs.LICENSE.txt do ASAR. Não confundir esse aviso com outro hunk da dependência.

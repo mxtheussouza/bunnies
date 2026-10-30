@@ -5,14 +5,13 @@ Atualizado em: 2026-10-30.
 ## Estado atual
 
 - Branch: `chore/modernization-app`.
-- Última entrega aprovada: **4A.2B — teste AMQPS/autenticação/vhost**, incluindo testes reais.
-- Aprovação atual: “Aprove a 4A.2B, e siga para a próxima etapa”, em 2026-10-30,
-  aceitou a conclusão/commit apresentados e pediu a preparação da 4A.2C.
-- Último commit: entrega `feat(connections): add cancellable AMQPS connection tests`,
-  com pai 9401448; consultar hash no Git após registro.
-- Task atual: registrar/conferir somente o commit aprovado da 4A.2B.
-- Próxima ação: preparar contrato detalhado 4A.2C para aprovação; não implementar
-  sessão sem aceite do contrato próprio, nem fazer push.
+- Última entrega aprovada: **4A.2C — sessão ativa e recuperação**, com ADR-0008 A e testes reais.
+- Aprovação atual: “Aprovado”, em 2026-10-30, aceitou a conclusão da 4A.2C e o
+  commit `feat(connections): maintain broker session and bounded recovery`.
+- Último commit: commit desta entrega 4A.2C (pai `ea116de`; identificador em `git log -1`).
+- Task atual: registrar o aceite e a entrega aprovada da 4A.2C neste commit.
+- Próxima ação: aguardar instrução para preparar a etapa seguinte; sem push ou 4B
+  autorizados pelo aceite da conclusão.
 
 ## Tarefas concluídas
 
@@ -28,7 +27,8 @@ Atualizado em: 2026-10-30.
 | 4A.1 | CRUD local, JSON limitado/atômico, IPC e senha em memória | Conclusão/commit aprovados; fe4a252 |
 | DOC.1 | Histórico vivo, guia do usuário e Ajuda offline | Concluída/aprovada; 66183f7 |
 | 4A.2A | CA por perfil, JSON v2/backup v1 e teste explícito HTTPS | Concluída/aprovada; 966b4a2 |
-| 4A.2B | Teste AMQPS/vhost, cancelamento e verificação real 4.4.0/4.3.6 | Conclusão/commit aprovados; registro nesta entrega |
+| 4A.2B | Teste AMQPS/vhost, cancelamento e verificação real 4.4.0/4.3.6 | Concluída/aprovada; ea116de |
+| 4A.2C | Sessão única, estados independentes, recuperação limitada e ADR-0008 A | Conclusão/commit aprovados; commit deste registro |
 
 ## Entrega DOC.1 aprovada
 
@@ -41,8 +41,8 @@ Atualizado em: 2026-10-30.
 
 ## Pendências e decisões
 
-- Conclusão/commit 4A.2A e 4A.2B aprovados; nenhuma sessão ativa;
-  sessão (4A.2C) permanece dependente de contrato/autorização específicos.
+- Conclusão e commit da 4A.2C aprovados; registrar somente a entrega apresentada.
+  Próxima etapa depende de contrato e autorização próprios.
 - Mudança da barra de título macOS foi registrada pelo proprietário em 9401448;
   preservar e revalidar no próximo pacote. Não integra o pacote/testes da 4A.2A.
 - Atualizar este arquivo a cada Task/fase/alteração, mantendo histórico de decisões,
@@ -78,6 +78,17 @@ sem canal/sessão. Guia/Ajuda têm 13 tópicos e 12 campos.
 pelo pedido de teste real: 20 verificações em cada RabbitMQ 4.4.0/4.3.6 passaram
 no mesmo executável, com TLS/HTTPS/AMQPS, recusas, cancelamento/deadline e cleanup.
 As 40 verificações do harness são separadas dos 216 testes da suíte.
+
+4A.2C, gate inicial histórico: npm run check passou novamente (216 testes/27 arquivos, typecheck/lint/
+formatação/docs:check). Gate manual de lifecycle **reprovou**: onze cenários,
+seis processos filhos com saída anormal antes do modelo público. Todos os sockets
+de fixture/filhos/CA limpos; sem novo pacote/smoke/broker real ou sessão disponível.
+[Evidências e decisão pendente](docs/07-testing/sessions-4a2c.md).
+
+Resultado vigente 4A.2C: **237 testes/31 arquivos + seis Node**, gate corrigido de
+30 cenários, instalação limpa, package/cinco smokes e **54 checks reais** passaram.
+Guia/Ajuda sincronizados e artefato final revisado; conclusão/commit aprovados.
+[Evidências finais](docs/07-testing/sessions-4a2c.md).
 
 ## Histórico de atividades
 
@@ -840,3 +851,353 @@ Conferência do aceite 4A.2B: docs:check e whitespace passaram; 39 Markdown,
 322 links locais e 111 tabelas válidos. Código/guia/ferramentas apresentados
 permanecem idênticos. Selecionar somente os 57 caminhos do snapshot e as mudanças
 documentais de aceite nesses mesmos caminhos; conferir commit/parent após gravar.
+
+### 2026-10-30 — T-4A2B-COMMIT-CONFERIDO-4A2C-INICIO
+
+- Entrega aprovada registrada em ea116de8ec84f0f7246e1922fa4a60fb3dfb0634,
+  feat(connections): add cancellable AMQPS connection tests. Parent 9401448 e
+  57 caminhos exatos conferidos sem renames; Git mostrou 56 arquivos ao agrupar
+  uma renomeação. Working tree limpo após registrar. Nenhum push.
+- Escopo seguinte autorizado pelo pedido: investigar/detalhar contrato 4A.2C para
+  apresentação/aceite. Não implementar sessão com parâmetros ainda não aprovados.
+- Em leitura: ADRs/arquitetura, FR-004/005/019/025/027/029/030, NFR-012/013/018/019,
+  coordenação/probes/IPC e shell atuais; revalidar APIs públicas/lifecycle do cliente.
+- Sem instalação, teste funcional novo, acesso a broker ou mudança de produto/guia.
+  Documentos propostos não devem apresentar sessão como recurso disponível.
+
+### 2026-10-30 — T-4A2C-INVESTIGACAO-CONTRATO
+
+- Probes atuais são transitórios; shell/contexto e footer mostram Sem sessão ativa.
+  Sessão requer coordenador no main e estado compartilhado no shell, sem concluir
+  M01 nem abrir canais/rotas de broker. Nenhuma implementação iniciada.
+- Proposta em elaboração: sessão única, HTTPS whoami periódico/estado datado,
+  AMQPS persistente com heartbeat e recuperação limitada; vhost derivado do perfil
+  nesta etapa, sem listagem/seleção arbitrária antes da 4B.
+- APIs públicas de close/error/blocked/unblocked confirmadas nos tipos instalados
+  e callback_model v2.2.0. O loop interno pode processar eventos antes do callback:
+  gate de teste de eventos precoces, sem ler/alterar stream/estado privado.
+- Documentação de heartbeats/conexões e ciclo Electron consultada. Página remota de
+  callback_api.d.ts indisponível; tipos locais da versão exata foram lidos.
+- Reconexão deve seguir NFR-019, distinguir disponibilidade por endpoint e não
+  repetir autenticação/permissão/TLS/protocolo inválido; limites propostos serão
+  submetidos no contrato, sem marcar novos NFRs/ADRs como aceitos.
+
+### 2026-10-30 — T-4A2C-CONTRATO-PROPOSTO
+
+- Preparado contrato no roadmap: 13 campos/12 critérios e C-01–07 Proposed,
+  arquivos/módulos, tarefas/gates, critérios e testes com versões/digests já aceitos.
+- Propõe sessão única, vhost da URL salva, AMQPS persistente sem canais e whoami
+  periódico/datado; estados parciais, cinco retries por endpoint/ativação, jitter,
+  pausas em background/suspend, generation/sequence e cleanup limitado.
+- Ponte proposta: 22 métodos, com getSessionState/connectSession/disconnectSession/
+  onSessionState. Cotas/lifecycle/IPC dependem do aceite do contrato; nada implementado.
+- Listagem/seleção de vhosts, versão/capacidades/recursos ficam na 4B. Gate de
+  eventos precoces exige teste e interrupção se comportamento seguro requerer
+  troca de cliente/versão ou API privada; não tratar risco como resolvido.
+- AGENTS/estado/progresso/PROJECTS sincronizados; guia/Ajuda/código/lock/assets
+  preservados. Conferência documental/whitespace em curso antes da apresentação.
+- Nenhuma instalação, teste funcional, sessão, broker, package, smoke ou commit da
+  proposta. Aceite de conclusão 4A.2B não é autorização dos novos parâmetros.
+
+### 2026-10-30 — T-4A2C-PREPARACAO-ENTREGA
+
+- Conferência aprovada: docs:check e git diff --check; 39 Markdown, 322 links
+  locais e 114 tabelas válidos; 13 campos/12 critérios/C-01–07 do contrato presentes.
+- Somente cinco documentos de governança/planejamento mudaram desde ea116de;
+  179 arquivos fora do recorte preservados, incluindo código/guia/lock/assets.
+  Index vazio; nenhum commit/push da proposta ou novo teste funcional.
+- Contrato pronto para apresentação e aceite de implementação. A conclusão/commit
+  da 4A.2B está registrada em ea116de; C-01–07/limites ainda Proposed. Próxima ação
+  é obter aprovação do contrato antes de instalar/alterar código/conectar sessão.
+
+### 2026-10-30 — T-4A2C-AUTORIZACAO-INICIO
+
+- Pedido: “Autorizado” aprovou o contrato detalhado 4A.2C/C-01–07 e sublimites,
+  verificações locais/isoladas e quatro métodos específicos adicionais propostos.
+- Retomada: AGENTS/PROJECTS/contrato e Git consultados. Branch chore/modernization-app,
+  HEAD ea116de, cinco documentos da proposta preservados e hashes conferidos;
+  index vazio. Aprovação não inclui 4B, nova dependência, commit ou push antecipados.
+- Primeiro bloco: provar APIs públicas do amqplib 2.2.0 com sessão persistente,
+  heartbeat, close e eventos precoces. Conforme contrato, interrupção do trabalho
+  dependente se houver comportamento inseguro sem solução dentro dessas APIs.
+- Testes novos ainda não executados. Não alterar guia para recurso não disponível.
+
+### 2026-10-30 — T-4A2C-GATE-PRIMEIRA-REPRODUCAO
+
+- Harness tools/testing/amqps-lifecycle.cjs usa processos filhos próprios e APIs
+  públicas, sem uncaughtException global, patch ou leitura de stream/estado privado.
+- Reprodução inicial em Node 24.22.1: normal/heartbeat/close e eventos tardios
+  funcionaram; open-ok+Close 403 e open-ok+frame inesperado encerraram filhos com
+  exit 1 antes do callback público. Blocked precoce perdeu evento, sem falso
+  fechamento confirmado. TCP próprio não impediu a exceção dentro do parser.
+- Primeiro relatório não foi gravado porque package.json não é export público do
+  amqplib; corrigida só leitura de metadados via filesystem de fixture. Aumentado
+  tempo do caso sem heartbeat para observar dois intervalos completos sem tráfego,
+  sem relaxar heartbeat nem alterar biblioteca.
+- Execução final acrescenta API Promise e runtime Node do Electron para os dois
+  cenários fatais; gate ainda em curso. Suíte de produto não foi alterada.
+- Registry npm consultado por curl/HTTPS validado: latest observado ainda 2.2.0,
+  nenhuma dependência de produção. Nenhuma atualização/instalação aplicada.
+- Trabalho dependente de sessão/UI interrompido, conforme contrato. Avaliar
+  alternativas e preparar decisão concreta para aprovação se confirmado.
+
+### 2026-10-30 — T-4A2C-GATE-RESULTADO-DECISAO
+
+- Rodada final: 11 cenários isolados, seis saídas anormais código 1. Close 403/frame
+  inesperado após open-ok falham em Callback/Promise Node 24.22.1 e Callback no
+  Electron 45.1.0/Node 24.22.1 em modo Node. Zero sockets/canais/filhos restantes.
+- Normal 22 s com heartbeat/close confirmado, eventos tardios, close 200 precoce,
+  blocked sem falsa confirmação e perda de heartbeat por 34 s também exercitados.
+  Certificados removidos. Gate manual retornou 1, reprovado.
+- npm run check passou separadamente: 216 testes/27 arquivos, typecheck/lint/
+  formatação/docs:check. Isso não aprova o gate. Sem novo package/smoke, broker real
+  ou sessão de produto implementada.
+- Diagnóstico: loop inicia antes do callback/modelo público; socket próprio e
+  Promise não corrigem. Impacto no probe anterior é inferência do caminho comum,
+  sem alegar teste de GUI/produção ou CVE.
+- ADR-0008 Proposed recomenda patch de uma linha para adiar loop com setImmediate,
+  sujeito a aprovação/testes. Alternativas: utilityProcess ou troca de cliente.
+  Diff/hashes só calculados em memória, nada aplicado.
+- Fonte instalada preserva hash original
+  0966aae8e582c2ec6e137cb8773deb28b962a287d28890c61504b83cee1d803b.
+  Sem nova dependência, handler global, API privada no app, commit ou push.
+- Sincronizar estado/AGENTS/progresso/NFR/segurança e índice arquitetural; entregar
+  evidências e decisão revisável antes de retomar implementação dependente.
+
+### 2026-10-30 — T-4A2C-GATE-REVISAO-ENTREGA
+
+- Conferências finais: docs:check/whitespace aprovados; 41 Markdown, 340 links
+  locais, 117 tabelas válidos; sete ADRs Accepted e somente 0008 Proposed.
+- Catorze caminhos no recorte (documentos da proposta/autorização/decisão, fixture
+  e harness); 173 arquivos fora dele preservados, incluindo produto/guia/lock.
+  Biblioteca mantém hash original; ASAR idêntico ao da 4A.2B.
+- Relatório final confere 11 cenários/seis saídas anormais, zero sockets/canais;
+  nenhum filho ou diretório TLS temporário restante. Check de 216 testes passou,
+  mas gate manual continua reprovado. Sem package/smoke/broker/sessão novos.
+- Preparado ADR-0008 com alternativas, diff de uma linha/hashes, implantação
+  reprodutível proposta e critérios obrigatórios. Não aplicado ou executado.
+- Entregar evidências e solicitar aceite específico de A antes de alterar a
+  dependência/retomar trabalho dependente. Sem conclusão/commit/push/4B.
+
+### 2026-10-30 — T-ADR0008-A-AUTORIZACAO
+
+- Pedido: “Autorizo aplicar e testar a alternativa A da ADR-0008” aprova a exceção
+  delimitada: patch de uma linha/hashes, aplicador/verificador sem pacote novo,
+  instalação/build controlados e testes/instalação limpa. Sem commit/push.
+- Retomada: AGENTS/PROJECTS/ADR/estado/evidências e Git consultados; 14 caminhos
+  da revisão preservados, hashes conferidos, branch chore/modernization-app,
+  HEAD ea116de/index vazio. Biblioteca ainda original no início.
+- Próxima ação: implementar/verificar aplicação reproduzível e executar gates.
+  Somente gate aprovado permite retomar trabalho dependente 4A.2C já autorizado.
+  Não ampliar diff, trocar cliente ou usar handler global para ocultar erro.
+
+### 2026-10-30 — T-ADR0008-A-APLICACAO-REGRESSOES
+
+- Aplicador/verificador e seis testes adicionados; aplicação idempotente e recusa
+  de hash/versão/artefato desconhecido provadas. Hunk aplicado uma única vez,
+  hash final e429dd17f333dcedf925c692c862bc3aa8a85cbed971396456d9df61d2a98de6.
+- Root postinstall/precheck/prestart/prepackage e build main verificam patch.
+  Lock alterou somente hasInstallScript da raiz; sem pacote/versão/transitiva nova.
+- Onze cenários originais repetidos após patch: nenhum filho caiu; erro/close
+  precoce chegou aos handlers, inclusive Promise/Electron Node. Ampliar gate para
+  abort/close e provar término sem esperar heartbeat, além de ambos modelos no Electron.
+- Regressão do probe detectou mudança relevante: com loop adiado, blocked seguido
+  de CloseOk real pode terminar confirmado. Separada prova positiva com ack real
+  da negativa blockedNoClose, que não envia ack; não remover teste de confirmação.
+- Lint recusou throw em finally do aplicador; cleanup usa rmSync de arquivo temporário
+  próprio. Instalação isolada em curso, sem tocar node_modules do workspace.
+
+### 2026-10-30 — T-ADR0008-A-GATE-INSTALACAO-APROVADOS
+
+- Gate ampliado: 30 cenários, nenhum filho anormal, zero canais/sockets e término
+  dentro de orçamentos por cenário. Callback/Promise em Node/Electron Node cobrem
+  eventos precoces/tardios, close no callback e abort antes/depois do loop.
+- Cleanup usa destruição pública do socket com erro fixo, propagando encerramento
+  ao TLS/heartbeater; probe recebeu o mesmo ajuste. Sem outro hunk da biblioteca.
+- Harness corrigido para chamar close pela API Promise correta (sem callback),
+  mantendo prova de ack no peer. Nenhuma asserção de segurança removida.
+- Instalação isolada passou: npm ci --ignore-scripts resulta em recusa no verify
+  e build main; npm ci normal aplica patch, verify/build/seis testes passam, lock
+  idêntico e diretório próprio removido. Workspace não foi reinstalado.
+- npm run check passou com 217 testes/27 arquivos e seis testes Node do aplicador,
+  typecheck/lint/formatação/guia. Lock só acrescenta hasInstallScript na raiz.
+- Conforme item 6 da ADR aceita e autorização original 4A.2C, retomar adapter/
+  sessão e integrações dependentes. Sem commit/push ou avanço à 4B.
+
+### 2026-10-30 — T-4A2C-RETOMADA-NUCLEO
+
+- Gate/instalação de A aprovados liberaram retomada: extraído amqpsConnection com
+  handle restrito, sem canais/modelo exposto, aguardando loop inicial antes de
+  declarar abertura e encerrando socket com erro fixo para cleanup do cliente.
+- Probe reusa adapter. Cancelamento sem reason próprio é normalizado para
+  AMQP_CANCELLED; erro de confirmação nunca vira sucesso. Fixture positiva usa
+  blocked durante close com ack real; negativa sem CloseOk preservada.
+- Núcleo SessionService/DTO e lease de atividade implementados/testados isoladamente,
+  sem compor sessão no app/IPC/UI ainda. Sete casos de núcleo + 21 do probe passaram
+  (28 alvo), incluindo cotas, TLS terminal, background/suspend, ownership e stale.
+- Próximo bloco verifica pacote/regressões reais da correção/adapter antes de
+  integrar superfície de sessão. Este estado não é conclusão da 4A.2C.
+- Sem nova dependência/transitiva, alteração TLS, provider, publicação ou commit/push.
+
+### 2026-10-30 — T-ADR0008-A-PACOTE-MATRIZ-E-IPC
+
+- Pacote da correção/adapter passou com quatro smokes sequenciais e 40 checks
+  reais 4.4.0/4.3.6; artifact/hashes em out/4a2c-a-artifact.json. Esse pacote ainda
+  tem 18 métodos e não inclui integração de sessão posterior. Não confundir alvos.
+- Retomada 4A.2C: parser/IPC específico, composição/lifecycle, ponte fonte de 22
+  métodos e provider/ações/contexto de UI implementados, em validação. Sem pacote
+  dessa superfície ainda. Produção permanece distinguida; broker pages indisponíveis.
+- Tipo IPC corrigido para eventos nomeados explícitos (overloads Electron); estado
+  de sessão validado no preload, sem objeto Electron entregue. Atualizar guia e
+  ampliar testes/smokes antes de considerar a etapa pronta. Sem commit/push.
+
+### 2026-10-30 — T-4A2C-INTEGRACAO-GUIA
+
+- Check integrado passou com 227 testes e seis testes Node do patch; IPC de sessão,
+  UI/contexto e ciclo de vida compostos. Nenhum pacote dessa superfície ainda.
+- Revisão acrescentou proteção contra restauração após close durante revisão e
+  testes de blocked sem reconexão; respostas da sessão também validadas no preload.
+- Guia canônico/Ajuda e Sobre/README atualizados para sessão, limites, efeitos de
+  background/suspend, recuperação e encerramento; pendente gerar/verificar Markdown.
+- Próximo bloco: testes adicionais, pacote de 22 métodos e regressões/novos cenários
+  reais. Resultados do pacote anterior de A permanecem distintos. Sem commit/push.
+
+### 2026-10-30 — T-4A2C-REVISAO-TESTES-PACOTE
+
+- Novos testes de fronteira/assinatura/preload/provider e corrida de close passaram
+  com 233 testes/31 arquivos. Check apontou tipo de Promise no teste e formatação;
+  corrigidos. Harness novo corrigiu referências explícitas a window no lint.
+- Documentação operacional sincronizada: oito ADRs Accepted, A aplicada/gate
+  aprovado e 4A.2C em validação, mantendo o registro histórico da falha original.
+- Harness de sessão local e matriz real ampliados: heartbeat, background, cortes
+  por endpoint, recuperação e confirmação de close. Execução ainda pendente; não
+  declarar esses cenários aprovados antes de rodar no pacote completo.
+
+### 2026-10-30 — T-4A2C-SMOKE-SESSAO-REVISAO-VISUAL
+
+- Smoke de sessão no executável passou nove grupos: 22 s/heartbeats e polling,
+  pause/background, suspend/resume, blocked/close sem ack, frames precoces sem crash,
+  endpoints parciais, alteração/reload/janela/quit e senha transitória, zero canais.
+- Harness precisou recuperar foco nativo durante espera (o host o retirava),
+  preservando prova separada de pausa real e mínimo de consultas. Sem burlar UI.
+- Revisão de capturas encontrou texto legado de perfil sem sessão no detalhe e
+  rodapé ambíguo; corrigidos, com foco de ações e quebra de texto longo. Novas
+  capturas explícitas de temas/correção e novo pacote ainda necessários.
+- Regressões base/perfis/HTTPS do pacote anterior desta integração passaram;
+  AMQPS/matriz real em execução. Repetir no pacote final após correções visuais.
+
+### 2026-10-30 — T-4A2C-MATRIZ-REAL-E-PROVENIENCIA
+
+- Novo pacote com correções visuais: smoke de sessão passou novamente; base/Ajuda
+  de 14 tópicos, perfis e HTTPS passaram. AMQPS/matriz real em execução sequencial.
+- Primeira rodada real chegou a heartbeat/background; finally do relay verificou
+  Set de sockets antes de todos os eventos close e mascarou erro anterior. Harness
+  agora aguarda fechamento limitado, preserva erro original e recupera foco real
+  nos trechos de foreground. Matriz ainda não declarada aprovada. Cleanup externo
+  de container/rede/temporários foi confirmado mesmo nessa rodada.
+- Teste adicional de corte de conexão estabelecida passou no adapter: um único
+  evento AMQP_NETWORK, close não confirmado, zero sockets e sem evento repetido.
+- Revisão do ASAR confirmou patch no main, preload somente require electron e
+  ausência de fixtures/chaves. Acrescentada licença MIT original/aviso da alteração
+  via BannerPlugin instalado, para preservar proveniência no bundle. Repackage e
+  regressões finais necessárias; fonte original da biblioteca permanece com um hunk.
+- Verificação limpa repetida com novo aviso/build; resultados em coleta.
+
+### 2026-10-30 — T-4A2C-REVISAO-FINAL-DE-ESTADO
+
+- Check ampliado passou 237 testes/31 arquivos + seis Node, cobrindo geração
+  antiga, conexão entregue após disconnect e cota após recuperação. Instalação
+  limpa repetida com aviso MIT passou e preservou lock.
+- Matriz real 4.4.0 passou 26 verificações no pacote anterior; 4.3.6 em curso.
+  API Management registra conexões de forma assíncrona: harness agora aguarda
+  contagem exata em prazo limitado, em vez de leitura imediatamente após open.
+- Rodada anterior deixou processo do harness com segundo relay aberto após
+  asserção no primeiro cleanup. Identificado e encerrado somente esse processo
+  próprio; nenhum container/rede/arquivo do usuário tocado. Cleanup dos relays agora
+  usa allSettled e aguarda todos, mesmo diante de erro individual.
+- Acrescentada prova de cortes simultâneos/recovery à próxima rodada real. Revisão
+  removeu referência residual à ativação futura no guia; flow volta a unknown ao
+  perder AMQP/suspender, sem reapresentar indicação antiga como atual. Próximo
+  pacote final incorpora essas correções; repetir verificações pertinentes.
+
+### 2026-10-30 — T-4A2C-DATAS-E-CRITERIOS
+
+- Matriz anterior passou 26 verificações em cada broker real, com cleanup completo.
+  Cenário simultâneo acrescentado à rodada final; não misturar contagens.
+- Revisão do critério de atualidade: erro HTTPS recebe failedAt separado do último
+  sucesso checkedAt, inclusive na primeira falha. UI/guia preservam essa distinção,
+  sem promover dado antigo a autenticação disponível. DTO/guarda/teste acompanham.
+- NFR sincronizado com A Accepted e implementação em verificação. Sem alteração de
+  parâmetro, schema, TLS, pacote ou escopo. Novo pacote final será verificado.
+
+### 2026-10-30 — T-4A2C-REGRESSAO-COMPLETA-ANTERIOR
+
+- Rodada com guia/flow/cancelamento/foco passou: pacote, cinco smokes (base, perfis,
+  HTTPS, AMQPS e sessão) e 27 verificações em cada broker 4.4.0/4.3.6, incluindo
+  cortes simultâneos/recuperação sem renovar cotas. Zero canais/consumidores/filas
+  e cleanup de recursos próprios confirmado; nenhum processo de harness restante.
+- Check final passou 237 testes/31 arquivos + seis Node. A primeira asserção de
+  failedAt foi inserida no teste manual de stop por contexto repetido; movida ao
+  cenário TLS terminal e suíte repetida com sucesso. Sem mudar expectativa funcional.
+- Novo pacote em execução para incorporar failedAt e seu texto no guia; resultados
+  anteriores continuam distintos. Ao terminar, conferir ASAR/licença/hash e revisar
+  capturas/links/working tree antes de apresentar conclusão. Sem commit/push.
+
+### 2026-10-30 — T-4A2C-ENTREGA-PRONTA-PARA-REVISAO
+
+- Pacote final com failedAt e guia correto passou cinco smokes sequenciais e
+  **54 verificações reais**, 27 por RabbitMQ 4.4.0/4.3.6. Cortes individuais e
+  simultâneos recuperaram sem reset de cotas; zero canais/filas/consumidores/
+  conexões restantes, cleanup de container/rede/relay/temp confirmado. Sem harness
+  restante. Imagens oficiais ficam em cache; nenhum recurso alheio removido.
+- Check final **237 testes/31 arquivos + seis Node**, typecheck/lint/format/guia
+  aprovados. Gate 30 sem crash e instalação limpa isolada aprovados; um hunk/hash
+  exato, lock somente hasInstallScript da raiz, licença/proveniência no bundle.
+- ASAR final 03ac0e8c251a088ec4ff794db9f15e285d3689214c36d9caeb1f01616f44db25,
+  975117 bytes; 22 métodos, preload só require electron, patch/data de erro no
+  bundle, sem fixtures/chaves/testes/ferramentas. Capturas dark/light/partial/zoom
+  revisadas e guia/Ajuda 14 tópicos/12 campos sincronizados com README.
+- AGENTS/estado/progresso/roadmap/M01/NFR/arquitetura/segurança/dependência/evidências
+  sincronizados; 61 arquivos no recorte e 144 arquivos baseline fora dele conferidos
+  até esta revisão, sem drift inesperado. Branch/HEAD ea116de/index vazio mantidos,
+  assets e 9401448 preservados. Sem commit/push ou 4B.
+- Limitações: macOS arm64, brokers de nó único; outros SOs/CPUs, cluster/HA, nativos/
+  assistivas manuais, suspensão física, providers/CI remoto/releases não homologados.
+- Próxima ação autorizada: apresentar entrega e solicitar aceite de conclusão e
+  commit feat(connections): maintain broker session and bounded recovery.
+
+### 2026-10-30 — T-4A2C-CONFERENCIA-FINAL
+
+- docs:check e whitespace passaram; 41 Markdown/332 links relativos conferidos,
+  nenhum alvo ausente. Hash do ASAR permanece idêntico ao executado nos testes.
+- 61 arquivos do recorte registrados por hash em out/4a2c-final-review.json;
+  144 baseline fora do recorte conferidos, sem drift. Nenhum processo do harness
+  restante ou container de teste por label; index vazio e HEAD ea116de preservados.
+- Revisão pronta para o proprietário. Não houve commit/push nem início da 4B.
+  Aguardando aprovação de conclusão/commit exigida pelo fluxo do AGENTS.
+
+### 2026-10-30 — T-4A2C-ACEITE-E-REGISTRO
+
+- Pedido: “Aprovado” aceitou a conclusão apresentada da 4A.2C e autorizou o commit
+  feat(connections): maintain broker session and bounded recovery.
+- Retomada: AGENTS/PROJECTS/arquitetura/roadmap/estado/progresso e Git consultados;
+  branch chore/modernization-app, HEAD ea116de e index vazio. Os 61 arquivos
+  apresentados conferem integralmente com out/4a2c-final-review.json; ASAR final
+  também idêntico, sem mudanças externas ao recorte.
+- Escopo desta Task: registrar aceite, sincronizar somente documentação de estado,
+  verificar guia/links/whitespace e criar o único commit aprovado. Não implementar
+  funcionalidade adicional, repetir testes funcionais sem motivo, fazer push ou 4B.
+- Resultados anteriores e limitações aceitos permanecem: 237 testes + seis Node,
+  gate de 30, instalação limpa, package/cinco smokes e 54 checks reais. Não declarar
+  nova execução funcional nesta sincronização documental.
+
+### 2026-10-30 — T-4A2C-COMMIT-APROVADO
+
+- Aceite sincronizado em oito documentos de governança/estado/evidências; todos
+  os demais arquivos apresentados e o ASAR mantêm os hashes conferidos na revisão.
+- Nesta Task, docs:check e whitespace passaram; 41 Markdown/332 links relativos
+  conferidos, nenhum alvo ausente. Testes funcionais anteriores não foram repetidos.
+- Registro coeso autorizado: feat(connections): maintain broker session and bounded
+  recovery, na branch chore/modernization-app, com pai ea116de. Esta entrada integra
+  o próprio commit da entrega; identificador verificável por git log -1.
+- Próxima ação: aguardar instrução para preparar a etapa seguinte. Sem push ou 4B.

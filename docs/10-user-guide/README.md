@@ -8,6 +8,7 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 
 - [O que está disponível nesta versão](#disponibilidade)
 - [Primeiros passos e distribuição](#primeiros-passos)
+- [Conectar, acompanhar e encerrar uma sessão](#manter-sessao)
 - [Criar um perfil local](#criar-perfil)
 - [Selecionar um perfil e recarregar a lista](#selecionar-e-recarregar)
 - [Editar um perfil e descartar alterações](#editar-e-cancelar)
@@ -24,11 +25,11 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 
 ## O que está disponível nesta versão
 
-Esta é uma versão em desenvolvimento. Você pode cadastrar, listar, selecionar, editar e remover perfis locais; configurar CA pública por perfil; testar autenticação HTTPS e abertura AMQPS do vhost; usar temas e consultar a Ajuda. O Bunnies ainda não ativa uma sessão de trabalho no RabbitMQ.
+Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, usar temas e consultar a Ajuda.
 
-Salvar ou selecionar um perfil não testa endereços, certificados, usuário ou senha e não envia dados ao broker. Testar HTTPS e Testar AMQPS são ações explícitas, com conexões transitórias encerradas ao terminar. Sem sessão ativa, HTTPS sem sessão e AMQPS sem sessão são estados esperados.
+Salvar ou selecionar um perfil não conecta ao broker. Testar HTTPS e Testar AMQPS usam conexões transitórias. Conectar mantém uma conexão AMQPS e verifica a autenticação HTTPS periodicamente. Os dois endereços são independentes: o aplicativo não comprova que apontam ao mesmo broker.
 
-Visão geral, Filas, Exchanges e Publicar permanecem indisponíveis. Ativação de sessão e senhas protegidas salvas no dispositivo ainda não estão disponíveis; use senha somente nesta execução.
+Visão geral, Filas, Exchanges e Publicar permanecem indisponíveis. A sessão atual não abre canais nem publica ou consome mensagens. Senhas protegidas salvas no dispositivo continuam indisponíveis; use senha somente nesta execução.
 
 <a id="primeiros-passos"></a>
 
@@ -42,6 +43,31 @@ Ainda não há instaladores publicados ou um fluxo de atualização automática.
 2. Clique em Novo perfil e preencha os dados do seu ambiente. Os exemplos deste guia são fictícios; confirme os valores com o responsável pelo broker.
 3. Salve o perfil e selecione-o na lista para consultar o resumo. Se houver senha disponível nesta execução, clique em Testar HTTPS para verificar o acesso administrativo. O resultado não ativa sessão nem verifica AMQPS.
 4. Abra Ajuda na barra lateral sempre que precisar revisar uma função. Em janela estreita, o ícone de ajuda continua disponível; Expandir navegação mostra os nomes dos destinos.
+
+<a id="manter-sessao"></a>
+
+## Conectar, acompanhar e encerrar uma sessão
+
+Em Conexões, selecione um perfil salvo que tenha senha disponível nesta execução e clique em Conectar. O vhost é o interpretado do Endpoint AMQPS; para mudá-lo, desconecte e edite esse campo. Não existe seleção de outro vhost pela sessão. Os testes avulsos ficam indisponíveis enquanto há sessão ou encerramento em curso.
+
+O cabeçalho identifica nome, ambiente e vhost. Produção tem texto e símbolo de alerta. Conectado significa AMQPS estabelecido e autenticação HTTPS verificada, sem comprovar saúde do cluster, permissões de recursos ou capacidade de publicação. Fluxo não verificado significa que o broker ainda não enviou indicação de bloqueio/liberação; não é teste de publicação.
+
+HTTPS é uma consulta de autenticação; a hora mostrada é a última verificação bem-sucedida. Em caso de erro, o horário da falha aparece separadamente, preservando a hora do último sucesso quando houver. A próxima consulta começa cinco segundos após a anterior terminar, sem sobreposição. AMQPS é uma conexão mantida com heartbeat. Conexão parcial indica que os endpoints têm resultados diferentes ou o broker bloqueou o fluxo. Confira o erro de cada endpoint.
+
+Falhas transitórias de rede/prazo podem gerar até cinco novas tentativas por endpoint nesta ativação, com intervalos de aproximadamente 1, 2, 4, 8 e 16 segundos e variação de até 20%. Recuperar a conexão não renova esse limite. Erros de certificado, autenticação, vhost, permissão ou protocolo não são repetidos automaticamente. Após corrigir a causa, desconecte e clique em Conectar para iniciar outra ativação.
+
+Ao minimizar, ocultar ou tirar o foco da janela, consultas HTTPS, negociações pendentes e novas tentativas são pausadas. Uma conexão AMQPS já estabelecida mantém tráfego de heartbeat. Ao voltar à janela, uma consulta vencida pode ser refeita, sem executar todas as consultas atrasadas. Suspender o computador encerra a conexão AMQPS; ao retomar, a sessão desejada tenta recuperar dentro do mesmo limite.
+
+Cancelar conexão ou Desconectar encerra o trabalho e impede recuperação automática. Fechar/recarregar a janela, sair do aplicativo, salvar qualquer perfil ou remover um perfil também encerra a sessão. Mudanças externas no arquivo são detectadas na próxima leitura, consulta ou tentativa, não instantaneamente. Abrir novamente a janela não reconecta.
+
+O encerramento aguarda até um segundo pela confirmação AMQP. Se ela não chegar, os recursos locais são liberados e o aplicativo informa que o broker não confirmou; não confunda isso com confirmação remota. No macOS, fechar a janela pode manter o processo e a senha em memória; use Sair para finalizar a execução.
+
+1. Confira perfil, ambiente, CA, endereços e vhost antes de conectar. Se a senha não estiver disponível, edite o perfil e informe Nova senha.
+2. Clique em Conectar e acompanhe separadamente os estados HTTPS e AMQPS no cabeçalho. Durante a abertura, Cancelar conexão permite interromper.
+3. Para trocar ambiente, encerre com Desconectar, selecione ou edite o perfil desejado e clique em Conectar novamente.
+
+- Os formulários continuam disponíveis durante a sessão; salvar uma alteração encerra a sessão de forma conservadora. Selecionar outro perfil na lista apenas muda a seleção, mantendo o contexto ativo identificado no cabeçalho.
+- A sessão não desbloqueia operações de filas, exchanges ou mensagens nesta versão.
 
 <a id="criar-perfil"></a>
 
@@ -192,7 +218,7 @@ Os atalhos mostrados ao lado de alguns itens de menu não garantem um atalho glo
 Leia o resultado de cada operação. Um erro não significa que os dados foram salvos ou removidos. Se o estado ficar incerto, use Recarregar lista para conferir o arquivo local antes de tentar outra alteração.
 
 - O broker recusou a negociação AMQP: confirme credenciais, vhost e permissão de acesso; a causa pode ser ambígua. Não há fallback automático para guest.
-- O fechamento da conexão AMQPS não foi confirmado: o aplicativo encerrou seus recursos locais e não apresentou sucesso. Confira rede/broker antes de repetir. Prazo total de AMQPS é 15 s; nenhuma reconexão ocorre automaticamente.
+- O fechamento da conexão AMQPS não foi confirmado: o aplicativo encerrou seus recursos locais e não apresentou sucesso. Confira rede/broker antes de repetir. O teste avulso AMQPS tem prazo total de 15 s e não faz reconexão automática; a ação Conectar tem recuperação limitada, descrita em Conectar, acompanhar e encerrar uma sessão.
 - Vhost inválido: remova uma barra final isolada ou use /%2F para o padrão /. Barras no nome devem ser %2F e não caminhos com múltiplos segmentos. Revise a prévia antes de salvar.
 
 | Situação | O que fazer |
@@ -221,7 +247,6 @@ Os itens a seguir descrevem o propósito planejado das funções, não instruç�
 
 | Campo ou função | Como usar / para que serve | Exemplo fictício |
 | --- | --- | --- |
-| Ativação de sessão | Contexto de trabalho, vhost ativo, reconexão e operações de broker dependem de entregas posteriores. Os testes HTTPS/AMQPS já disponíveis não ativam sessão nem comprovam permissão sobre mensagens. | — |
 | Visão geral e monitoramento | Apresentar informações e métricas do broker com estado e atualidade claros. Ainda não há métricas reais, gráficos ou histórico no aplicativo. | — |
 | Filas | Listar, criar e inspecionar filas e, em operações específicas futuras, excluir ou executar purge com confirmação. Nenhuma dessas operações está disponível agora. | — |
 | Exchanges e bindings | Organizar exchanges, relacionamentos de roteamento e routing keys. Ainda não existem formulários ou operações implementados. | — |

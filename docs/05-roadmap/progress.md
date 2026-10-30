@@ -778,3 +778,71 @@ o próprio commit com pai 9401448, cujo hash deve ser consultado no Git.
 
 Após conferir commit, preparar contrato detalhado 4A.2C. Não implementar sessão
 antes do aceite de seu contrato, nem fazer push. PROJECTS registra os blocos.
+
+## 2026-10-30 — Commit 4A.2B e proposta 4A.2C
+
+Commit aprovado registrado/conferido: ea116de8ec84f0f7246e1922fa4a60fb3dfb0634, pai
+9401448, 57 caminhos exatos (56 no resumo com uma renomeação agrupada); working
+tree limpo após o registro, sem push. Código/guia do aceite preservados.
+
+Pedido de seguir aplicado à preparação de contrato próprio 4A.2C: 13 campos,
+12 critérios e escolhas C-01–07 Proposed. Sessão única e AMQPS persistente sem
+canais, whoami periódico/datado, estados independentes, recuperação/cotas por
+endpoint, lifecycle, contexto de vhost salvo e ponte proposta de 22 métodos.
+
+Riscos de eventos precoces/blocked/close do cliente fixado foram reexaminados e
+viraram gate antes de UI, sem importar estado privado ou trocar dependência.
+Tipos locais/código fixado e documentação oficial lidos; sem nova homologação.
+Fontes e limites no contrato; seus novos parâmetros ainda exigem aprovação.
+
+Somente documentos de governança/planejamento alterados; guia/Ajuda preservados.
+Nenhuma instalação, código, teste funcional, sessão, broker, package, smoke ou
+commit da proposta. Próximo passo: apresentar contrato e pedir aceite explícito.
+
+## 2026-10-30 — 4A.2C autorizada, gate reprovado
+
+“Autorizado” aceitou contrato/C-01–07/sublimites. Cinco documentos da proposta
+preservados; HEAD ea116de/index vazio. Gate em filhos: onze cenários, seis saídas
+anormais (Callback/Promise Node e Callback Electron Node), open-ok seguido de
+Close 403/frame inesperado. Todos sockets/filhos/CA temporários encerrados.
+
+Check passou com 216 testes/27 arquivos, typecheck/lint/formatação/guia; gate manual
+reprovado. Sem pacote/smoke/broker real/sessão novos. Fixture/harness ampliados para
+reproduzir falha/heartbeat, sem produto alterado.
+[Evidências](../07-testing/sessions-4a2c.md) e
+[ADR-0008 Proposed](../03-architecture/adr/0008-amqp-lifecycle-safety.md).
+
+Exceção de patch local mínimo/verificável recomendada, ainda não aplicada/testada.
+Biblioteca instalada/manifesto/lock/guia/assets preservados. Trabalho dependente
+interrompido conforme contrato; aprovação adicional necessária. Sem commit/push.
+
+## 2026-10-30 — ADR-0008 A aceita/aplicada; 4A.2C retomada
+
+“Autorizo aplicar e testar a alternativa A da ADR-0008” aceitou patch mínimo,
+aplicação/verificação por hashes, hooks/build e instalação limpa. Gate ampliado
+aprovou 30 cenários (Callback/Promise Node/Electron), seis testes Node e instalação
+limpa isolada passaram. Conforme item 6, trabalho 4A.2C dependente retomado.
+
+Sessão/adapter/lease/IPC/UI/guia implementados sob contrato: 22 métodos, nenhum
+canal/mensagem; endpoints separados e recuperação limitada. Testes integrados,
+pacote/smokes e matriz real em revisão; conclusão/commit não aprovados. Preservar
+registro histórico da falha, consultar evidências/PROJECTS para resultados finais.
+
+## 2026-10-30 — 4A.2C implementada/verificada, pronta para revisão
+
+A alternativa A passou instalação limpa e gate de 30 cenários; patch único/hash
+fixo preservado. Sessão completa passou 237 testes/31 arquivos + seis Node,
+package/cinco smokes sequenciais e 54 checks reais (27 em cada 4.4.0/4.3.6),
+incluindo cortes individuais/simultâneos e recuperação sem reset de cotas.
+Artefato/capturas/links/fronteiras/cleanup revisados. Guia/Ajuda 14 tópicos/12 campos.
+[Evidências](../07-testing/sessions-4a2c.md). Validação macOS arm64/nó único, com
+limitações mantidas. Conclusão/commit ainda dependem de aprovação; sem push/4B.
+
+## 2026-10-30 — Conclusão/commit 4A.2C aprovados
+
+“Aprovado” aceitou a entrega apresentada e autorizou o commit
+feat(connections): maintain broker session and bounded recovery. Conferidos hashes
+dos 61 arquivos/ASAR e Git antes de sincronizar somente o aceite documental.
+Resultados/limitações mantidos; testes funcionais não repetidos nesta Task.
+Este registro acompanha o commit de entrega (pai ea116de; hash em git log -1).
+Sem push ou execução/preparação automática da 4B.

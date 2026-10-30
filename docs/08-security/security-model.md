@@ -250,3 +250,31 @@ Tentativa pode produzir logs/métricas no broker; cancelar não desfaz esse efei
 [Evidências 4A.2B](../07-testing/amqps-4a2b.md) registram resultados reais. Limites do
 parser amqplib não são prova de orçamento global de memória ou proteção contra
 servidor arbitrariamente hostil. Nada habilita canais, auto-recovery ou sessão 4A.2C.
+
+## Risco de lifecycle observado — gate 4A.2C
+
+Em 2026-10-30, open-ok combinado com Close 403/frame inesperado no cliente fixado
+causou seis saídas anormais em onze cenários isolados, antes do modelo público.
+TLS válido não torna confiáveis os frames nem elimina falhas do cliente. Há risco
+de disponibilidade no processo que hospeda AMQP; impacto no probe existente é
+inferência do caminho comum, sem prova de exploração, RCE ou advisory/CVE declarado.
+[Resultados e limites](../07-testing/sessions-4a2c.md).
+
+Não registrar exceção global e continuar com estado desconhecido. Trabalho
+dependente interrompido; biblioteca instalada permanece original. A
+[ADR-0008 Proposed](../03-architecture/adr/0008-amqp-lifecycle-safety.md) delimita
+patch candidato/hashes/build, sem aplicação ou eficácia comprovada. Qualquer
+correção precisará validar erro/close/abort, regressões e runtime empacotado antes
+de considerar o risco tratado.
+
+## Implementação de sessão / ADR-0008 A
+
+A aceita supera a pendência do gate registrada acima: patch mínimo verificável,
+sem exceção global/internals; pré-instalação/build falham fechado por hash/versão.
+Ponte de 22 métodos específicos, estado/evento com campos limitados e respostas
+validadas, autoridade main frame antes/depois de await. Sockets/segredos continuam
+no main. Lease impede probes concorrentes, tokens/generation invalidam resultado
+antigo antes de close. Nunca tratar pausa como dado recente: HTTPS exibe hora e
+pausa/erro; AMQP heartbeat continua em background estabelecido. TLS/CA validados,
+sem proxy herdado ou reconexão em erros de autenticação/certificado/protocolo.
+Não comprova saúde do cluster ou permissão de publicar. Sem canais ou mensagens.

@@ -209,3 +209,17 @@ alerta para amqplib na consulta. Dependências reportadas: plugin-webpack,
 fork-ts-checker-webpack-plugin, webpack-dev-server, deepmerge, sockjs e uuid.
 Ausência de alerta não comprova ausência de vulnerabilidade. Sem high/critical no
 relatório consultado. [Evidências da implementação](../07-testing/amqps-4a2b.md).
+
+## Exceção aceita em 2026-10-30 — amqplib 2.2.0
+
+ADR-0008 A autoriza alterar somente o agendamento inicial de acceptLoop, antes do
+callback público. Gate original encontrou seis crashes/11 cenários; não é CVE
+consultado. tools/patches registra diff e verifica versão/hashes. Postinstall aplica,
+check/start/package/build recusam fonte inesperada. Lock preserva versão/integridade
+upstream e muda apenas hasInstallScript da raiz; distribuição contém código local
+modificado. Gate corrigido tem 30 cenários sem saída anormal, instalação limpa
+isolada e regressões do probe/adapter aprovadas. Evidências em sessions-4a2c.md.
+
+Manter proveniência/licença MIT da biblioteca. Remover patch somente após versão
+upstream corrigida aprovada e gates/regressões equivalentes; ainda não há essa
+atualização validada. Sem outro cliente/transitiva nova.

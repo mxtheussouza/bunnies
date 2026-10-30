@@ -117,3 +117,21 @@ Não altera schema v2, limites HTTPS, transporte de trabalho ou gates de provide
 
 TLS/CA segue 4A.2A. O campo AMQPS anterior continua editável/legível mesmo quando
 fora do recorte novo, sem reset ou migração automática. [Evidências](../07-testing/amqps-4a2b.md).
+
+## Refinamentos aceitos para 4A.2C — implementados/verificados localmente
+
+“Autorizado” em 2026-10-30 aceitou o contrato/C-01–07 e os refinamentos abaixo.
+São a fonte de parâmetros do incremento, sem homologação. O gate inicial reprovou;
+a autorização posterior da ADR-0008 A permitiu correção/gate aprovado e retomada.
+Ver [evidências](../07-testing/sessions-4a2c.md).
+
+| Referência | Refinamento aceito | Limite |
+| --- | --- | --- |
+| NFR-012/017/036, FR-004/030 | Sessão/autoridade | Uma sessão lógica do aplicativo, pertencente à janela principal; probes excluídos enquanto sessão vive; quatro métodos novos implementados, total 22 |
+| NFR-013/018/019 | Verificação/recuperação | whoami 5 s após concluir, sem sobreposição; prazos HTTP/AMQP 10/15 s. Até cinco retries por endpoint/ativação após 1/2/4/8/16 s com jitter uniforme ±20%; sucesso não repõe cota; tentativa iniciada consome cota mesmo se interrompida; erro TLS/auth/permissão/protocolo terminal não gera retry |
+| NFR-012/018 | Background/lifecycle | Pausar novos polls/retries e abortar trabalho pendente em background; AMQP estabelecido mantém heartbeat 10 s. Suspensão invalida/fecha recursos; retomada sem rajada/reset de cota. Desconexão invalida generation antes de close de até 1 s; depois destruição, sem falsa confirmação |
+
+Estado HTTPS é resultado datado de autenticação, não saúde contínua. AMQP
+estabelecido/fluxo inicialmente desconhecido não prova permissão para publicar.
+Sem fila, canal, publicação ou replay de escrita. ADR-0008 A está Accepted, sem
+alterar estes limites. Resultados reais e limitações ficam nas evidências.

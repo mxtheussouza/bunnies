@@ -22,6 +22,7 @@ Referências: [avaliação e matriz tecnológica](technology-evaluation.md),
 | [ADR-0005](adr/0005-compatibility-matrix.md) | Matriz inicial de homologação de broker e SO/CPU |
 | [ADR-0006](adr/0006-message-inspection.md) | Excluir inspeção/consumo do MVP e exigir semântica explícita depois |
 | [ADR-0007](adr/0007-desktop-distribution.md) | Build por alvo, smoke cedo e release sem publicação automática |
+| [ADR-0008](adr/0008-amqp-lifecycle-safety.md) | Alternativa A: patch mínimo verificável no agendamento inicial AMQP; aceita em 2026-10-30 |
 
 ## Processos e confiança
 
@@ -436,3 +437,35 @@ resultados separados e exclusão mútua. UI permanece sem sessão e sem recursos
 
 Especificação/limites em [M01](../04-modules/01-connection-manager.md);
 [evidências e limitações](../07-testing/amqps-4a2b.md). Nenhum adapter vai ao renderer.
+
+## Registro histórico — decisão inicial do gate 4A.2C
+
+Contrato 4A.2C/C-01–07 autorizado por “Autorizado” em 2026-10-30, mas seu gate
+reproduziu exceções antes de disponibilizar modelo público. Sessão/UI dependentes
+não implementadas. Sete ADRs anteriores continuam Accepted;
+[ADR-0008](adr/0008-amqp-lifecycle-safety.md) está **Proposed**, recomendando exceção
+delimitada para patch local verificável do cliente. Nenhuma dependência/arquitetura
+alterada ou correção testada por esse documento.
+[Evidências](../07-testing/sessions-4a2c.md).
+
+## Implementação autorizada — 4A.2C/ADR-0008 A
+
+O histórico anterior do gate foi superado pela aprovação explícita da alternativa A
+em 2026-10-30. Patch de uma linha verificável por hashes e instalação limpa passou
+gate de 30 cenários. Oito ADRs Accepted; sem troca de stack/versão/cliente.
+
+SessionService no main é o dono do contexto e de seus timers/abort/handles. Adapter
+amqpsConnection só expõe vhost/flow/close/destroy, nunca modelo/canais. Probes reusam
+adapter e ConnectionActivity impede concorrência com sessão. Bootstrap explícito
+valida perfil/revision/senha/vhost. Endpoints têm estados, prazos e orçamento próprios;
+HTTPS usa whoami a cada cinco segundos após conclusão; AMQP mantém heartbeat.
+
+IPC bunnies:session e evento bunnies:session-state preservam autoridade integral e
+DTO estrito; 22 métodos específicos, unsubscribe próprio, nenhum Electron event,
+URL/segredo/PEM/modelo entregue. Provider ignora sequence anterior e serializa ações.
+Background pausa consultas/negociações/retries, mantendo AMQP já estabelecido;
+suspend destrói/invalida. Reload/crash/close/quit e qualquer gravação de perfis
+encerram. Stop invalida antes de close≤1s; sem ack reporta liberação local.
+
+Guia/Ajuda descrevem a sessão implementada. Quatro páginas de recursos continuam
+desabilitadas. Ver contrato no roadmap e evidências 4A.2C para testes efetivos.

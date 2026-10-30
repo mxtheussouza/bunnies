@@ -1,6 +1,6 @@
 # M01 — Connection Manager
 
-Data: 2026-10-30. Status: **4A.1/4A.2A/4A.2B concluídas/aprovadas**.
+Data: 2026-10-30. Status: **4A.1/4A.2A/4A.2B/4A.2C concluídas/aprovadas**.
 Execução 4A.2A autorizada por “Autorizo”; conclusão/commit aprovados por “Aprovado”.
 M01/MVP ainda não completos. 4A.2B concluída/aprovada, incluindo testes reais; sessão depende da 4A.2C.
 
@@ -206,3 +206,36 @@ M01 futuros, cluster/HA ou outros alvos. Conclusão/commit 4A.2B continuam pende
 Aceite de conclusão 4A.2B: “Aprove a 4A.2B, e siga para a próxima etapa”, em
 2026-10-30, aprovou entrega/commit e limitações. Preparar contrato próprio 4A.2C;
 sessão/reconexão e conclusão do módulo permanecem futuras.
+
+## Registro histórico — gate da 4A.2C e decisão adicional
+
+Contrato de sessão autorizado por “Autorizado” em 2026-10-30. Gate inicial
+reprovado antes de implementar serviço/IPC/UI: eventos precoces podem lançar
+exceção antes de o cliente devolver modelo público. Potencial impacto no probe
+existente é inferência do caminho compartilhado, não resultado de novo smoke.
+[Evidências](../07-testing/sessions-4a2c.md) e
+[ADR-0008 Proposed](../03-architecture/adr/0008-amqp-lifecycle-safety.md).
+Produto/guia/dependências preservados; aguardar decisão antes do trabalho dependente.
+
+## Incremento implementado — 4A.2C
+
+Contrato C-01–07 autorizado, ADR-0008 A aceita e gate corrigido aprovado. Sessão
+única explícita, HTTPS/AMQPS independentes, recuperação limitada, background/suspend,
+invalidação e UI/guia implementados; verificada, sem conclusão/commit aprovado.
+
+Interfaces: SessionApi no shared (quatro operações), SessionService no main;
+ConnectionActivity controla exclusão com probes. Dependências: ProfileService,
+amqpsConnection/probeHttps, Electron lifecycle/IPC, sem pacote novo.
+Regras/limites e critérios: contrato 4A.2C no roadmap/NFR; testes unitários próximos
+ao código, smokes sessions.cjs e matriz rabbitmq-real.cjs. Não há canais, mensagens,
+listagem de vhosts ou providers; leitura de estado/seleção nunca conecta.
+Pendências: aprovação de conclusão/commit; evidências finais registradas e M01 ainda parcial.
+
+Resultado final 4A.2C: 237 testes + seis Node/gate de 30/instalação limpa,
+package/cinco smokes e 54 checks reais passaram. [Evidências](../07-testing/sessions-4a2c.md).
+Entrega pronta para revisão, não conclusão aceita; demais funcionalidades M01
+continuam parciais e outros alvos/providers/cluster não homologados.
+
+Aceite posterior: “Aprovado”, em 2026-10-30, aceitou a conclusão da 4A.2C e seu
+commit de entrega. M01 permanece parcial; os resultados/limitações apresentados
+continuam válidos, sem autorização de etapa seguinte ou push.

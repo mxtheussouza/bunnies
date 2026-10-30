@@ -181,7 +181,7 @@ async function run() {
       ["protocol", messages.protocol],
       ["oversize", messages.protocol],
       ["stallClose", messages.close],
-      ["blocked", messages.close],
+      ["blockedNoClose", messages.close],
     ]) {
       peer.mode = mode;
       const previous = peer.attempts;

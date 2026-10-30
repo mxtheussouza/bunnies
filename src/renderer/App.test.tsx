@@ -1,3 +1,4 @@
+import { emptySession } from "../shared/session";
 import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
@@ -13,6 +14,8 @@ afterEach(() => {
 describe("desktop error feedback", () => {
   it("displays a dismissible generic message when a desktop action fails", async () => {
     vi.stubGlobal("bunnies", {
+      getSessionState: async () => ({ ok: true, value: emptySession() }),
+      onSessionState: () => () => undefined,
       listProfiles: async () => ({
         ok: true,
         value: { revision: "absent", profiles: [] },

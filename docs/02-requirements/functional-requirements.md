@@ -102,3 +102,12 @@ resultado datado e encerramento. Ainda sem sessão/reconexão/permissão de recu
 comprovadas; testes reais verificaram este recorte em 4.4.0/4.3.6 de nó único.
 Conclusão/commit aprovados em 2026-10-30; M01 permanece parcial.
 [M01](../04-modules/01-connection-manager.md), [evidências](../07-testing/amqps-4a2b.md).
+
+## Cobertura incremental 4A.2C
+
+FR-004 recebe sessão única com contexto derivado do perfil/vhost da URL AMQPS,
+generation/sequence e invalidação. FR-022 recebe polling limitado/cancelável de
+whoami com data/pausa e recuperação limitada por endpoint; sem métricas/gráficos
+ou atualização manual de métricas ainda. FR-019 permanece parcial: não há listagem
+ou seleção de vhosts pela sessão. Não declarar requisitos completos a partir deste
+incremento; ver M01/evidências e aguardar aprovação da conclusão da etapa.

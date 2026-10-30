@@ -1,4 +1,6 @@
 import type { ConnectionRequest, ConnectionsApi } from "../shared/connections";
+import type { SessionRequest, SessionSnapshot } from "../shared/session";
+import { isSessionSnapshot } from "../shared/session";
 import {
   profileErrorMessages,
   type ProfileRequest,
@@ -16,6 +18,12 @@ export function createDesktopApi(
   invoke: (request: DesktopRequest) => Promise<unknown>,
   invokeProfiles: (request: ProfileRequest) => Promise<unknown>,
   invokeConnections: (request: ConnectionRequest) => Promise<unknown>,
+  invokeSession: (request: SessionRequest) => Promise<unknown> = async () => {
+    throw new Error("Unavailable");
+  },
+  subscribeSession: (
+    listener: (state: SessionSnapshot) => void,
+  ) => () => void = () => () => undefined,
 ): DesktopApi {
   async function call<T = undefined>(
     request: DesktopRequest,
@@ -77,6 +85,14 @@ export function createDesktopApi(
       profileCall({ command: "cancelProfileHttpsTest", operationId }),
   };
   return Object.freeze({
+    getSessionState: () => sessionCall({ command: "getSessionState" }),
+    connectSession: input => sessionCall({ command: "connectSession", input }),
+    disconnectSession: input =>
+      sessionCall({ command: "disconnectSession", input }),
+    onSessionState: listener =>
+      typeof listener === "function"
+        ? subscribeSession(listener)
+        : () => undefined,
     ...connections,
     ...profiles,
     getInfo: () => call({ command: "info" }),
@@ -88,4 +104,36 @@ export function createDesktopApi(
     view: action => call({ command: "view", action }),
     openLink: id => call({ command: "openLink", id }),
   } satisfies DesktopApi);
+  async function sessionCall(
+    request: SessionRequest,
+  ): Promise<ProfileResult<SessionSnapshot>> {
+    try {
+      const result = (await invokeSession(
+        request,
+      )) as ProfileResult<SessionSnapshot>;
+      if (result?.ok === true && isSessionSnapshot(result.value)) return result;
+      if (
+        result?.ok === false &&
+        Object.hasOwn(profileErrorMessages, result.error?.code)
+      )
+        return {
+          ok: false,
+          requestId: "session",
+          error: {
+            code: result.error.code,
+            message: profileErrorMessages[result.error.code],
+          },
+        };
+      throw new Error("Invalid session response");
+    } catch {
+      return {
+        ok: false,
+        requestId: "transport",
+        error: {
+          code: "UNAVAILABLE",
+          message: profileErrorMessages.UNAVAILABLE,
+        },
+      };
+    }
+  }
 }

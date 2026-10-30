@@ -1,8 +1,45 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 import { createDesktopApi } from "./desktopApi";
+import { emptySession } from "../shared/session";
 
 describe("preload API", () => {
+  it("routes session commands separately and releases only its own subscription", async () => {
+    const other = vi.fn(),
+      session = vi.fn().mockResolvedValue({
+        ok: true,
+        value: emptySession(),
+        requestId: "test",
+      });
+    const release = vi.fn(),
+      subscribe = vi.fn(() => release);
+    const api = createDesktopApi(other, other, other, session, subscribe);
+    const listener = vi.fn();
+    const unsubscribe = api.onSessionState(listener);
+    await api.getSessionState();
+    await api.connectSession({
+      profileId: "id",
+      revision: "rev",
+      operationId: "op",
+    });
+    await api.disconnectSession({ sessionId: "id", generation: 2 });
+    expect(other).not.toHaveBeenCalled();
+    expect(session.mock.calls.map(([v]) => v.command)).toEqual([
+      "getSessionState",
+      "connectSession",
+      "disconnectSession",
+    ]);
+    expect(subscribe).toHaveBeenCalledWith(listener);
+    unsubscribe();
+    expect(release).toHaveBeenCalledTimes(1);
+    session.mockResolvedValue({
+      ok: true,
+      value: { ...emptySession(), password: "private-sentinel" },
+    });
+    const bad = await api.getSessionState();
+    expect(bad).toMatchObject({ ok: false, error: { code: "UNAVAILABLE" } });
+    expect(JSON.stringify(bad)).not.toContain("sentinel");
+  });
   it("exposes only named operations and no generic invoke or Electron objects", async () => {
     const invoke = vi
       .fn()
@@ -12,11 +49,15 @@ describe("preload API", () => {
       "cancelProfileAmqpsTest",
       "cancelProfileHttpsTest",
       "close",
+      "connectSession",
       "discardProfileCa",
+      "disconnectSession",
       "getInfo",
       "getSecretProtectionStatus",
+      "getSessionState",
       "listProfiles",
       "minimize",
+      "onSessionState",
       "openLink",
       "quit",
       "removeProfile",

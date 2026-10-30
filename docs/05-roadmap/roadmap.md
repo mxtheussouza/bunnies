@@ -884,3 +884,291 @@ apresentada e seu commit, incluindo testes reais/limitações. Registrar
 `feat(connections): add cancellable AMQPS connection tests` sem nova implementação,
 com pai 9401448. O avanço seguinte é a preparação do contrato 4A.2C, sujeito a
 aprovação específica antes de implementar. Sem push.
+
+## Contrato autorizado — 4A.2C: sessão ativa e recuperação
+
+Data: 2026-10-30. Status: **Execução autorizada por “Autorizado”; gate inicial em execução**.
+Base: `ea116de`, entrega 4A.2B concluída/aprovada e registrada. O pedido “Aprove a
+4A.2B, e siga para a próxima etapa” autorizou preparar este contrato; os parâmetros
+abaixo foram posteriormente aceitos por “Autorizado”. Começar pelo gate; não há
+sessão de produto implementada nesta autorização.
+
+| Campo | Proposta para aprovação |
+| --- | --- |
+| Identificador/nome | 4A.2C — Sessão única, estados dos transportes e recuperação limitada |
+| Objetivo | Conectar/desconectar explicitamente um perfil salvo, manter AMQPS aberto sem canais e acompanhar HTTPS de forma datada, com recuperação controlada |
+| Justificativa | Os probes 4A.2A/B terminam suas conexões; não constituem contexto ativo para as próximas consultas. FR-004/005/025/027/029/030 exigem identidade, geração e descarte de trabalho antigo |
+| Escopo | Coordenador de sessão no main; AMQPS persistente; whoami periódico limitado; recuperação por endpoint; lifecycle/IPC; contexto global de UI, comandos conectar/desconectar, erros e guia; sem operações de recursos |
+| Tarefas | Provar adapter persistente e eventos precoces; implementar estados/generation/ownership; integrar recuperação/polling/lifecycle; ampliar ponte específica; atualizar UI/guia; testar unidades/fixtures/pacote/RabbitMQ real; revisar artefato/documentação |
+| Módulos afetados | M01, contexto transversal do shell, transporte/segredos/IPC e M08/Ajuda; demais módulos não habilitados |
+| Arquivos previstos | Novos src/shared/session.ts e src/main/sessions/sessionService.ts, validation.ts e errors.ts; adapter pequeno em src/main/connections/amqpsConnection.ts ou equivalente; ajustes em amqpsProbe, connectionTestService, profiles/service, app e ipc/session.ts; preload/index/desktopApi e typings; SessionProvider local ao shell, SessionContextBar, ApplicationShell, Connections/ProfileTests e estilos; testes próximos e tools/testing/sessions.cjs/fixtures/rabbitmq-real; documentos abaixo |
+| Dependências | ADRs 0001–0005, FR/NFR aceitos, CA/schema v2, cliente amqplib 2.2.0 já instalado e evidências 4A.2B; somente APIs já instaladas, sem nova dependência, migração, schema ou provider |
+| Riscos | Conexão/timer órfão, reconexão após desconectar, sessão duplicada, evento precoce perdido, dado antigo substituir novo, falso estado de saúde, credencial obsoleta e polling/retry sem limite |
+| Critérios de aceitação | Doze critérios abaixo, executados com resultados reais e limites explícitos antes de pedir conclusão |
+| Estratégia de testes | Relógio/RNG controlados, concorrência/estados/IPC/componentes; TLS/AMQP roteirizado com heartbeat/close/blocked; check/package/smokes sequenciais; instâncias RabbitMQ próprias 4.4.0/4.3.6 por digest, cortes/restauração de rede e cleanup |
+| Resultado esperado | Usuário identifica perfil/ambiente/vhost e estados separados, mantém uma conexão AMQPS sem canais, cancela/encerra e recupera falhas transitórias dentro do limite; sem conectar automaticamente ao iniciar |
+| Impacto documental | Atualizar PROJECTS em cada Task, AGENTS/estado/progresso/roadmap, arquitetura/M01/segurança/requisitos/NFR/testes/evidências; após implementar, guide.json/Markdown/Ajuda/README; não publicar sessão futura como disponível nesta proposta |
+
+### Decisões propostas e limites de contexto
+
+As escolhas C-01–07 foram propostas e depois **aceitas por “Autorizado”** ao contrato,
+detalhando a direção arquitetural aceita. Isso não homologa sua implementação nem
+altera automaticamente os ADRs.
+
+1. **C-01 — Uma sessão lógica por aplicativo, pertencente à janela principal.**
+   Ativar somente por Conectar no perfil salvo, sem senha/URL/vhost arbitrário no
+   request. Main atribui sessionId/generation e resolve revision, segredo e CA.
+   Perfil sem senha ou endpoint/vhost inválido falha antes da rede; abrir, salvar
+   ou selecionar perfil, obter estado e assinar eventos nunca conectam.
+2. **C-02 — Contexto inicial é o vhost já interpretado na URL AMQPS.** Sem schema
+   novo nem seletor/listagem de vhosts nesta etapa. Alterar esse contexto exige
+   desconectar, editar o endpoint e conectar explicitamente. A 4B tratará listagem,
+   permissões e seleção de vhosts; FR-019 permanece parcial. HTTPS autenticado não
+   comprova acesso administrativo ao vhost nem que ambos endpoints são o mesmo broker.
+3. **C-03 — Estados independentes dos transportes.** AMQPS mantém conexão após
+   open-ok, com heartbeat 10 s/frameMax 128 KiB/channelMax 1 e zero canais. HTTPS
+   continua GET whoami, sem socket persistente como sinal de saúde; mostrar instante,
+   resultado e suspensão da última verificação. Ambos podem funcionar parcialmente.
+4. **C-04 — Recuperação é controlada pelo Bunnies.** connect comum da API pública,
+   sem recovery da biblioteca, import privado, monkey patch, replay ou topologia.
+   Cotas e pausas estão abaixo; falhas permanentes exigem intervenção.
+5. **C-05 — Coordenação com testes existentes.** Uma sessão connecting/ready/degraded/
+   reconnecting impede probes manuais HTTPS/AMQPS; probe em curso impede ativar sessão.
+   Main rejeita concorrência, UI explica Desconectar/Cancelar primeiro. Sem cancelar
+   silenciosamente outra operação ou criar segunda conexão de diagnóstico.
+6. **C-06 — Lifecycle invalida antes de fechar.** Desconectar ou encerrar a janela
+   cancela trabalho/retries, avança generation e libera sockets/timers/listeners.
+   Reabrir/recarregar a janela não reativa sessão. Senha transitória continua segundo
+   as regras existentes (macOS: fechar janela não equivale a sair do processo).
+7. **C-07 — Quatro métodos nomeados adicionais, total de 22.** Canal próprio
+   bunnies:session e evento específico de estado, com DTO fechado e mesma autoridade
+   2B; nunca expor modelo/socket, credencial recuperada, transporte ou IPC genérico.
+
+### Máquina de estados e significado do resultado
+
+| Estado agregado | Significado proposto |
+| --- | --- |
+| idle | Nenhuma ativação nesta janela; nenhum timer ou recurso de broker |
+| connecting | Ativação explícita em curso; transportes com estados próprios e cancelamento disponível |
+| ready | HTTPS autenticado na última verificação e AMQPS estabelecido; não comprova saúde de cluster, permissão de recurso ou publicação |
+| degraded | Um transporte está disponível ou AMQPS sinalizou blocked; mostrar exatamente a limitação, sem desconectar o outro automaticamente |
+| reconnecting | Nenhum transporte disponível e existe tentativa transitória autorizada/agendada; se outro está disponível, o agregado permanece degraded |
+| closed | Encerramento explícito ou ambos endpoints indisponíveis sem tentativa elegível; nenhum recurso/timer restante; diagnóstico final sanitizado |
+
+Cada transporte tem fase, checkedAt/connectedAt quando aplicável, código de erro,
+tentativa/nextRetryAt e indicação de verificação suspensa. ready não é promessa de
+disponibilidade contínua. Fluxo AMQP começa **desconhecido**: ausência de blocked
+não prova aptidão para publicar. Eventos públicos blocked/unblocked atualizam a
+indicação; blocked não deve causar ciclo de reconexão nem retransmissão.
+
+Inicialização tenta HTTPS e AMQPS independentemente, com respectivos prazos de
+10/15 s incluindo snapshot/DNS/TLS; aggregate inicial não espera além desses limites.
+HTTPS inválido para Basic (por exemplo, usuário com dois-pontos) não impede AMQP
+válido. Se ao menos um transporte funcionar, preservar o contexto parcial e sua
+limitação; se só HTTPS funcionar, o vhost AMQP aparece **não verificado**.
+
+Manter no main um contador sequence crescente para ordenar snapshots/eventos e
+generation para invalidar tentativas/contextos. Callbacks/resultados antigos nunca
+restauram o estado novo. Recriação de recurso após falha invalida a generation antes
+de aceitar novos resultados; estado HTTP saudável pode ser preservado por endpoint.
+Regras/modelo ficam próximos de sessões, sem framework genérico de workflows.
+
+### Recuperação, polling e encerramento propostos
+
+- Reusar NFR-013/018/019. Após falha transitória de rede/timeout, até **cinco retries
+  por endpoint por ativação**, após 1, 2, 4, 8 e 16 s, com jitter uniforme de até
+  ±20%; uma tentativa inicial mais no máximo cinco retries. Sucesso de recuperação
+  não repõe a cota automaticamente: evita ciclos ilimitados de flapping.
+- Recuperar somente endpoint falho; não recriar o saudável. Sem tentativa
+  sobreposta. Erros TLS, 401/403, credencial/endpoint inválido, recusa AMQP, redirect,
+  resposta/protocolo incompatível e causa não classificável interrompem recuperação
+  desse endpoint. Não inferir causa por replyText arbitrário. Falha conhecida de
+  rede ou queda de uma conexão antes estabelecida pode ser transitória; código
+  estruturado de protocolo/permissão continua terminal. Matriz deve ser testada.
+- Esgotamento ou erro terminal exigem ação manual: desconectar e conectar novamente
+  com perfil válido (se closed, basta Conectar). Nenhuma escrita existe neste
+  incremento e nenhuma política pode repeti-la automaticamente no futuro.
+- HTTPS saudável usa **whoami 5 s após concluir** a consulta anterior, sem
+  sobreposição. Este polling verifica só autenticação/alcance, sem overview,
+  métricas, versão, capacidades ou recursos. Erro transitório usa backoff no lugar
+  do polling normal; erro terminal não fica repetindo login a cada cinco segundos.
+- Main determina background por janela sem foco, oculta ou minimizada: pausar
+  novas consultas HTTPS e retries; abortar consulta/handshake em curso sem contar
+  como falha permanente. Retry já iniciado consome cota mesmo se interrompido;
+  voltar ao foco não a repõe. AMQP já estabelecido mantém heartbeat; não prometer rede
+  zero em background. Foco/visibilidade retomados geram no máximo uma verificação,
+  sem rajada para compensar intervalos perdidos nem reset da cota de retries.
+- Em suspensão do SO, invalidar trabalho pendente e fechar recursos AMQP, pausando
+  timers; ao retomar, recuperar apenas sessão que continua desejada e com janela
+  válida, sem recriar sessão explicitamente encerrada ou renovar cotas. Eventos
+  powerMonitor não implicam garantia de execução enquanto o SO está suspenso.
+- Revisão de perfil antes de cada tentativa/poll e após await; alteração própria
+  de qualquer perfil encerra conservadoramente a sessão, seguindo notifyChanged
+  atual. Mudança externa encerra ao ser detectada na leitura; não prometer
+  detecção instantânea de editor externo ou observação física contínua em background.
+- Desconectar cancela intenção e avança generation **antes** do fechamento. Close
+  AMQP tem até **1 s**, depois destrói socket próprio. Sem CloseOk, inclusive atalho
+  blocked da biblioteca, indicar encerramento local sem confirmação remota, jamais
+  manter conexão ou apresentar confirmação falsa. Main/quit não espera indefinidamente.
+  before-quit pode conceder uma única espera limitada a 1 s; will-quit faz descarte
+  final idempotente. Reload/crash/close também descartam recursos e listeners.
+
+Os refinamentos de cota por ativação, jitter e background/suspend são escolhas
+propostas para aprovação. Se aceitas, registrar como sublimites específicos na
+fonte NFR durante implementação; não mudar valores já aceitos silenciosamente.
+
+### Fronteira IPC e interface propostas
+
+| Método novo | Argumento e comportamento |
+| --- | --- |
+| getSessionState() | Snapshot local sanitizado, sem conectar ou consultar broker |
+| connectSession({ profileId, revision, operationId }) | Valida DTO/origem, reserva sessão e devolve estado de ativação; progresso por evento; recusa se sessão/probe já está em curso |
+| disconnectSession({ sessionId, generation }) | Cancela somente o contexto atual dessa janela; id/generation antigo não encerra sessão nova; idempotente para o mesmo encerramento |
+| onSessionState(listener) | Listener recebe somente snapshot validado/sanitizado e devolve unsubscribe local; nunca encaminha evento Electron ou registro de canal genérico |
+
+Adicionar validação/erros específicos de sessão, com requestId e mensagens fixas.
+Antes de cada comando/resultado e publicação de evento, verificar janela principal,
+main frame e URL canônica. Main envia apenas ao frame principal atual autorizado;
+preload instala/remove listener específico e descarta evento Electron. Assinar
+primeiro, obter snapshot depois e usar sequence para resolver a corrida; cleanup
+React/StrictMode/reload não duplica listeners nem mantém assinatura de frame antigo.
+Snapshot contém só IDs/contexto público, ambiente/vhost, estados/tempos/erros/cota;
+nenhum password/CA/path/header/replyText/socket vai ao renderer/storage/log.
+
+UI mantém seleção de perfil separada de sessão ativa. Conectar/Desconectar e
+cancelamento de ativação ficam claros em Conexões; barra global e footer mostram
+perfil, ambiente (produção também com símbolo/texto), vhost e estados separados.
+Selecionar outro perfil não troca a sessão; para ativá-lo, desconectar primeiro.
+Navegar entre Conexões/Ajuda/Sobre preserva sessão; sair/recarregar janela a encerra.
+O formulário e probes continuam utilizáveis após desconectar; salvar alteração
+invalida a sessão conforme regra acima, com aviso claro. Não habilitar destinos de
+broker antes de seus módulos existirem. Sem perfil de teste instalado como produto.
+
+Reusar tokens/componentes/design aceitos, com foco/teclado/status acessíveis e zoom
+200%. Guia único explicará cada ação/estado, diferença teste/sessão, heartbeat,
+periodicidade/login/logs, pausa/retries, desconexão, vhost ainda não verificado e
+recursos indisponíveis. Não expor detalhes internos sem utilidade ao usuário.
+
+### Sequência de execução proposta e gates
+
+1. Provar adapter persistente com APIs públicas antes de integrar UI: open,
+   heartbeats, close/erro/blocked/unblocked, eventos precoces e descarte. Extrair
+   somente reutilização concreta do probe; regressão de 4A.2B obrigatória.
+2. Implementar coordenador/estado/generation, prazos/cotas/clock/RNG e exclusão de
+   probes; integrar mudanças de perfil e lifecycle no main.
+3. Integrar IPC/preload/estado do shell e ações, atualizar guia/documentos.
+4. Executar check, package e smokes sequenciais, incluindo base/perfis/HTTPS/AMQPS,
+   sessão e matriz real; revisar artefato/capturas/cleanup e apresentar conclusão.
+
+Gate específico: código fixado inicia seu loop de recebimento antes de devolver
+o modelo público; eventos precoces podem anteceder nossos listeners. Testar
+open-ok combinado com blocked, close e frame inválido, exigindo ausência de crash,
+vazamento e sucesso indevido. Não consultar connection.blocked/stream internos
+para contornar. Se APIs públicas não permitirem comportamento seguro, parar o
+trabalho dependente e apresentar alternativa/decisão (inclusive eventual mudança
+de cliente/versão), sem instalar ou aplicar patch fora deste contrato. O fluxo
+inicial desconhecido não autoriza ignorar erro/fechamento ou alegar proteção total.
+
+### Critérios de aceitação da 4A.2C
+
+1. Inicialização e CRUD/seleção/getState/assinatura sem rede; Conectar explícito
+   usa somente perfil/revision/CA/credencial válidos do main, recusando segredo
+   ausente antes de DNS/TCP. Sem persistir sessão/senha ou alterar schema v2.
+2. No máximo uma sessão; probes e sessão mutuamente exclusivos no main/UI.
+   Repetição concorrente, janela/frame estrangeiro ou generation antiga não muda
+   contexto atual. Troca nunca mantém sessão antiga funcionando ocultamente.
+3. AMQPS permanece aberto por mais de dois intervalos de heartbeat no pacote e
+   no RabbitMQ real, com heartbeat efetivo e **zero canais**. Close confirmado ou
+   encerramento forçado corretamente diferenciados, sem APIs privadas.
+4. HTTPS/AMQPS disponíveis/parciais/negados/inacessíveis representados separadamente;
+   HTTPS sempre datado, sem promover whoami a saúde/vhost/permissão/publicação.
+   UI fiel a ready/degraded/reconnecting/closed e fluxo inicial desconhecido.
+5. Falha/restauração individual e simultânea prova backoff/jitter/cotas/deadline,
+   sem sobreposição/reset infinito; TLS/401/403/recusa/protocolo terminal sem retry.
+   Esgotamento permite intervenção manual, sem sessão antiga ressurgir.
+6. Polling whoami no mínimo 5 s após conclusão, no máximo uma leitura; pause/
+   retomada em foco/visibilidade/suspend sem rajadas. Heartbeat não é polling.
+   Não afirmar SLA de detecção enquanto o SO estiver suspenso.
+7. Desconectar durante fila/DNS/TCP/TLS/handshake/ready/retry, mudança de perfil,
+   resposta atrasada, reload/crash/close/quit liberam recursos e invalidam contexto.
+   Reabrir não conecta; no macOS, sair do processo descarta senha em memória.
+8. Eventos precoces/blocked/unblocked e erro/close não derrubam processo nem geram
+   estado/confirmação falso; gate de APIs públicas satisfeito ou impedimento
+   explicitamente apresentado antes da implementação dependente.
+9. Ponte com exatamente 22 métodos específicos e listener removível; origem/DTO/
+   frame/tamanho/pós-await/evento validados, mensagens fixas e ausência de segredo
+   em DTO/storage/log/pacote. CSP/sandbox/URL/navegação/9401448 preservados.
+10. Componentes/teclado/foco/ambiente/temas/1024×700/zoom 200% verificados; guia
+    Markdown/Ajuda/README sincronizados com comportamento real, sem liberar páginas
+    ou funções futuras. Nativos/assistivas manuais e outros alvos explicitados.
+11. Check/package e smokes sequenciais passam; matriz RabbitMQ real 4.4.0/4.3.6
+    por digests já registrados cobre sessão, heartbeat, falhas/recuperação e cleanup
+    com recursos próprios e portas loopback. Fixture não substitui broker real;
+    indisponibilidade de ambiente é limitação, não teste aprovado.
+12. Revisão técnica/ASAR/capturas, resultados/limitações e PROJECTS/estado/progresso
+    atualizados; entrega pronta para aprovação de conclusão/commit, sem push ou 4B.
+
+### Exclusões e referências da preparação
+
+Sem listagem/seleção administrativa de vhosts, detecção de versão/capacidades,
+overview/métricas, filas/exchanges/bindings, canais/confirm/publicação/consumo,
+administração, providers de senha reais, OAuth/mTLS/proxy configurável, novos
+pacotes, CI remoto, assinatura/release/updater. Sem renovar identidade ou reabrir
+decisões aceitas; 4B e etapas seguintes precisam de contratos próprios.
+
+Consultas em 2026-10-30: [heartbeats](https://www.rabbitmq.com/docs/heartbeats) e
+[conexões RabbitMQ](https://www.rabbitmq.com/docs/connections) fundamentam distinção
+de conexão persistente/vida do transporte. Código fixado de
+[callback model](https://github.com/amqp-node/amqplib/blob/v2.2.0/lib/callback_model.js)
+e [connection](https://github.com/amqp-node/amqplib/blob/v2.2.0/lib/connection.js)
+conferido com o instalado; tipos locais callback_api.d.ts declaram os eventos
+públicos. Página remota desses tipos indisponível; não foi tratada como prova.
+[webContents](https://www.electronjs.org/docs/latest/api/web-contents),
+[BrowserWindow](https://www.electronjs.org/docs/latest/api/browser-window) e
+[powerMonitor](https://www.electronjs.org/docs/latest/api/power-monitor) são APIs
+candidatas de lifecycle, sujeitas à verificação no Electron instalado.
+[Releases RabbitMQ](https://www.rabbitmq.com/release-information) reconsultadas;
+manter referências/digests aceitos 4.4.0/4.3.6, sem declarar versões adicionais.
+
+Na preparação original não houve instalação, código/guia ou teste funcional novo.
+Em 2026-10-30, “Autorizado” aceitou este contrato/C-01–07/limites. Executar primeiro
+o gate de eventos precoces, sem ampliar escopo para contornar impedimentos.
+Conclusão/commit terão aceite posterior próprio; 4B continua fora desta autorização.
+
+### Resultado do gate inicial — 4A.2C
+
+Em 2026-10-30, o gate **reprovou**: seis processos filhos encerrados por exceção
+antes do modelo público em onze cenários; Callback/Promise Node e Callback no
+runtime Node do Electron. [Evidências](../07-testing/sessions-4a2c.md).
+Normal/heartbeat/close e cleanup observados, sem sessão de produto/UI.
+Check passou com 216 testes/27 arquivos; gate manual permanece reprovado.
+
+Conforme cláusula acima, interrompido trabalho dependente.
+[ADR-0008](../03-architecture/adr/0008-amqp-lifecycle-safety.md) é Proposed: recomenda
+patch local de uma linha, hashes/aplicação/build verificáveis e gates posteriores.
+Não aplicado ou testado como correção. Solicitar aceite específico antes de
+modificar dependência ou implementar sessão/UI. Sem commit/push.
+
+### Continuidade autorizada após ADR-0008 A — 2026-10-30
+
+A resposta “Autorizo aplicar e testar a alternativa A da ADR-0008” aceita a exceção
+delimitada. Patch/hashes/instalação limpa e gate ampliado de 30 cenários passaram;
+conforme item 6 da ADR Accepted e contrato 4A.2C já aprovado, implementação dependente
+retomada. Versão 2.2.0 preservada, um único hunk, sem import privado/handler global.
+Serviço/IPC/UI/guia de sessão implementados, verificação/revisão final em curso.
+Não autoriza conclusão/commit/push ou 4B; evidências registram alcance real.
+
+### Resultado para revisão — 4A.2C
+
+Implementação/verificação encerradas: 237 testes/31 arquivos + seis Node, gate de
+30 e instalação limpa aprovados. Package/cinco smokes e 54 checks reais passaram
+(27 por versão), com cortes individuais/simultâneos/cleanup e sem canais. Guia e
+registros sincronizados, ASAR/capturas revisados. Conclusão/commit pendentes;
+ver evidências. Não iniciar 4B sem proposta/aceite próprios.
+
+### Conclusão aceita — 4A.2C
+
+Em 2026-10-30, “Aprovado” aceitou a conclusão e autorizou o commit
+feat(connections): maintain broker session and bounded recovery. Entrega e
+limitações apresentadas preservadas; aceite/documentação no mesmo commit.
+Não autoriza push ou a etapa seguinte, que precisa de contrato e aceite próprios.

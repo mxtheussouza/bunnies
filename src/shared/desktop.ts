@@ -1,5 +1,6 @@
 import type { ConnectionsApi } from "./connections";
 import type { ProfilesApi } from "./profiles";
+import type { SessionApi } from "./session";
 export const DESKTOP_CHANNEL = "bunnies:desktop";
 
 export const viewActions = [
@@ -43,7 +44,7 @@ export const desktopErrorMessages: Record<DesktopErrorCode, string> = {
   INTERNAL: "Não foi possível concluir a operação desktop.",
 };
 
-export interface DesktopApi extends ProfilesApi, ConnectionsApi {
+export interface DesktopApi extends ProfilesApi, ConnectionsApi, SessionApi {
   getInfo(): Promise<DesktopResult<DesktopInfo>>;
   close(): Promise<DesktopResult>;
   quit(): Promise<DesktopResult>;

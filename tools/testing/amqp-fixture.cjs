@@ -1,5 +1,6 @@
 const { createServer } = require("node:tls");
 const { once } = require("node:events");
+const { setInterval, clearInterval } = require("node:timers");
 // Minimal scripted connection handshake only. This fixture is not a RabbitMQ
 // broker, never routes/consumes messages, and is excluded from the application.
 const short = value => {
@@ -46,10 +47,17 @@ async function createAmqpPeer(fixture, options = {}) {
         credentials: null,
         tune: null,
         closeConfirmed: false,
+        heartbeatsReceived: 0,
       };
       records.push(record);
       let pending = Buffer.alloc(0),
         header = false;
+      let heartbeater;
+      const eventTimers = [];
+      socket.once("close", () => {
+        clearInterval(heartbeater);
+        for (const timer of eventTimers) clearTimeout(timer);
+      });
       socket.on("error", () => undefined);
       socket.on("data", chunk => {
         pending = Buffer.concat([pending, chunk]);
@@ -98,7 +106,10 @@ async function createAmqpPeer(fixture, options = {}) {
           if (pending.length < length + 8) return;
           const frame = pending.subarray(0, length + 8);
           pending = pending.subarray(length + 8);
-          if (frame[0] === 8) continue;
+          if (frame[0] === 8) {
+            record.heartbeatsReceived++;
+            continue;
+          }
           if (frame[0] !== 1 || length < 4 || frame[length + 7] !== 0xce) {
             socket.destroy();
             return;
@@ -146,18 +157,44 @@ async function createAmqpPeer(fixture, options = {}) {
               socket.write(refusal(530));
               return;
             }
+            const early = {
+              blocked: method(60, short("synthetic blocked")),
+              blockedNoClose: method(60, short("synthetic blocked")),
+              earlyClose: refusal(403),
+              earlyNormalClose: refusal(200),
+              earlyInvalid: method(31, Buffer.alloc(8)),
+            }[peer.mode];
             socket.write(
-              peer.mode === "blocked"
-                ? Buffer.concat([
-                    method(41, short("")),
-                    method(60, short("synthetic blocked")),
-                  ])
+              early
+                ? Buffer.concat([method(41, short("")), early])
                 : method(41, short("")),
             );
+            if (options.heartbeat && peer.mode !== "heartbeatLost")
+              heartbeater = setInterval(() => {
+                if (!socket.destroyed)
+                  socket.write(Buffer.from([8, 0, 0, 0, 0, 0, 0, 0xce]));
+              }, 5000);
+            if (peer.mode === "lateEvents") {
+              eventTimers.push(
+                setTimeout(
+                  () => socket.write(method(60, short("synthetic blocked"))),
+                  100,
+                ),
+                setTimeout(() => socket.write(method(61)), 200),
+              );
+            }
           } else if (id === 50) {
-            if (peer.mode === "stallClose") return;
+            if (peer.mode === "stallClose" || peer.mode === "blockedNoClose")
+              return;
             record.closeConfirmed = true;
-            socket.end(method(51));
+            socket.end(
+              peer.mode === "blockedDuringClose"
+                ? Buffer.concat([
+                    method(60, short("synthetic blocked")),
+                    method(51),
+                  ])
+                : method(51),
+            );
           } else if (id === 51) socket.end();
           else {
             socket.destroy();

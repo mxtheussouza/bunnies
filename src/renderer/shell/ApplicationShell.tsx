@@ -6,12 +6,10 @@ import Connections from "../pages/Connections";
 import Help from "../pages/Help";
 import About from "../pages/About";
 import "./shell.scss";
+import SessionProvider, { useSession, sessionLabels } from "./SessionProvider";
 
-export default function ApplicationShell({
-  feedback,
-}: {
-  feedback?: React.ReactNode;
-}) {
+function Shell({ feedback }: { feedback?: React.ReactNode }) {
+  const { state: session } = useSession();
   const [page, setPage] = React.useState<LocalPage>("connections");
   const [panelOpen, setPanelOpen] = React.useState(false);
   const panel = React.useRef<HTMLDialogElement>(null);
@@ -139,10 +137,17 @@ export default function ApplicationShell({
           </main>
           <footer className="workspace-footer">
             <span className="offline-dot" aria-hidden="true" />
-            Sem sessão ativa
+            {session.stopping
+              ? "Encerrando sessão…"
+              : session.desired
+                ? sessionLabels[session.state]
+                : "Sem sessão ativa"}
             <span className="footer-detail">
               {" "}
-              · Nenhuma conexão iniciada automaticamente
+              ·{" "}
+              {session.desired
+                ? "Ativada por você"
+                : "Nenhuma conexão iniciada automaticamente"}
             </span>
           </footer>
         </div>
@@ -173,5 +178,15 @@ export default function ApplicationShell({
         />
       </dialog>
     </>
+  );
+}
+
+export default function ApplicationShell(props: {
+  feedback?: React.ReactNode;
+}) {
+  return (
+    <SessionProvider>
+      <Shell {...props} />
+    </SessionProvider>
   );
 }

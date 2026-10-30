@@ -49,7 +49,7 @@ operação destrutiva só podem usar brokers/recursos isolados e reproduzíveis.
 
 | Módulo | Status | Documento especializado planejado | Pendências específicas |
 | --- | --- | --- | --- |
-| M01 | CRUD/HTTPS/AMQPS 4A.2B aprovados, integração real 4.4.0/4.3.6 verificada; sem sessão | [Connection Manager](01-connection-manager.md) | Contrato 4A.2C; sessão/reconexão e homologações restantes |
+| M01 | CRUD/HTTPS/AMQPS 4A.2B aprovados; sessão 4A.2C concluída/aprovada | [Connection Manager](01-connection-manager.md) | Próximo contrato e homologações restantes |
 | M02 | Planejado; não implementado | `02-dashboard.md` | Conjunto de métricas; fonte, atualização e layout |
 | M03 | Planejado; não implementado | `03-queue-management.md` | Catálogo de argumentos/tipos; confirmações e conflitos |
 | M04 | Planejado; não implementado | `04-exchange-management.md` | Tipos/plugins; identidade de binding; restrições de recursos |

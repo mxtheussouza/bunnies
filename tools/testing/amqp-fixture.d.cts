@@ -9,6 +9,7 @@ export type AmqpPeer = {
     credentials: { mechanism: string; response: string } | null;
     tune: { channelMax: number; frameMax: number; heartbeat: number } | null;
     closeConfirmed: boolean;
+    heartbeatsReceived: number;
   }>;
   sockets: Set<Socket>;
   readonly attempts: number;
@@ -18,5 +19,5 @@ export type AmqpPeer = {
 };
 export function createAmqpPeer(
   fixture: TlsFixture,
-  options?: { mode?: string; cert?: string },
+  options?: { mode?: string; cert?: string; heartbeat?: boolean },
 ): Promise<AmqpPeer>;

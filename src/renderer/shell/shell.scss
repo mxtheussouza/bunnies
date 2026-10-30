@@ -137,6 +137,11 @@
   color: var(--bn-muted);
   margin-top: 4px;
 }
+.session-context > div {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
 .endpoint-states {
   display: flex;
   gap: 8px;
@@ -151,6 +156,8 @@
   padding: 5px 8px;
   border-radius: 6px;
   background: var(--bn-alternate);
+  max-width: 100%;
+  min-width: 0;
 }
 .endpoint-states .icon {
   width: 14px;

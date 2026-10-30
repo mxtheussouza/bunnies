@@ -4,6 +4,9 @@ import { resolve } from "node:path";
 import { createAppWindow, getAppWindow, rendererEntry } from "./appWindow";
 import { registerDesktopIpc } from "./ipc/desktop";
 import { ConnectionTestService } from "./connections/connectionTestService";
+import { ConnectionActivity } from "./connections/activity";
+import { SessionService } from "./sessions/sessionService";
+import { registerSessionIpc } from "./ipc/session";
 import { registerConnectionsIpc } from "./ipc/connections";
 import { registerProfilesIpc } from "./ipc/profiles";
 import { ProfileRepository } from "./profiles/repository";
@@ -51,7 +54,26 @@ if (squirrelStartup) {
         entry,
         profiles,
       );
-      const connectionTests = new ConnectionTestService(profiles);
+      const activity = new ConnectionActivity();
+      const connectionTests = new ConnectionTestService(
+        profiles,
+        undefined,
+        undefined,
+        activity,
+      );
+      const brokerSession = new SessionService(profiles, activity);
+      const disposeSessions = registerSessionIpc(
+        getAppWindow,
+        entry,
+        brokerSession,
+      );
+      let quitting = false;
+      app.on("before-quit", event => {
+        if (quitting) return;
+        event.preventDefault();
+        quitting = true;
+        void brokerSession.dispose().finally(() => app.quit());
+      });
       const disposeConnections = registerConnectionsIpc(
         getAppWindow,
         entry,
@@ -59,6 +81,7 @@ if (squirrelStartup) {
         connectionTests,
       );
       app.once("will-quit", () => {
+        disposeSessions();
         dispose();
         disposeProfiles();
         disposeConnections();

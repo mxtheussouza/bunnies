@@ -16,12 +16,16 @@ import ProfileTests from "./ProfileTests";
 import { parseAmqpsEndpoint } from "../../shared/amqpsEndpoint";
 import ProfileForm from "./ProfileForm";
 import "./profiles.scss";
+import { useSession } from "../shell/SessionProvider";
+import SessionControls from "./SessionControls";
 
 const noProtection: SecretProtectionStatus = {
   persistence: "disabled",
   reason: "unverified",
 };
 export default function Connections() {
+  const { state: session } = useSession();
+  const [testing, setTesting] = React.useState(false);
   const [snapshot, setSnapshot] = React.useState<ProfileSnapshot | null>(null);
   const [protection, setProtection] = React.useState(noProtection);
   const [error, setError] = React.useState("");
@@ -190,8 +194,10 @@ export default function Connections() {
                       {environmentLabels[item.environment]}
                     </span>
                     <span className="profile-hint">
-                      {selected === item.id ? "Selecionado · " : ""}Sem sessão
-                      ativa
+                      {selected === item.id ? "Selecionado · " : ""}
+                      {session.desired && session.profile?.id === item.id
+                        ? "Sessão ativa"
+                        : "Sem sessão ativa"}
                     </span>
                   </button>
                 </li>
@@ -214,8 +220,10 @@ export default function Connections() {
               }
             >
               {profile.environment === "production" ? "⚠ " : ""}
-              {environmentLabels[profile.environment]} · Perfil selecionado, sem
-              sessão ativa
+              {environmentLabels[profile.environment]} ·{" "}
+              {session.desired && session.profile?.id === profile.id
+                ? "Perfil da sessão ativa"
+                : "Perfil selecionado, sem sessão ativa"}
             </p>
             <dl>
               <dt>HTTPS</dt>
@@ -275,24 +283,42 @@ export default function Connections() {
                 Remover perfil
               </Button>
             </div>
+            <SessionControls
+              profileId={profile.id}
+              revision={snapshot!.revision}
+              disabled={
+                busy || loading || testing || !profile.secret.availableThisRun
+              }
+            />
+            {(session.desired || session.stopping) && (
+              <p className="profile-hint">
+                Salvar alterações encerra a sessão atual. Testes separados ficam
+                disponíveis após desconectar.
+              </p>
+            )}
             <ProfileTests
               key={profile.id + snapshot?.revision}
               profileId={profile.id}
               revision={snapshot!.revision}
               hasPassword={profile.secret.availableThisRun}
+              blocked={session.desired || session.stopping}
+              onRunningChange={setTesting}
             />
             <p className="profile-hint">
               Os testes criam conexões transitórias e podem gerar logs/métricas
               no broker. Não comprovam permissão para publicar ou acessar filas.
-              A ativação de sessão estará disponível em outra etapa.
+              O teste não ativa sessão; use Conectar para mantê-la.
             </p>
           </section>
         )}
       </Card>
-      <StatusMessage title="Sem sessão ativa">
-        Selecionar ou salvar perfis não envia dados ao broker. Testar HTTPS ou
-        AMQPS é uma ação explícita; a conexão do teste é encerrada ao terminar.
-      </StatusMessage>
+      {!session.desired && !session.stopping && (
+        <StatusMessage title="Sem sessão ativa">
+          Selecionar ou salvar perfis não envia dados ao broker. Testar HTTPS ou
+          AMQPS é uma ação explícita; a conexão do teste é encerrada ao
+          terminar.
+        </StatusMessage>
+      )}
       {editor && snapshot && (
         <ProfileForm
           profile={editor === "new" ? undefined : editor}

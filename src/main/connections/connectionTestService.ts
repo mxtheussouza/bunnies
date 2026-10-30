@@ -9,6 +9,7 @@ import { ProfileFailure } from "../profiles/errors";
 import type { ProfileService } from "../profiles/service";
 import { probeHttps } from "./httpsProbe";
 import { probeAmqps } from "./amqpsProbe";
+import { ConnectionActivity } from "./activity";
 export class ConnectionTestService {
   private running = new Map<
     number,
@@ -20,6 +21,7 @@ export class ConnectionTestService {
     private readonly profiles: ProfileService,
     private readonly probe = probeHttps,
     private readonly amqpProbe = probeAmqps,
+    private readonly activity = new ConnectionActivity(),
   ) {
     this.unsubscribe = profiles.onChanged(() => {
       for (const owner of this.running.keys())
@@ -45,6 +47,7 @@ export class ConnectionTestService {
   ): Promise<HttpsTestOutcome | AmqpsTestOutcome> {
     if (this.closed || this.running.has(owner))
       throw new ProfileFailure("UNAVAILABLE");
+    const release = this.activity.probe(owner);
     const controller = new AbortController();
     this.running.set(owner, { id: input.operationId, transport, controller });
     const started = performance.now();
@@ -94,6 +97,7 @@ export class ConnectionTestService {
     try {
       return await Promise.race([work(), cancelled]);
     } finally {
+      release();
       clearTimeout(timer);
       controller.signal.removeEventListener("abort", abort);
       if (this.running.get(owner)?.controller === controller)

@@ -1,3 +1,4 @@
+import { emptySession } from "../../shared/session";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
@@ -10,6 +11,8 @@ beforeEach(() => {
   localStorage.clear();
   getInfo.mockResolvedValue({ ok: true, value: { version: "1.2.3" } });
   vi.stubGlobal("bunnies", {
+    getSessionState: async () => ({ ok: true, value: emptySession() }),
+    onSessionState: () => () => undefined,
     getInfo,
     listProfiles: vi.fn().mockResolvedValue({
       ok: true,

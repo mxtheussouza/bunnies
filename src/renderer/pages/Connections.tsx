@@ -12,7 +12,8 @@ import Button from "../components/Button";
 import Card from "../components/Card";
 import EmptyState from "../components/EmptyState";
 import StatusMessage from "../components/StatusMessage";
-import HttpsTest from "./HttpsTest";
+import ProfileTests from "./ProfileTests";
+import { parseAmqpsEndpoint } from "../../shared/amqpsEndpoint";
 import ProfileForm from "./ProfileForm";
 import "./profiles.scss";
 
@@ -221,6 +222,11 @@ export default function Connections() {
               <dd>{profile.httpsUrl}</dd>
               <dt>AMQPS</dt>
               <dd>{profile.amqpsUrl}</dd>
+              <dt>Vhost AMQPS interpretado</dt>
+              <dd>
+                {parseAmqpsEndpoint(profile.amqpsUrl)?.vhost ??
+                  "Endpoint fora do recorte AMQPS; revise em Editar perfil."}
+              </dd>
               <dt>Usuário</dt>
               <dd>{profile.username}</dd>
               <dt>Confiança TLS</dt>
@@ -269,23 +275,23 @@ export default function Connections() {
                 Remover perfil
               </Button>
             </div>
-            <HttpsTest
+            <ProfileTests
               key={profile.id + snapshot?.revision}
               profileId={profile.id}
               revision={snapshot!.revision}
               hasPassword={profile.secret.availableThisRun}
             />
             <p className="profile-hint">
-              Teste AMQPS e ativação de sessão estarão disponíveis em outra
-              etapa.
+              Os testes criam conexões transitórias e podem gerar logs/métricas
+              no broker. Não comprovam permissão para publicar ou acessar filas.
+              A ativação de sessão estará disponível em outra etapa.
             </p>
           </section>
         )}
       </Card>
       <StatusMessage title="Sem sessão ativa">
-        Selecionar ou salvar perfis não envia dados ao broker. Testar HTTPS é
-        uma ação explícita e encerra sua conexão ao terminar. AMQPS permanece
-        não iniciado.
+        Selecionar ou salvar perfis não envia dados ao broker. Testar HTTPS ou
+        AMQPS é uma ação explícita; a conexão do teste é encerrada ao terminar.
       </StatusMessage>
       {editor && snapshot && (
         <ProfileForm

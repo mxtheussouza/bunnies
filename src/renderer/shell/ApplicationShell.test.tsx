@@ -67,7 +67,7 @@ describe("offline application shell", () => {
       }),
     ).toBeTruthy();
     expect(screen.getByText("HTTPS sem sessão")).toBeTruthy();
-    expect(screen.getByText("AMQPS não iniciado")).toBeTruthy();
+    expect(screen.getByText("AMQPS sem sessão")).toBeTruthy();
     for (const name of ["Visão geral", "Filas", "Exchanges", "Publicar"])
       expect(
         screen.getByRole("button", { name }).getAttribute("aria-disabled"),

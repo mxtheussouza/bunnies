@@ -78,6 +78,20 @@ export const profileErrorMessages = {
     "O endpoint respondeu com redirecionamento. Confira a URL; ele não foi seguido.",
   TEST_RESPONSE:
     "O endpoint não devolveu uma resposta de autenticação compatível dentro dos limites.",
+  AMQP_ENDPOINT:
+    "Revise o endpoint AMQPS e o vhost: use um único segmento codificado, até 255 bytes UTF-8; /%2F identifica o vhost padrão.",
+  AMQP_CREDENTIALS: "Informe a senha nesta execução antes de testar AMQPS.",
+  AMQP_CREDENTIAL_FORMAT:
+    "Para AMQPS, usuário e senha devem ser texto UTF-8 válido, sem NUL.",
+  AMQP_CANCELLED: "Teste AMQPS cancelado. Nenhuma sessão foi ativada.",
+  AMQP_TIMEOUT: "O teste AMQPS excedeu o prazo total de 15 segundos.",
+  AMQP_NETWORK: "Não foi possível alcançar o endpoint AMQPS.",
+  AMQP_REFUSED:
+    "O broker recusou a negociação AMQP. Confira autenticação e acesso ao vhost.",
+  AMQP_PROTOCOL:
+    "O endpoint não concluiu uma negociação AMQP 0-9-1 compatível.",
+  AMQP_CLOSE:
+    "O fechamento da conexão AMQPS não foi confirmado no prazo. Os recursos locais foram encerrados.",
 } as const;
 export type ProfileErrorCode = keyof typeof profileErrorMessages;
 export type ProfileResult<T> =

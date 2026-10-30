@@ -13,13 +13,15 @@ export function parseConnectionRequest(
     return value as ConnectionRequest;
   if (
     exactObject(value, ["command", "operationId"]) &&
-    value.command === "cancelProfileHttpsTest" &&
+    (value.command === "cancelProfileHttpsTest" ||
+      value.command === "cancelProfileAmqpsTest") &&
     validId(value.operationId)
   )
     return value as ConnectionRequest;
   if (
     exactObject(value, ["command", "input"]) &&
-    value.command === "testProfileHttps" &&
+    (value.command === "testProfileHttps" ||
+      value.command === "testProfileAmqps") &&
     exactObject(value.input, ["profileId", "revision", "operationId"]) &&
     validId(value.input.profileId) &&
     validRevision(value.input.revision) &&

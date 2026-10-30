@@ -222,3 +222,41 @@ A tentativa de docker info falhou por daemon ausente. Nenhum container/broker fo
 iniciado; fixtures Node não homologam RabbitMQ 4.4.0/4.3.6. Fontes oficiais dessas
 versões foram conferidas, sem substituir execução. Outros SOs/CPUs, nativos/leitores
 de tela e gates de release permanecem pendentes. [Resultados](https-4a2a.md).
+
+## Validação do teste AMQPS — 4A.2B
+
+Execução autorizada por “Autorizo” em 2026-10-29. Parser/vhost, TLS/CA, SASL/handshake/
+close, concorrência/deadline/invalidação, novos IPCs e componentes estão cobertos
+junto das unidades. Fixture tools/testing/amqp-fixture.cjs implementa só handshake
+roteirizado em TLS, sem ser broker nem criar recursos de mensageria.
+
+Pipeline: check, package e smokes base/perfis/HTTPS/AMQPS sequenciais para evitar
+concorrência de foco de janelas. Cada harness usa userData/portas/certificados e
+credenciais sintéticos próprios, com cleanup. Smoke AMQPS mede prazo real, erros,
+close/blocked, cancelamento/reload/fechamento, reflow/zoom e ausência de sessão.
+
+Em macOS, preservar 9401448: sem botões da barra customizada; conferir roles/menu
+nativo e IPC real/estado. Windows/Linux mantêm suas expectativas de cliques/teclado;
+não declarar nativos manuais homologados pela execução privilegiada do harness.
+
+Reconsultar Docker antes da matriz 4.4.0/4.3.6; daemon ausente é limitação, não prova
+positiva. Fixture Node, testes com fakes e inspeção de fonte não substituem broker
+real. [Resultados efetivos](amqps-4a2b.md), sem declaração antecipada de sucesso.
+
+### Execução adicional com RabbitMQ real
+
+Após Docker ativo e pedido explícito, o harness `tools/testing/rabbitmq-real.cjs`
+passou em 4.4.0/4.3.6 de nó único: 20 verificações por versão, no mesmo executável.
+Resolução da imagem oficial por digest antes de criar container/rede com namespace
+e label próprios, portas host apenas loopback, TLS efêmero, senhas geradas em memória
+e hashes nas definições. Nenhuma URL externa/credencial do usuário é aceita.
+
+O observador usa HTTPS real para versão/conexões/canais/filas/consumidores e métricas;
+o app é exercitado pela UI. Logs confirmam vhost/close. Relay TCP opaco retém a
+resposta TLS do broker para cancelamento/deadline, com timeout do servidor de teste
+em 30 s para não anteceder o prazo 15 s do app. Não modifica o protocolo nem o produto.
+
+As tentativas iniciais do harness e suas correções estão no PROJECTS. Cleanup no
+finally valida propriedade do container; relatório registra falhas de remoção.
+Não confundir os 40 checks adicionais com os 216 testes da suíte, nem com homologação
+de cluster/HA, outros alvos ou recursos futuros. [Resultados/digests](amqps-4a2b.md).

@@ -100,6 +100,7 @@ export class ProfileService {
       return {
         id,
         httpsUrl: profile.httpsUrl,
+        amqpsUrl: profile.amqpsUrl,
         username: profile.username,
         password,
         trust: profile.trust,

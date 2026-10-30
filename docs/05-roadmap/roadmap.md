@@ -4,6 +4,8 @@ Data: 2026-10-28. Status: Etapas 0, 1A, 1B, 2A, 2B, 3A e 3B concluídas e aprova
 sete ADRs e D3A-01–08 aceitos. Conclusão/commit da 3B aprovados por “Aprovado”.
 4A.1 concluída/aprovada e registrada em `fe4a252`. DOC.1 concluída/aprovada por
 “Aprovado”; registrada em `66183f7`. Conclusão/commit 4A.2A aprovados por “Aprovado”.
+4A.2A registrada em `966b4a2`; HEAD `9401448` inclui ajuste posterior do proprietário
+na barra de título macOS. Contrato 4A.2B abaixo foi autorizado por “Autorizo” em 2026-10-29.
 
 ## Sequência proposta
 
@@ -18,7 +20,7 @@ sete ADRs e D3A-01–08 aceitos. Conclusão/commit da 3B aprovados por “Aprova
 | 3B | Interface base acessível, temas e estados | Concluída e aprovada; commit autorizado por “Aprovado” |
 | 4A.1 | Perfis locais e proteção condicionada de credenciais | Concluída e aprovada; commit autorizado |
 | DOC.1 | Histórico vivo, guia e Ajuda offline | Concluída e aprovada; commit 66183f7 |
-| 4A.2 | Testes HTTPS/AMQPS, CA customizada e ciclo de sessão | 4A.2A autorizada/em verificação; 4A.2B/C exigem contratos próprios |
+| 4A.2 | Testes HTTPS/AMQPS, CA customizada e ciclo de sessão | 4A.2A/B concluídas/aprovadas; contrato 4A.2C a preparar |
 | 4B | Management API, capacidades e consultas de leitura | Proposta |
 | 5 | Filas e proteção das operações destrutivas | Proposta |
 | 6 | Exchanges e bindings | Proposta |
@@ -530,7 +532,7 @@ não registra as novas escolhas como aprovadas nem habilita operações no produ
 | Incremento proposto | Entrega | Gate |
 | --- | --- | --- |
 | 4A.2A | CA personalizada e teste explícito HTTPS | Execução autorizada por Autorizo; conclusão/commit aprovados por Aprovado |
-| 4A.2B | Teste AMQPS/autenticação/vhost e cliente AMQP | Contrato próprio; verificar versão/tipos do cliente aceito no ADR-0002 |
+| 4A.2B | Teste AMQPS/autenticação/vhost e cliente AMQP | Conclusão/commit aprovados em 2026-10-30, incluindo testes reais |
 | 4A.2C | Ativar/encerrar sessão e ciclo de recuperação | Contrato próprio; usar resultados/capacidades dos dois transportes |
 
 A divisão mantém o escopo da 4A.2 e produz entregas menores. Não autoriza executar
@@ -679,3 +681,206 @@ continua gate da implementação. A página da API consultada é a de RabbitMQ 4
 Não foi instalada dependência, gerado certificado, executado teste TLS ou homologada
 compatibilidade. O proprietário autorizou a execução por “Autorizo”; apresentar evidências e
 solicitar aprovação de conclusão antes de commit.
+
+## Contrato autorizado — 4A.2B: teste AMQPS e acesso ao vhost
+
+Preparação: 2026-10-28. Execução autorizada em 2026-10-29 por **“Autorizo”**.
+Status: **concluída/aprovada em 2026-10-30; commit autorizado**.
+O pedido “Continue as etapas” iniciou esta preparação após a entrega 966b4a2.
+Base observada: 9401448, Git limpo; ajuste posterior da barra macOS preservado.
+A preparação original não instalou cliente nem implementou o transporte; o aceite
+posterior autorizou somente o recorte descrito abaixo.
+
+| Campo | Proposta para aprovação |
+| --- | --- |
+| Identificador/nome | 4A.2B — Teste AMQPS de autenticação e abertura do vhost |
+| Objetivo | Verificar TLS e abertura AMQP 0-9-1 no vhost do endpoint salvo, encerrando a conexão antes de concluir |
+| Justificativa | HTTPS já tem teste explícito; seu sucesso não comprova AMQP. Validar esse transporte separadamente antecede o ciclo de sessão da 4A.2C |
+| Escopo | Cliente AMQP no main, interpretação estrita do endpoint/vhost, senha/CA do perfil salvo, teste cancelável e datado, erros sanitizados, IPC específico, UI/guia e testes isolados |
+| Tarefas | Instalar/fixar cliente aprovado e revisar lock/audit; validar endpoint/vhost; implementar adapter e recursos canceláveis; coordenar testes HTTPS/AMQPS; ampliar DTOs/preload/IPC; integrar UI; atualizar documentação; executar check/package/smokes/revisão |
+| Módulos afetados | M01, transporte AMQP/TLS, credenciais/configuração, IPC, Conexões e Ajuda; sem operação de topologia/mensagem |
+| Arquivos previstos | package.json/package-lock.json; novos src/main/connections/amqpsEndpoint.ts e amqpsProbe.ts; coordenação em httpsTestService.ts ou substituto local connectionTestService.ts; profiles/service, ipc/connections e app; shared/connections/profiles, preload; Conexões/HttpsTest e controle AMQPS; testes próximos, tools/testing e guia/documentos listados abaixo |
+| Dependências | ADR-0002/0003/0004/0005 e NFRs aceitos; CA/schema v2 da 4A.2A; instalar somente amqplib 2.2.0 exato em dependencies, incluindo resolução do lock. Tipos já incluídos; sem @types/amqplib ou cliente alternativo |
+| Riscos | Vazamento de SASL, vhost decodificado incorretamente, conexão tardia órfã, retry implícito, parser de broker não confiável, resultado confundido com sessão/permissão de publicar e regressão dos smokes após 9401448 |
+| Critérios de aceitação | Dez critérios verificáveis abaixo; resultados efetivos, documentação e limitações apresentados para aprovação de conclusão |
+| Estratégia de testes | Parse/DTO/serviço/componentes; TLS e handshake AMQP isolados; broker RabbitMQ nas duas versões quando viável; IPC e regressões HTTPS/perfis/Ajuda/segurança; package e smokes sequenciais; distinguir fixture de broker real |
+| Resultado esperado | Testar/cancelar AMQPS no perfil salvo, identificar vhost e resultado datado, encerrar recursos e manter Sem sessão ativa; nenhum envio/consumo ou conexão automática |
+| Impacto documental | Atualizar M01, arquitetura/segurança/NFRs, dependências, requisitos/MVP conforme cobertura real, roadmap/current-stage/progress, evidências, AGENTS/PROJECTS; após implementar, revisar guide.json e gerar Markdown/Ajuda/README |
+
+### Dependência e limites de autorização
+
+- Candidato revalidado: **amqplib 2.2.0**, com tipos incluídos, Node >=18 e sem
+  dependências de produção declaradas. Isso não comprova segurança/compatibilidade
+  no Electron nem ausência de vulnerabilidades. Instalação dirigida, auditoria sem
+  auto-fix, diff de manifesto/lock e testes serão parte da implementação aprovada.
+- Usar API pública de conexão comum, sem recovery/reconexão/retry. Não importar
+  arquivos internos da biblioteca, fazer monkey patch global ou expor cliente ao renderer.
+  Não acrescentar outros pacotes/atualizações alheios para fazer testes passarem.
+- Se a versão não estiver disponível ou a validação revelar bloqueio que exija
+  troca de cliente/versão, bypass ou alteração arquitetural, apresentar a decisão
+  antes do trabalho dependente. Não substituir silenciosamente a versão aprovada.
+- Manter branch/histórico, assets, providers desligados e identidade. Sem CI remoto,
+  assinatura/publicação/push ou commit antes da aprovação de conclusão.
+
+### Endpoint e vhost — proposta sem schema novo
+
+1. Resolver somente o endpoint AMQPS do **perfil salvo**, nunca URL/senha fornecida
+   como parâmetro de teste. Porta padrão 5671; rejeitar porta zero e formas inválidas.
+   Proibir amqp, userinfo, query, fragment e opções arbitrárias de TLS/transporte.
+2. Usar o único segmento de caminho como vhost percent-encoded; decodificar UTF-8
+   estritamente uma vez. Não aparar espaços, perder caracteres, normalizar segmentos
+   ponto/ponto-ponto ou decodificar de novo no adapter. Barras no nome exigem %2F;
+   rejeitar múltiplos segmentos literais, percent inválido e UTF-8 inválido.
+3. Propor vhost não vazio de até **255 bytes UTF-8**, sem NUL/controles C0/DEL.
+   Vhost ausente significa padrão `/`; `/%2F` identifica explicitamente `/`.
+   Uma barra final isolada significa vhost vazio na especificação: este recorte
+   rejeita `amqps://host/`, orientando usar ausência de caminho ou `/%2F`.
+   Exemplos: `/pedidos` → pedidos; `/equipe%2Fpedidos` → equipe/pedidos;
+   `/literal%252F` → literal%2F, sem segunda conversão para barra.
+4. Montar opções de conexão estruturadas no main, sem concatenar segredo à URI.
+   A biblioteca também decodifica seu campo vhost: fornecer representação compatível
+   para que o nome entregue ao broker preserve exatamente o resultado do parse.
+   Testar Unicode, espaços, %, barras, segmentos ponto e IPv4/IPv6/hostname.
+5. Não alterar schema v2 nem regravar perfis ao abrir/testar. Perfis antigos com
+   endpoint fora desse recorte continuam legíveis/editáveis; falham antes de rede,
+   sem migração/reset silencioso. Não endurecer a leitura do repositório de modo
+   a tornar toda configuração anterior ilegível por um endpoint antes aceito.
+   Mostrar no formulário/resumo o vhost interpretado e instruções do campo AMQPS.
+
+### TLS, protocolo e recursos — parâmetros propostos
+
+- TLS >=1.2, cadeia/validade/identidade obrigatórias. Reusar default/custom do perfil
+  com a semântica 4A.2A; bundle escolhido exclusivo, sem trust global, bypass,
+  downgrade, certificado de cliente ou proxy/túnel. SNI somente para hostname DNS;
+  IP também exige validação de identidade. Não abrir HTTPS para testar AMQPS.
+- Sem senha nesta execução, recusar antes de DNS/TCP. Usar SASL PLAIN apenas dentro
+  de TLS validado, com credenciais no main e sem fallback guest. Rejeitar NUL/UTF-8
+  malformado; não importar a restrição de dois-pontos de HTTP Basic para AMQP.
+- Testar somente abertura de conexão no vhost (até connection.open-ok) e fechamento.
+  **Não criar canais**, declarar/consultar topologia, publicar, consumir ou confirmar
+  mensagens. Propor heartbeat **10 s**, frameMax **128 KiB** e channelMax **1**;
+  respeitar negociação válida e falhar se os limites forem violados. O teste não
+  mede liveness contínuo nem homologa desempenho/limites globais do parser.
+- Uma operação de teste por janela **compartilhada entre HTTPS e AMQPS**; a UI
+  bloqueia iniciar a outra modalidade e o main rejeita concorrência indevida.
+  Generalizar somente a coordenação necessária do serviço existente, mantendo dois
+  comandos específicos e os limites HTTPS já aprovados, sem framework de transporte.
+- Deadline total AMQPS **15 s** (NFR-013), incluindo fila/snapshot, DNS/TCP/TLS,
+  negociação, revalidação e fechamento. Timeout de inatividade do socket não basta.
+  Encerrar normalmente após abrir; conceder até **1 s** ao close, dentro do prazo
+  restante, e destruir recursos ao exceder. Sem confirmação de fechamento no prazo,
+  retornar diagnóstico específico, sem apresentar sucesso pleno ou manter conexão.
+- O main deve possuir um socket TCP por tentativa, fornecido à negociação TLS por
+  APIs públicas, para poder destruir recursos também antes de connect resolver.
+  Cancelar/deadline/erro/reload/crash/fechamento/quit invalida a operação e destrói
+  sockets, timers e listeners; eventual resolução atrasada é descartada/encerrada.
+  Não usar somente Promise.race deixando a conexão abrir depois, nem acessar streams
+  privados de amqplib. A composição socket/TLS deve ser provada no runtime do pacote.
+- ID/revision/operationId vinculados à janela no main; mudanças próprias/externas de
+  perfil invalidam testes. Revalidar antes de concluir, sem senha/CA/corpo/stack no
+  resultado. DNS/I/O já entregue ao SO não tem garantia de interrupção física imediata.
+- Distinguir cancelamento, prazo, TLS, rede, protocolo/negociação, recusa do broker
+  e fechamento sem confirmação. Não inferir senha incorreta, vhost inexistente ou
+  falta de permissão por texto bruto/queda genérica; a recusa pode ser ambígua.
+  Mensagens fixas e requestId; detalhes de broker não voltam ao renderer/log.
+
+### IPC, interface e documentação do usuário
+
+Propor somente `testProfileAmqps({ profileId, revision, operationId })` e
+`cancelProfileAmqpsTest(operationId)` no canal bunnies:connections: **18 métodos**
+específicos ao todo. Manter autoridade integral da 2B, validação estrita de shape,
+tamanho e origem, revalidação após await e limpeza por janela. Nenhuma API genérica.
+
+Em Conexões, adicionar **Testar AMQPS**, cancelar, vhost interpretado e resultado
+com data/duração. Sucesso significa abertura autenticada aceita naquele vhost e
+conexão encerrada; não comprova acesso a filas, publicação, saúde de cluster ou que
+HTTPS/AMQPS pertençam ao mesmo broker. Preservar **Sem sessão ativa**, resultados
+separados e páginas de broker bloqueadas. Não conectar ao abrir/salvar/selecionar.
+
+O guia/Ajuda explicará vhost, exemplos de URL, CA usada nos dois endpoints,
+credenciais, erros e efeitos: o teste cria uma conexão transitória real e tentativa
+de login, podendo gerar logs/métricas no broker mesmo quando cancelado. Sem operação
+de mensagens/topologia; nenhum efeito de rede é desfeito por cancelar.
+
+Preservar o ajuste macOS versionado em **9401448**. Adequar smokes/expectativas e
+instruções de menu aos controles disponíveis por plataforma, sem restaurar a barra
+alterada pelo proprietário. Usar roles/menu nativo no teste quando aplicável; revisão
+manual nativa permanece explicitamente separada da automação privilegiada.
+
+### Critérios verificáveis da 4A.2B
+
+1. Dependência exata/tipos/lock revisados, audit registrado sem auto-fix; cliente
+   fica no main, ausente do preload/renderer, sem pacote adicional não aprovado.
+2. Parse preserva vhost/Unicode/escapes e rejeita entradas fora do recorte antes
+   da rede; perfis v1/v2 continuam legíveis e não sofrem gravação ao testar.
+3. Sem senha não há tentativa; SASL só ao destino TLS validado. Senha/chave/CA/caminho
+   e respostas brutas não vazam em DTO/storage/log/pacote; segredo não vai à URI.
+4. TLS real cobre CA correta/desconhecida, expiração e SAN divergente, DNS/IP,
+   compartilhamento de CA com HTTPS e ausência de trust global/bypass.
+5. Sucesso requer open-ok no vhost correto e fechamento confirmado. Nenhum canal,
+   declaração, leitura/consumo/ack/publicação ou reconexão é executado pelo probe.
+6. Erros/negociação/protocolo inválido/recusa e close sem resposta são sanitizados;
+   sucesso AMQP não é apresentado como permissão de recurso/sessão/saúde do broker.
+7. Deadline total, cancelamento em DNS/TCP/TLS/handshake/close, retorno atrasado,
+   mudança de perfil e fechamento/reload/quit não deixam conexão/sockets/timers
+   órfãos. HTTPS e AMQPS não executam em paralelo na mesma janela.
+8. IPC nega janela/frame/URL/shape/tamanho indevidos; ponte finita e proteções
+   CSP/sandbox/protocolo/rede do renderer e regressões anteriores preservadas.
+9. UI em dois temas, foco/teclado/erros/layout/zoom 200% e guia/Ajuda sincronizados;
+   macOS usa comportamento atual de 9401448, com limitações nativas documentadas.
+10. Check/package e smokes base/perfis/HTTPS/AMQPS executados em sequência e
+    registrados; distinguir TLS/AMQP de fixture Node de RabbitMQ real. Revalidar
+    Docker e tentar matriz isolada 4.4.0/4.3.6 quando viável, com portas loopback,
+    certificados/usuários/vhosts sintéticos, readiness e cleanup. Daemon indisponível
+    ou outro alvo não executado permanece limitação, nunca compatibilidade homologada.
+
+### Exclusões e fontes da preparação
+
+4A.2C (sessão/vhost ativo/reconexão/polling), canais confirm/publicação, filas,
+exchanges, mensagens, administração e nova infraestrutura de release continuam
+fora deste contrato. Seu aceite não autoriza executar a próxima etapa ou registrar
+commit sem aprovação de conclusão. Não ligar provider real de senha.
+
+Fontes consultadas em 2026-10-28:
+
+- [Manifesto oficial v2.2.0](https://github.com/amqp-node/amqplib/blob/v2.2.0/package.json)
+  e [registry npm](https://registry.npmjs.org/amqplib/latest): versão/tipos/engines/dependências
+  verificados, sem instalação. [Changelog](https://github.com/amqp-node/amqplib/blob/v2.2.0/CHANGELOG.md)
+  registra heartbeat/recovery; usar connect comum, sem recovery.
+- [API do cliente](https://amqp-node.github.io/amqplib/channel_api.html) e
+  [connect v2.2.0](https://github.com/amqp-node/amqplib/blob/v2.2.0/lib/connect.js):
+  timeout/socket options, vhost e negociação; leitura de código não substitui prova
+  de cancelamento/fechamento no runtime Node 24 do Electron.
+- [URI RabbitMQ](https://www.rabbitmq.com/docs/uri-spec),
+  [controle de acesso](https://www.rabbitmq.com/docs/access-control) e
+  [heartbeats](https://www.rabbitmq.com/docs/heartbeats): semântica de vhost,
+  autenticação/permissões distintas e heartbeat negociado.
+- [Releases RabbitMQ](https://www.rabbitmq.com/release-information): 4.4.0/4.3.6
+  continuam referências aceitas, sem homologação executada. Na 4A.2A, Docker estava
+  sem daemon; verificar novamente durante a implementação, sem iniciar serviço do host.
+- [TLS Node](https://nodejs.org/api/tls.html): suporte a socket fornecido/validação.
+  Página genérica disponível indica Node 26; página v24 não ficou acessível via
+  navegador. Tipos Node 24 instalados declaram socket; provar composição e limites
+  no pacote, sem supor equivalência de runtimes.
+
+Na preparação original não houve instalação, teste funcional/TLS/broker ou alteração
+de código/guia. Em 2026-10-29, “Autorizo” aprovou executar este contrato. A implementação
+e seus resultados estão nas [evidências 4A.2B](../07-testing/amqps-4a2b.md).
+Conclusão/commit ainda dependem de revisão e aceite, sem push ou etapa 4A.2C.
+
+### Complemento executado — broker real
+
+O proprietário pediu testes reais com Docker já ativo e confirmou continuidade.
+Em 2026-10-29, harness `tools/testing/rabbitmq-real.cjs` passou com 20 verificações
+em cada 4.4.0/4.3.6, imagens oficiais arm64 por digest, nó único e portas loopback.
+HTTPS/AMQPS, TLS/CA/vhosts/recusas, cancelamento/prazo/cleanup no mesmo pacote.
+[Evidências](../07-testing/amqps-4a2b.md) delimitam a compatibilidade observada.
+Sem mudança do contrato de produto ou início de sessão; conclusão/commit pendentes.
+
+### Aceite de conclusão 4A.2B
+
+Em 2026-10-30, “Aprove a 4A.2B, e siga para a próxima etapa” aprovou a entrega
+apresentada e seu commit, incluindo testes reais/limitações. Registrar
+`feat(connections): add cancellable AMQPS connection tests` sem nova implementação,
+com pai 9401448. O avanço seguinte é a preparação do contrato 4A.2C, sujeito a
+aprovação específica antes de implementar. Sem push.

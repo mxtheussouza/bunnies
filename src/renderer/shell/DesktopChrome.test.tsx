@@ -13,7 +13,7 @@ describe("desktop chrome keyboard access", () => {
     render(
       <Titlebar
         title="Bunnies"
-        platform="darwin"
+        platform="linux"
         development={false}
         mode="centered-title"
       />,

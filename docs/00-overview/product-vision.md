@@ -125,3 +125,13 @@ ou abrir AMQP. Perfis antigos são preservados em leitura e convertidos somente 
 gravação explícita com backup. Guia e Ajuda passam a documentar os novos campos.
 A conclusão/commit foram aprovados por “Aprovado”; RabbitMQ real e outros alvos não homologados.
 [Evidências](../07-testing/https-4a2a.md).
+
+## Incremento 4A.2B — teste AMQPS/vhost
+
+Execução autorizada por “Autorizo” em 2026-10-29. O usuário pode verificar a prévia
+de vhost, testar AMQPS separadamente de HTTPS, cancelar e consultar resultado datado.
+O teste encerra a conexão, não cria canais/recursos nem publica/consome mensagens.
+Senha permanece somente nesta execução e UI sem sessão ativa. Guia/Ajuda explicam
+preenchimento, efeitos e erros. [Verificações](../07-testing/amqps-4a2b.md): 216 testes e 40 checks reais no
+recorte de conexão 4.4.0/4.3.6 passaram. Conclusão/commit aprovados em 2026-10-30;
+demais recursos, cluster/HA e outros alvos não homologados.

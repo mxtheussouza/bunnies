@@ -13,6 +13,7 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 - [Editar um perfil e descartar alterações](#editar-e-cancelar)
 - [Remover um perfil local](#remover-perfil)
 - [Configurar CA e testar HTTPS](#ca-e-teste-https)
+- [Testar AMQPS e abertura do vhost](#teste-amqps)
 - [Senhas, privacidade e encerramento](#senhas-e-privacidade)
 - [Temas, navegação e janela](#temas-e-navegacao)
 - [Menus e teclado](#menus-e-teclado)
@@ -23,11 +24,11 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 
 ## O que está disponível nesta versão
 
-Esta é uma versão em desenvolvimento. Você pode cadastrar, listar, selecionar, editar e remover perfis locais; configurar uma CA pública por perfil; testar autenticação HTTPS; usar temas e consultar a Ajuda. O Bunnies ainda não ativa uma sessão de trabalho no RabbitMQ.
+Esta é uma versão em desenvolvimento. Você pode cadastrar, listar, selecionar, editar e remover perfis locais; configurar CA pública por perfil; testar autenticação HTTPS e abertura AMQPS do vhost; usar temas e consultar a Ajuda. O Bunnies ainda não ativa uma sessão de trabalho no RabbitMQ.
 
-Salvar ou selecionar um perfil não testa endereços, certificados, usuário ou senha e não envia dados ao broker. Testar HTTPS é uma ação explícita que verifica TLS e a resposta de autenticação do endpoint salvo, encerrando sua conexão ao terminar. Sem sessão ativa, HTTPS sem sessão e AMQPS não iniciado são estados esperados.
+Salvar ou selecionar um perfil não testa endereços, certificados, usuário ou senha e não envia dados ao broker. Testar HTTPS e Testar AMQPS são ações explícitas, com conexões transitórias encerradas ao terminar. Sem sessão ativa, HTTPS sem sessão e AMQPS sem sessão são estados esperados.
 
-Visão geral, Filas, Exchanges e Publicar permanecem indisponíveis. Teste AMQPS e ativação de sessão ainda não estão disponíveis. Senhas protegidas salvas no dispositivo também estão desabilitadas; use somente nesta execução.
+Visão geral, Filas, Exchanges e Publicar permanecem indisponíveis. Ativação de sessão e senhas protegidas salvas no dispositivo ainda não estão disponíveis; use senha somente nesta execução.
 
 <a id="primeiros-passos"></a>
 
@@ -55,8 +56,9 @@ Em Conexões, clique em Novo perfil. Complete o formulário descrito a seguir e 
 | Nome do perfil | Use um nome que identifique claramente o ambiente. É obrigatório, tem limite de 120 e não aceita espaços no início ou fim nem caracteres de controle. | Equipe — Homologação |
 | Ambiente | Escolha Desenvolvimento, Homologação, Produção ou Outro. Produção aparece com texto e símbolo de alerta para ajudar a reconhecer o contexto; a escolha não muda permissões do broker. | Homologação |
 | Endpoint HTTPS | Informe a URL base HTTPS do acesso administrativo, com host e porta corretos. Pode incluir o prefixo do seu proxy, por exemplo /rabbitmq; o teste acrescenta /api/whoami a esse prefixo. Não informe a URL final /api/whoami neste campo. É independente do AMQPS e tem limite de 2048. Não use usuário/senha na URL, espaços, barra invertida, query (?) ou fragmento (#). | https://broker.exemplo:15671 |
-| Endpoint AMQPS | Informe a URL AMQPS para mensageria, com host e porta corretos. Limite de 2048 e as mesmas restrições de credenciais, espaços, query e fragmento do HTTPS. Informe o endpoint separadamente; ele não é deduzido do HTTPS. | amqps://broker.exemplo:5671 |
-| Confiança TLS | Escolha CAs padrão do aplicativo ou CA personalizada (PEM). Na edição, Manter configuração atual preserva a escolha salva. O modo padrão usa as CAs do runtime do aplicativo, que podem diferir das do sistema; o personalizado usa exclusivamente o bundle escolhido, sem alterar o sistema. | — |
+| Endpoint AMQPS | Informe a URL AMQPS com host e porta corretos (padrão 5671). É independente do HTTPS; limite de 2048, sem credenciais, query, fragmento, barra invertida ou espaços literais. Sem caminho ou /%2F usa o vhost /. Para outro vhost, use um único segmento com barras codificadas como %2F: /equipe%2Fpedidos significa equipe/pedidos. Uma barra final isolada / representa nome vazio e é rejeitada pelo teste. Vhost não vazio de até 255 bytes UTF-8, sem caracteres de controle; espaços que façam parte do nome precisam de %20. Não codifique duas vezes: /literal%252F significa o nome literal%2F. | amqps://broker.exemplo:5671/equipe%2Fpedidos |
+| Vhost AMQPS interpretado | É uma prévia somente de leitura, calculada a partir do Endpoint AMQPS. Confira o nome exato antes de salvar/testar; a prévia não abre conexão e não comprova que o vhost existe. Endpoint inválido para o teste indica que você deve revisar o formato. Perfis antigos fora do recorte continuam legíveis/editáveis, sem correção automática. | — |
+| Confiança TLS | Escolha CAs padrão do aplicativo ou CA personalizada (PEM). Na edição, Manter configuração atual preserva a escolha salva. O modo padrão usa as CAs do runtime do aplicativo, que podem diferir das do sistema; o personalizado usa exclusivamente o bundle escolhido, sem alterar o sistema. A mesma escolha de CA vale para HTTPS e AMQPS desse perfil; confira o bundle adequado aos dois servidores, que podem ser diferentes. | — |
 | Selecionar CA PEM | No modo CA personalizada (PEM), clique para escolher pelo diálogo do sistema um arquivo contendo apenas certificados CA públicos. Até 256 KiB e 16 certificados. Não selecione chave privada, certificado de cliente, PFX/PKCS#12 ou certificado de servidor que não seja CA. Confira a origem da CA antes de confiar nela. | — |
 | Fingerprints da CA selecionada | Compare os identificadores SHA-256 com os fornecidos pelo responsável pelo ambiente. A seleção não grava o perfil: clique em Salvar perfil para importar uma cópia. Ela expira em dez minutos e é descartada ao fechar o formulário. Cancelar o seletor não altera a seleção anterior. | — |
 | Usuário | Informe o nome de usuário do broker, respeitando maiúsculas, minúsculas e espaços que façam parte dele. É obrigatório, tem limite de 256 e não aceita caracteres de controle. Salvar não cria o usuário nem valida suas permissões. Para testar HTTPS com Basic, o usuário não pode conter dois-pontos e usuário/senha precisam ser texto UTF-8 válido; valores incompatíveis geram erro antes da rede. | usuario_da_equipe |
@@ -66,7 +68,7 @@ Em Conexões, clique em Novo perfil. Complete o formulário descrito a seguir e 
 
 - Nome, endereços e usuário são armazenados localmente. A senha no modo em memória não é gravada no arquivo de perfis.
 - Há limite de 50 perfis e 2 MiB de configuração. Os limites de texto contam unidades de texto; alguns símbolos podem ocupar mais de uma.
-- Os números de porta dos exemplos não configuram o seu servidor. Confirme os endereços reais e a configuração HTTPS/Management. O teste só usa dados salvos; nenhuma sessão ou conexão AMQPS é aberta.
+- Os números de porta dos exemplos não configuram o servidor. Confirme os endereços reais, os protocolos e o vhost com o responsável pelo ambiente. Os testes só usam dados salvos, encerram suas conexões e não ativam sessão.
 - Salvar perfis nesta versão usa um novo formato de configuração, que versões anteriores podem não ler. Ao converter um arquivo antigo válido, o aplicativo preserva um backup do original. Não tente voltar de versão regravando o arquivo manualmente; solicite orientação ao responsável pelo projeto.
 
 <a id="selecionar-e-recarregar"></a>
@@ -124,15 +126,34 @@ O aplicativo usa validação de cadeia, validade e identidade do servidor, com T
 5. Aguarde o resultado ou clique em Cancelar teste HTTPS. O teste tem prazo total de dez segundos. Alterar/remover perfil, sair da página ou fechar/recarregar janela cancela ou invalida uma execução antiga.
 6. Em caso de sucesso, confira a data do último teste. Autenticação HTTPS verificada não significa sessão ativa, saúde do cluster, versão homologada, acesso AMQPS ou permissão sobre recursos.
 
-- Apenas uma execução HTTPS por janela. Não há retry automático; uma nova tentativa exige ação explícita.
+- Apenas uma execução de teste por janela, compartilhada entre HTTPS e AMQPS. Aguarde ou cancele a modalidade em andamento antes de iniciar a outra. Não há retry automático; nova tentativa exige ação explícita.
 - Não há proxy corporativo configurável, mTLS ou OAuth neste recorte. Respostas comprimidas ou fora dos limites/formato do probe inicial são rejeitadas com diagnóstico, sem alegar sucesso.
 - Na edição, mudar ou remover a CA não altera o segredo se Senha estiver em Manter senha atual. O limite total continua sendo 50 perfis/2 MiB, incluindo certificados; bundles grandes podem atingir o tamanho máximo antes de chegar a 50 perfis.
+
+<a id="teste-amqps"></a>
+
+## Testar AMQPS e abertura do vhost
+
+O teste AMQPS verifica TLS, autenticação usuário/senha e abertura AMQP 0-9-1 no vhost do endpoint salvo. Não depende do Management API nem dispara o teste HTTPS. Requer AMQPS acessível, usuário habilitado e acesso ao vhost; a mesma CA do perfil valida cada servidor pela sua própria identidade.
+
+O teste não cria canais, declara recursos, publica, consome ou confirma mensagens. Abre uma conexão transitória real e a encerra antes de concluir. Tentativas de login e conexões podem gerar logs/métricas no broker; cancelar não desfaz efeitos de rede já ocorridos.
+
+1. Cadastre ou selecione o perfil e abra Editar perfil. Confira Endpoint AMQPS, Vhost AMQPS interpretado e Usuário. Configure CA apropriada e informe a senha em Somente nesta execução. Clique em Salvar perfil.
+2. No resumo do perfil salvo, confira o vhost novamente e clique em Testar AMQPS. O botão fica indisponível sem senha nesta execução ou enquanto outro teste está em andamento. Não é iniciado ao abrir, salvar ou selecionar perfil.
+3. Aguarde ou clique em Cancelar teste AMQPS. Prazo total de 15 segundos, incluindo negociação e fechamento. Alterar/remover perfil, sair da página ou fechar/recarregar janela cancela ou invalida o teste antigo.
+4. Autenticação AMQPS e vhost verificados indica abertura aceita no vhost naquele instante e conexão encerrada com confirmação. Confira data/duração; o resultado não é monitoramento contínuo nem sessão ativa.
+5. Em caso de erro, revise o diagnóstico e a configuração com o responsável pelo broker. Antes de repetir, confira se está no ambiente certo. Nenhuma tentativa é repetida automaticamente.
+
+- Sem sessão ativa permanece esperado mesmo após sucesso nos dois testes. Isso não prova permissão de criar filas/publicar, saúde de cluster, versão homologada ou que HTTPS e AMQPS pertençam ao mesmo broker.
+- O nome do usuário AMQP pode conter dois-pontos; a restrição de Basic é específica do teste HTTPS. Usuário e senha AMQPS precisam ser texto UTF-8 válido, sem NUL.
+- Falha TLS exige corrigir CA/identidade/validade; nunca desabilite validação para contornar o problema. Não há mTLS, OAuth, downgrade ou proxy corporativo configurável neste recorte.
+- Uma recusa durante negociação pode envolver autenticação ou acesso ao vhost. O aplicativo não apresenta texto bruto do broker nem adivinha a causa quando ela é ambígua. Fechamento não confirmado é um erro separado: os recursos locais são encerrados, mas não é apresentado sucesso pleno.
 
 <a id="senhas-e-privacidade"></a>
 
 ## Senhas, privacidade e encerramento
 
-Nesta versão, a senha é mantida somente em memória durante a execução. Após reiniciar completamente o aplicativo, os dados do perfil continuam salvos, mas a senha precisa ser informada novamente. A senha digitada não é exibida no resumo nem devolvida para edição. No teste HTTPS, a senha é enviada ao endpoint salvo através de TLS para autenticação. Confira o endereço e a origem da CA antes de testar.
+Nesta versão, a senha é mantida somente em memória durante a execução. Após reiniciar completamente o aplicativo, os dados do perfil continuam salvos, mas a senha precisa ser informada novamente. A senha digitada não é exibida no resumo nem devolvida para edição. Nos testes HTTPS/AMQPS, a senha é enviada somente ao respectivo endpoint salvo através de TLS para autenticação. Confira o endereço e a origem da CA antes de testar.
 
 No macOS, fechar a janela pode manter o aplicativo em execução e conservar as senhas temporárias. Para encerrar o processo, use Arquivo → Sair. Nos outros sistemas, fechar a última janela encerra o aplicativo.
 
@@ -158,9 +179,9 @@ Use Tab e Shift+Tab para percorrer controles e Enter ou Espaço para acionar bot
 
 Ctrl+5 no Windows/Linux ou Cmd+5 no macOS abre Conexões quando você não está digitando em um campo. O atalho não fecha o formulário modal de perfil.
 
-Arquivo → Sair encerra o aplicativo. Editar abre o menu nativo de edição para ações como copiar, colar e selecionar texto no controle em foco.
+No Windows/Linux, a barra do aplicativo oferece Arquivo, Editar, Visualizar e Janela. No macOS, use os menus nativos no topo da tela; as ações da barra interna foram ocultadas. O menu do aplicativo permite encerrar; File/Arquivo oferece fechar/sair, Edit/Editar oferece edição e View/Visualizar oferece zoom, recarga e tela cheia. Os nomes podem seguir o idioma do sistema.
 
-Visualizar oferece Recarregar, Forçar recarga, Tamanho real, Aumentar zoom, Diminuir zoom e Alternar tela cheia. Janela oferece Minimizar e Fechar janela. Também existem botões na barra superior para minimizar, maximizar/restaurar e fechar.
+No Windows/Linux há botões na barra superior para minimizar, maximizar/restaurar e fechar. No macOS, use os itens nativos de Window/Janela e os comandos disponíveis no sistema. Fechar a janela pode manter o processo aberto no macOS; encerrar completamente descarta a senha em memória.
 
 Os atalhos mostrados ao lado de alguns itens de menu não garantem um atalho global implementado. Para essas ações, use os itens de menu; os atalhos de edição nativos dependem do sistema. Controles nativos, leitores de tela e outras plataformas ainda precisam de revisão manual completa.
 
@@ -169,6 +190,10 @@ Os atalhos mostrados ao lado de alguns itens de menu não garantem um atalho glo
 ## Resolver problemas
 
 Leia o resultado de cada operação. Um erro não significa que os dados foram salvos ou removidos. Se o estado ficar incerto, use Recarregar lista para conferir o arquivo local antes de tentar outra alteração.
+
+- O broker recusou a negociação AMQP: confirme credenciais, vhost e permissão de acesso; a causa pode ser ambígua. Não há fallback automático para guest.
+- O fechamento da conexão AMQPS não foi confirmado: o aplicativo encerrou seus recursos locais e não apresentou sucesso. Confira rede/broker antes de repetir. Prazo total de AMQPS é 15 s; nenhuma reconexão ocorre automaticamente.
+- Vhost inválido: remova uma barra final isolada ou use /%2F para o padrão /. Barras no nome devem ser %2F e não caminhos com múltiplos segmentos. Revise a prévia antes de salvar.
 
 | Situação | O que fazer |
 | --- | --- |
@@ -196,7 +221,7 @@ Os itens a seguir descrevem o propósito planejado das funções, não instruç�
 
 | Campo ou função | Como usar / para que serve | Exemplo fictício |
 | --- | --- | --- |
-| Teste AMQPS e ativação de sessão | Verificar acesso AMQPS, vhost e contexto de trabalho depende de entregas posteriores. O teste HTTPS e a configuração de CA já existem; não ativam sessão nem comprovam acesso a mensagens. | — |
+| Ativação de sessão | Contexto de trabalho, vhost ativo, reconexão e operações de broker dependem de entregas posteriores. Os testes HTTPS/AMQPS já disponíveis não ativam sessão nem comprovam permissão sobre mensagens. | — |
 | Visão geral e monitoramento | Apresentar informações e métricas do broker com estado e atualidade claros. Ainda não há métricas reais, gráficos ou histórico no aplicativo. | — |
 | Filas | Listar, criar e inspecionar filas e, em operações específicas futuras, excluir ou executar purge com confirmação. Nenhuma dessas operações está disponível agora. | — |
 | Exchanges e bindings | Organizar exchanges, relacionamentos de roteamento e routing keys. Ainda não existem formulários ou operações implementados. | — |

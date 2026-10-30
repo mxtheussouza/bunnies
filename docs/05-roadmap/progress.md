@@ -701,3 +701,80 @@ desse commit; não integra o pacote/testes aprovados. PROJECTS/AGENTS/estado e
 referências sincronizados. Registro da conclusão integra o commit autorizado com
 pai 66183f7; consultar hash no Git. Sem push ou início de 4A.2B/C. Limitações de
 broker real, nativos, assistivas, outros alvos e providers/release mantidas.
+
+## Preparação 4A.2B após 4A.2A
+
+O pedido “Continue as etapas” iniciou o contrato da próxima entrega. A 4A.2A está
+registrada/aprovada em 966b4a2; HEAD 9401448 contém mudança posterior da barra de
+título macOS, feita pelo proprietário. Git limpo; preservar esse comportamento e
+revalidar o próximo pacote, sem reutilizar evidências antigas como prova desse HEAD.
+
+Contrato 4A.2B Proposed no roadmap: 13 campos/dez critérios; amqplib 2.2.0 com tipos
+incluídos, teste explícito AMQPS/vhost sem sessão/canal, prazo total 15 s, fechamento
+limitado/cancelamento, parse estrito e duas novas operações IPC. Guias/smokes devem
+acompanhar a implementação futura e o comportamento real por plataforma.
+
+Fontes oficiais/registry consultados; nenhum cliente instalado, código/guia alterado
+ou teste funcional/broker executado. Novos parâmetros não foram registrados como
+Accepted. AGENTS/PROJECTS/current-stage sincronizados; sem commit ou push. Aguardar
+aceite do contrato antes de implementar; 4A.2C permanece para aprovação própria.
+
+Conferência da proposta 4A.2B: docs:check/whitespace aprovados; 38 Markdown,
+288 links locais e 106 tabelas válidos; 13 campos do contrato presentes. Cinco
+documentos alterados, index vazio; código/guia/dependências preservados. Sem teste
+funcional, instalação, broker, novo commit ou push nesta preparação.
+
+## 4A.2B — implementação verificada, pronta para revisão
+
+Em 2026-10-29, “Autorizo” aprovou executar o contrato AMQPS/cliente/limites.
+Instalado apenas amqplib 2.2.0 (sem transitivas de produção), com audit sem auto-fix:
+seis avisos preexistentes de tooling, nenhum alerta para o cliente na consulta.
+
+Parser puro de vhost, socket TCP próprio antes de TLS, SASL/abertura/close sem canais,
+coordenação HTTPS/AMQPS por janela, 18 métodos específicos e UI/resultados separados.
+Preservados 9401448 e políticas; sem schema novo ou persistência de senha habilitada.
+Guia/README/Ajuda de fonte única atualizados: 13 tópicos/12 campos.
+
+Check com 216 testes/27 arquivos, package darwin-arm64 e quatro smokes sequenciais
+passaram. DNS/IP no runtime Electron 45.1.0/Node 24.22.1, cancelamento/prazo/revision,
+recarga/close/quit, redigitação de senha, temas/zoom/segurança/Ajuda exercitados.
+Menu macOS usa roles nativas/IPC; espera de restauração corrigida no harness, sem
+alterar controles do produto ou homologar teclado nativo manualmente.
+
+Artefato e capturas revisados; 43 arquivos protegidos preservados. [Evidências e
+limitações](../07-testing/amqps-4a2b.md): fixture não é RabbitMQ real; Docker sem
+daemon e outros alvos/providers/releases continuam pendentes. Conclusão/commit
+aguardam aprovação, sem push ou execução da 4A.2C.
+
+## Complemento 4A.2B — RabbitMQ real
+
+Em 2026-10-29, o pedido explícito de testes reais após ativar Docker e “Continue”
+autorizaram complementar a revisão. `node tools/testing/rabbitmq-real.cjs` passou
+com 20 verificações em cada 4.4.0/4.3.6 real, de nó único, imagens oficiais arm64
+por digest e portas loopback. Mesmo executável anteriormente apresentado.
+
+HTTPS/whoami, AMQPS/vhosts exatos/recusas, DNS/IP/CA, cancelamento/exclusão mútua e
+prazo passaram. Broker confirmou zero canais criados e nenhum recurso residual
+de mensageria. Dados/containers/redes próprios removidos, outros projetos preservados.
+Falhas intermediárias eram do harness (configuração de porta management, timeout
+TLS remoto e expectativa de texto de log), corrigidas/documentadas no PROJECTS.
+
+[Evidências](../07-testing/amqps-4a2b.md) registram digests, resultados e limites.
+Isso supera a limitação de daemon ausente para esse recorte de testes, sem homologar
+cluster/HA, demais recursos/SOs/CPUs ou releases. Guia/Ajuda preservados, pois não
+houve mudança de produto. Conclusão/commit ainda pendentes; sem push ou 4A.2C.
+
+## 2026-10-30 — 4A.2B concluída/aprovada
+
+“Aprove a 4A.2B, e siga para a próxima etapa” aceitou conclusão e registro do commit
+`feat(connections): add cancellable AMQPS connection tests`, incluindo o complemento
+real. Conferidos os 57 caminhos/ASAR do snapshot, HEAD 9401448 e index vazio, sem
+edição adicional do proprietário. Somente documentos de aceite sincronizados.
+
+Resultados aceitos: 216 testes/27 arquivos, check/package/quatro smokes e 40 checks
+reais nas versões 4.4.0/4.3.6. Sem repetição funcional para alteração documental.
+Limitações mantidas; código/guia/dependências/Titlebar preservados. Registro integra
+o próprio commit com pai 9401448, cujo hash deve ser consultado no Git.
+
+Após conferir commit, preparar contrato detalhado 4A.2C. Não implementar sessão
+antes do aceite de seu contrato, nem fazer push. PROJECTS registra os blocos.

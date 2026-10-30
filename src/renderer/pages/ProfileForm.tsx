@@ -1,3 +1,4 @@
+import { parseAmqpsEndpoint } from "../../shared/amqpsEndpoint";
 import React from "react";
 import {
   environmentLabels,
@@ -232,12 +233,20 @@ export default function ProfileForm({
               placeholder="amqps://broker.exemplo:5671"
               value={fields.amqpsUrl}
               onChange={e => field("amqpsUrl", e.target.value)}
-              aria-describedby="profile-endpoint-hint"
+              aria-describedby="profile-endpoint-hint profile-vhost-hint"
             />
           </label>
           <p id="profile-endpoint-hint" className="profile-hint">
             Sem usuário/senha nas URLs, query ou fragmento. Testar HTTPS usa os
             dados já salvos e acrescenta /api/whoami ao prefixo informado.
+          </p>
+          <p id="profile-vhost-hint" className="profile-hint">
+            Vhost AMQPS interpretado:{" "}
+            {parseAmqpsEndpoint(fields.amqpsUrl)?.vhost ??
+              "endpoint inválido para o teste"}
+            . Sem caminho ou /%2F usa /. Barras no nome precisam de %2F; barra
+            final isolada não é aceita. A CA selecionada vale para os dois
+            endpoints.
           </p>
           <div className="profile-field">
             <label htmlFor="profile-trust">Confiança TLS</label>

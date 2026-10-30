@@ -2,7 +2,7 @@ import React from "react";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { render, cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import HttpsTest from "./HttpsTest";
+import ConnectionTest from "./ConnectionTest";
 const test = vi.fn(),
   cancel = vi.fn();
 beforeEach(() => {
@@ -19,7 +19,7 @@ afterEach(() => {
 describe("explicit HTTPS test UI", () => {
   it("never starts on mount and explains why a password is required", () => {
     render(
-      <HttpsTest profileId="id" revision="revision" hasPassword={false} />,
+      <ConnectionTest profileId="id" revision="revision" hasPassword={false} />,
     );
     expect(test).not.toHaveBeenCalled();
     expect(
@@ -41,7 +41,7 @@ describe("explicit HTTPS test UI", () => {
         durationMs: 7,
       },
     }));
-    render(<HttpsTest profileId="id" revision="revision" hasPassword />);
+    render(<ConnectionTest profileId="id" revision="revision" hasPassword />);
     await userEvent
       .setup()
       .click(screen.getByRole("button", { name: "Testar HTTPS" }));
@@ -65,7 +65,7 @@ describe("explicit HTTPS test UI", () => {
         }),
     );
     const view = render(
-      <HttpsTest profileId="id" revision="revision" hasPassword />,
+      <ConnectionTest profileId="id" revision="revision" hasPassword />,
     );
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Testar HTTPS" }));

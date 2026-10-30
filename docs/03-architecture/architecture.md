@@ -413,3 +413,26 @@ CA armazenada é pública; default/custom têm semântica explícita. Não há a
 cliente AMQP, sessão ativa, vhost, polling/reconexão ou mudança do gate de senhas.
 Detalhamento: [M01](../04-modules/01-connection-manager.md) e
 [evidências/limites](../07-testing/https-4a2a.md).
+
+## Testes HTTPS/AMQPS coordenados — 4A.2B
+
+Contrato 4A.2B autorizado por “Autorizo” em 2026-10-29; conclusão/commit aprovados
+em 2026-10-30, incluindo testes reais 4.4.0/4.3.6 e limitações registradas.
+Não altera ADRs/stack nem adiciona sessão de trabalho. O antigo HttpsTestService
+foi substituído por `connections/connectionTestService.ts`: uma operação por janela,
+com modalidade fixa HTTPS/AMQPS, prazos distintos, revision/credencial e invalidação.
+
+`shared/amqpsEndpoint.ts` é parser puro usado pelo main e pela prévia de UI, sem
+Node/Electron. Preserva caminho bruto/percent-encoding; não altera schema v2 nem
+endurece leitura de perfis antigos. `connections/amqpsProbe.ts` usa apenas
+amqplib/callback_api no main, socket próprio, TLS validado, SASL/abertura/close e
+nenhum canal. TCP conclui antes de envolver o socket em TLS. Callback de close
+permite rejeitar o atalho síncrono de blocked sem confirmação da biblioteca fixada.
+
+Ponte com 18 métodos: acrescenta testProfileAmqps/cancelProfileAmqpsTest, sem URL,
+senha ou transporte genérico em argumentos. `ipc/connections` mantém autoridade,
+DTO estrito e cleanup. Componente local ConnectionTest com ProfileTests apresenta
+resultados separados e exclusão mútua. UI permanece sem sessão e sem recursos de broker.
+
+Especificação/limites em [M01](../04-modules/01-connection-manager.md);
+[evidências e limitações](../07-testing/amqps-4a2b.md). Nenhum adapter vai ao renderer.

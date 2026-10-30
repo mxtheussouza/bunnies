@@ -101,5 +101,19 @@ eles não ampliam os tetos gerais anteriores e não constituem homologação de 
 | NFR-033 | Execução do teste / contexto | Uma operação em voo por janela, deadline total 10 s (NFR-013); cancelamento/invalidação e resultado datado sem ativar sessão |
 
 Schema v2/backup v1 implementam NFR-011; arquivo principal e backup individual
-continuam limitados a 2 MiB, sem segredo em memória. Regressão e limites efetivamente
+continuam limitados a 2 MiB, sem segredo em texto puro no arquivo. Regressão e limites efetivamente
 executados: [4A.2A](../07-testing/https-4a2a.md).
+
+## Sublimites aceitos para 4A.2B
+
+“Autorizo”, em 2026-10-29, aceitou os parâmetros do contrato de teste AMQPS.
+Não altera schema v2, limites HTTPS, transporte de trabalho ou gates de provider.
+
+| ID | Parâmetro específico | Limite aceito |
+| --- | --- | --- |
+| NFR-034 | Probe AMQPS / encerramento | Deadline total 15 s incluindo snapshot/DNS/TCP/TLS/abertura/close/revalidação; close até 1 s dentro do restante, com diagnóstico e destruição se não confirmado |
+| NFR-035 | Vhost e negociação | Nome não vazio até 255 bytes UTF-8, sem C0/DEL; caminho bruto de um segmento, decode estrito uma vez; ausente usa /, barra final isolada rejeitada; heartbeat 10 s, frameMax 128 KiB, channelMax 1; sem canais |
+| NFR-036 | Concorrência / recursos / autoridade | Uma operação HTTPS ou AMQPS por janela; 18 métodos específicos, cancelamento por modalidade/owner/id, descarte de resultado antigo e recursos fechados; sem retry/recovery ou sessão |
+
+TLS/CA segue 4A.2A. O campo AMQPS anterior continua editável/legível mesmo quando
+fora do recorte novo, sem reset ou migração automática. [Evidências](../07-testing/amqps-4a2b.md).

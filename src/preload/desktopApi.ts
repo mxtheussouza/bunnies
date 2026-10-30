@@ -40,7 +40,9 @@ export function createDesktopApi(
       return (await (request.command === "selectProfileCa" ||
       request.command === "discardProfileCa" ||
       request.command === "testProfileHttps" ||
-      request.command === "cancelProfileHttpsTest"
+      request.command === "cancelProfileHttpsTest" ||
+      request.command === "testProfileAmqps" ||
+      request.command === "cancelProfileAmqpsTest"
         ? invokeConnections(request as ConnectionRequest)
         : invokeProfiles(request as ProfileRequest))) as ProfileResult<T>;
     } catch {
@@ -62,6 +64,10 @@ export function createDesktopApi(
       profileCall({ command: "getSecretProtectionStatus" }),
   };
   const connections: ConnectionsApi = {
+    testProfileAmqps: input =>
+      profileCall({ command: "testProfileAmqps", input }),
+    cancelProfileAmqpsTest: operationId =>
+      profileCall({ command: "cancelProfileAmqpsTest", operationId }),
     selectProfileCa: () => profileCall({ command: "selectProfileCa" }),
     discardProfileCa: selectionId =>
       profileCall({ command: "discardProfileCa", selectionId }),

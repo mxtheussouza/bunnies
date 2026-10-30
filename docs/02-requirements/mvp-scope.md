@@ -157,3 +157,12 @@ real ainda desabilitado. MVP-C02 tem parte HTTPS implementada/testada em fixture
 TLS própria; AMQPS e homologação de broker continuam pendentes. MVP-C03 (sessão/
 reconexão) não é cumprido apenas por cancelamento de probe. M01/MVP não completos;
 conclusão/commit 4A.2A sujeitos a aceite. [Evidências](../07-testing/https-4a2a.md).
+
+## Incremento 4A.2B aprovado
+
+Autorizado por “Autorizo” em 2026-10-29, adiciona teste explícito AMQPS e vhost ao
+MVP-C02, com TLS/CA e fechamento, sem sessão de trabalho MVP-C03. Nenhum canal,
+topologia, publicação ou consumo foi habilitado. Resultado de teste não comprova
+permissão futura de recurso. Conclusão/commit aprovados em 2026-10-30, incluindo
+testes reais do recorte de conexão 4.4.0/4.3.6 de nó único;
+[evidências](../07-testing/amqps-4a2b.md). Escopo aprovado do MVP não foi ampliado.

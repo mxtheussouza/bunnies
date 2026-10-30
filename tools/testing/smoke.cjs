@@ -433,18 +433,45 @@ async function smoke() {
       .getByRole("combobox", { name: "Tema", exact: true })
       .selectOption("light");
     await theme("light");
-    await page.getByRole("button", { name: "Visualizar", exact: true }).focus();
-    await page.keyboard.press("Enter");
-    await page
-      .getByRole("button", { name: "Aumentar zoom", exact: false })
-      .waitFor();
-    await page.keyboard.press("Escape");
-    assert.equal(
+    if (process.platform !== "darwin") {
       await page
         .getByRole("button", { name: "Visualizar", exact: true })
-        .evaluate(button => button === document.activeElement),
-      true,
-    );
+        .focus();
+      await page.keyboard.press("Enter");
+      await page
+        .getByRole("button", { name: "Aumentar zoom", exact: false })
+        .waitFor();
+      await page.keyboard.press("Escape");
+      assert.equal(
+        await page
+          .getByRole("button", { name: "Visualizar", exact: true })
+          .evaluate(button => button === document.activeElement),
+        true,
+      );
+    } else {
+      assert.equal(await page.locator(".window-titlebar button").count(), 0);
+      const roles = await application.evaluate(({ Menu }) => {
+        const result = [];
+        function visit(items) {
+          for (const item of items) {
+            if (item.role) result.push(item.role.toLowerCase());
+            if (item.submenu) visit(item.submenu.items);
+          }
+        }
+        visit(Menu.getApplicationMenu().items);
+        return result;
+      });
+      for (const role of [
+        "close",
+        "quit",
+        "editmenu",
+        "zoomin",
+        "zoomout",
+        "resetzoom",
+        "windowmenu",
+      ])
+        assert.ok(roles.includes(role), "Native role missing: " + role);
+    }
     const beforeZoom = await window.evaluate(win =>
       win.webContents.getZoomFactor(),
     );
@@ -463,20 +490,31 @@ async function smoke() {
         ),
       "drag",
     );
-    assert.equal(
-      await page
-        .getByRole("button", { name: "Minimizar", exact: true })
-        .evaluate(element =>
-          getComputedStyle(element).getPropertyValue("-webkit-app-region"),
-        ),
-      "no-drag",
-    );
+    if (process.platform !== "darwin") {
+      assert.equal(
+        await page
+          .getByRole("button", { name: "Minimizar", exact: true })
+          .evaluate(element =>
+            getComputedStyle(element).getPropertyValue("-webkit-app-region"),
+          ),
+        "no-drag",
+      );
+    }
     await resize(1200, 800);
     for (const [name, state] of [
       ["Minimizar", "isMinimized"],
       ["Maximizar ou restaurar", "isMaximized"],
     ]) {
-      await page.getByRole("button", { name, exact: true }).click();
+      if (process.platform === "darwin") {
+        const result = await page.evaluate(
+          state =>
+            state === "isMinimized"
+              ? window.bunnies.minimize()
+              : window.bunnies.toggleMaximize(),
+          state,
+        );
+        assert.equal(result.ok, true);
+      } else await page.getByRole("button", { name, exact: true }).click();
       assert.equal(
         await window.evaluate(async (win, state) => {
           const start = Date.now();
@@ -485,10 +523,17 @@ async function smoke() {
           return win[state]();
         }, state),
         true,
+        "Window state was not reached: " + state,
       );
-      await window.evaluate((win, state) => {
+      await window.evaluate(async (win, state) => {
         if (state === "isMinimized") win.restore();
         else win.unmaximize();
+        const started = Date.now();
+        while (win[state]() && Date.now() - started < 3000)
+          await new Promise(resolve => setTimeout(resolve, 50));
+        if (win[state]())
+          throw new Error("Window restore did not finish: " + state);
+        win.focus();
       }, state);
     }
     assert.equal(page.url(), entry);
@@ -523,6 +568,10 @@ async function smoke() {
         compactPanel: true,
         zoom200: true,
         nativeControls: true,
+        chromeVerification:
+          process.platform === "darwin"
+            ? "native menu roles inspected; named IPC controls; manual OS keyboard pending"
+            : "custom controls and keyboard",
         dragRegions: true,
         shortcut: true,
         layout,

@@ -106,11 +106,12 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **4A.2A concluída e aprovada; registro do commit autorizado**.
-- Última etapa concluída e aprovada: **4A.2A — CA personalizada e teste HTTPS**.
-- Entrega aprovada: `feat(connections): add custom CA and HTTPS authentication tests`,
-  com pai `66183f7`; consultar o hash no Git.
-- Próxima ação: registrar/conferir somente o commit aprovado. Não executar 4A.2B/C.
+- Etapa atual: **4A.2B concluída/aprovada; commit autorizado**.
+- Última etapa concluída e aprovada: **4A.2B — teste AMQPS/vhost e matriz real**.
+- Entrega aprovada: `feat(connections): add cancellable AMQPS connection tests`.
+- Base desta entrega: `9401448`, alteração da barra macOS preservada.
+- Próxima ação: registrar/conferir o commit aprovado e preparar contrato 4A.2C;
+  implementação requer aceite específico do contrato.
 
 Ao retomar, ler este arquivo, [PROJECTS_STATUS.md](PROJECTS_STATUS.md), a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -229,3 +230,60 @@ do aceite. Resultados/limitações apresentados permanecem válidos; não amplia
 Uma alteração posterior em `misc/window/components/Titlebar/index.tsx` é trabalho
 local adicional: preservar fora desse commit, sem reverter ou presumir homologação.
 Não fazer push nem iniciar 4A.2B/C sem seus contratos/autorizações próprios.
+
+## Preparação vigente — 4A.2B
+
+O pedido “Continue as etapas” após o commit 966b4a2 autoriza preparar/apresentar
+o próximo contrato. [Roadmap](docs/05-roadmap/roadmap.md): teste AMQPS explícito
+sem sessão, amqplib 2.2.0 proposto, TLS/vhost/deadline/cleanup, IPC e guia/testes.
+Aguardar aceite desse contrato antes de instalar dependência ou modificar código.
+Não confundir proposta com recurso disponível no guia/Ajuda.
+
+O proprietário registrou a mudança da barra de título em 9401448; Git estava limpo
+na retomada. Preservar esse comportamento e revalidar smokes por plataforma no
+incremento autorizado; o pacote anterior não contém essa mudança. Atualizar
+PROJECTS a cada Task. 4A.2C continua dependente de contrato/autorização próprios.
+
+## Autorização vigente — 4A.2B
+
+Em 2026-10-29, após o contrato detalhado, o proprietário respondeu **“Autorizo”**.
+Está aprovada a implementação do teste AMQPS/vhost, amqplib 2.2.0 exato,
+parâmetros/IPC/UI/guia e verificações locais/isoladas do contrato. A preparação
+anterior Proposed foi aceita por essa resposta. Preservar 9401448 e proteções.
+Atualizar PROJECTS em cada Task. Não inclui sessão/4A.2C ou commit/push antecipados.
+
+Implementação 4A.2B: ConnectionTestService coordena HTTPS/AMQPS por janela;
+amqplib/callback_api somente no main, ponte com 18 métodos específicos. Parser de
+vhost puro compartilhado com UI; sem schema novo. Validar check/package e smokes
+base/perfis/HTTPS/AMQPS sequenciais; preservar políticas e não criar sessão/canais.
+
+[Evidências 4A.2B](docs/07-testing/amqps-4a2b.md): 216 testes/check, package e quatro
+smokes passaram em macOS arm64; na apresentação inicial, Docker estava sem daemon. Guia/Ajuda
+sincronizados; menu nativo manual/outros alvos/providers/releases não homologados.
+Não registrar commit antes do aceite da conclusão apresentada.
+
+## Complemento autorizado — RabbitMQ real na 4A.2B
+
+Após a apresentação, o proprietário pediu “Faça o teste com o rabbitmq real, o
+docker já está ativado”, seguido de “Continue”. Docker Engine 29.8.0 disponível;
+`tools/testing/rabbitmq-real.cjs` passou com **20 verificações em cada 4.4.0/4.3.6**
+real de nó único, imagens oficiais arm64 executadas por digest, HTTPS/AMQPS/TLS,
+vhosts/recusas/cancelamento/prazo e cleanup. Mesmo ASAR apresentado, sem alteração
+de produto. Ver [evidências](docs/07-testing/amqps-4a2b.md) antes de repetir.
+
+Harness só provisiona recursos próprios (labels/namespace, portas loopback, senhas
+geradas em memória e hashes nas definições), sem aceitar broker arbitrário. Remove
+container/rede/certificados/userData no finally; imagens ficam em cache. Os 40 checks
+são integração adicional, separados dos 216 testes. Não homologa cluster/HA, outros
+SOs/CPUs, recursos futuros ou release. Conclusão/commit 4A.2B ainda exigem aceite;
+não avançar à 4A.2C ou fazer push. PROJECTS registra também falhas/ajustes do harness.
+
+## Conclusão 4A.2B aprovada
+
+Em 2026-10-30, “Aprove a 4A.2B, e siga para a próxima etapa” aceitou conclusão e
+commit `feat(connections): add cancellable AMQPS connection tests`, incluindo o
+complemento real 4.4.0/4.3.6. Snapshot de 57 caminhos/ASAR conferido sem divergências.
+Registrar somente essa entrega e a sincronização documental do aceite; manter
+limitações apresentadas. O pedido seguinte autoriza preparar/apresentar contrato
+4A.2C, que ainda não foi detalhado/aceito. Não implementar sessão, fazer push ou
+interpretar hipóteses futuras como aprovadas. Consultar estado/PROJECTS na retomada.

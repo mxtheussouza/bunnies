@@ -15,7 +15,7 @@ export default function SessionContextBar() {
         </span>
         <span>
           <Icon name="connection" />
-          AMQPS não iniciado
+          AMQPS sem sessão
         </span>
       </div>
     </header>

@@ -257,7 +257,9 @@ async function run() {
     await page.getByText(messages.ok, { exact: true }).waitFor();
     await until(() => sockets.size === 0);
     assert.equal(requests, 1);
-    await page.locator(".https-test").scrollIntoViewIfNeeded();
+    await page
+      .locator('.https-test[aria-label="Teste de autenticação HTTPS"]')
+      .scrollIntoViewIfNeeded();
     await capture("success-light");
     for (const current of ["auth", "forbidden", "redirect"]) {
       const before = requests;
@@ -355,7 +357,9 @@ async function run() {
     mode = "ok";
     await testButton().click();
     await page.getByText(messages.ok, { exact: true }).waitFor();
-    await page.locator(".https-test").scrollIntoViewIfNeeded();
+    await page
+      .locator('.https-test[aria-label="Teste de autenticação HTTPS"]')
+      .scrollIntoViewIfNeeded();
     await capture("success-dark");
     // Closing the real BrowserWindow releases the Node socket; macOS can recreate it.
     if (process.platform === "darwin") {

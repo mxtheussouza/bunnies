@@ -3,15 +3,23 @@ import type { HttpsTestOutcome } from "../../shared/connections";
 import { profileErrorMessages } from "../../shared/profiles";
 import Button from "../components/Button";
 import StatusMessage from "../components/StatusMessage";
-export default function HttpsTest({
+export default function ConnectionTest({
   profileId,
   revision,
   hasPassword,
+  transport = "https",
+  blocked = false,
+  onRunningChange,
 }: {
   profileId: string;
   revision: string;
   hasPassword: boolean;
+  transport?: "https" | "amqps";
+  blocked?: boolean;
+  onRunningChange?: (running: boolean) => void;
 }) {
+  const amqps = transport === "amqps";
+  const label = amqps ? "AMQPS" : "HTTPS";
   const [running, setRunning] = React.useState(false);
   const [cancelling, setCancelling] = React.useState(false);
   const [outcome, setOutcome] = React.useState<HttpsTestOutcome | null>(null);
@@ -25,19 +33,28 @@ export default function HttpsTest({
       const id = active.current;
       active.current = null;
       if (id)
-        void window.bunnies.cancelProfileHttpsTest(id).catch(() => undefined);
+        void (
+          amqps
+            ? window.bunnies.cancelProfileAmqpsTest(id)
+            : window.bunnies.cancelProfileHttpsTest(id)
+        ).catch(() => undefined);
     };
-  }, []);
+  }, [amqps]);
   async function start() {
-    if (active.current) return;
+    if (active.current || blocked) return;
     const id = crypto.randomUUID();
     active.current = id;
     setRunning(true);
+    onRunningChange?.(true);
     setCancelling(false);
     setOutcome(null);
     setError("");
     try {
-      const result = await window.bunnies.testProfileHttps({
+      const result = await (
+        amqps
+          ? window.bunnies.testProfileAmqps
+          : window.bunnies.testProfileHttps
+      )({
         profileId,
         revision,
         operationId: id,
@@ -52,6 +69,7 @@ export default function HttpsTest({
       if (mounted.current && active.current === id) {
         active.current = null;
         setRunning(false);
+        onRunningChange?.(false);
         setCancelling(false);
       }
     }
@@ -61,7 +79,9 @@ export default function HttpsTest({
     if (!id || cancelling) return;
     setCancelling(true);
     try {
-      const result = await window.bunnies.cancelProfileHttpsTest(id);
+      const result = await (amqps
+        ? window.bunnies.cancelProfileAmqpsTest(id)
+        : window.bunnies.cancelProfileHttpsTest(id));
       if (mounted.current && !result.ok) {
         setError(profileErrorMessages[result.error.code]);
         setCancelling(false);
@@ -74,16 +94,19 @@ export default function HttpsTest({
     }
   }
   return (
-    <section className="https-test" aria-label="Teste de autenticação HTTPS">
+    <section
+      className="https-test"
+      aria-label={"Teste de autenticação " + label}
+    >
       <div className="profile-actions">
         <Button
-          disabled={!hasPassword}
+          disabled={!hasPassword || blocked}
           loading={running}
           onClick={() => {
             void start();
           }}
         >
-          Testar HTTPS
+          Testar {label}
         </Button>
         {running && (
           <Button
@@ -92,28 +115,35 @@ export default function HttpsTest({
               void cancel();
             }}
           >
-            {cancelling ? "Cancelando teste…" : "Cancelar teste HTTPS"}
+            {cancelling ? "Cancelando teste…" : "Cancelar teste " + label}
           </Button>
         )}
       </div>
       {!hasPassword && (
         <p className="profile-hint">
-          Informe a senha nesta execução em Editar perfil para testar HTTPS.
+          Informe a senha nesta execução em Editar perfil para testar {label}.
         </p>
       )}
       <p className="profile-hint">
-        Testa a autenticação HTTPS do perfil salvo. O resultado não verifica
-        AMQPS, permissões de filas ou disponibilidade contínua e não ativa
-        sessão.
+        {amqps
+          ? "Testa TLS, autenticação e abertura do vhost salvo, encerrando a conexão antes de concluir. Não cria canais, publica ou consome mensagens e não ativa sessão."
+          : "Testa a autenticação HTTPS do perfil salvo. O resultado não verifica AMQPS, permissões de filas ou disponibilidade contínua e não ativa sessão."}
       </p>
       {running && (
         <p role="status">
-          Verificando autenticação HTTPS… Prazo total de até 10 segundos.
+          Verificando autenticação {label}… Prazo total de até {amqps ? 15 : 10}{" "}
+          segundos.
         </p>
       )}
       {error && <StatusMessage tone="danger" title={error} />}
       {outcome && (
-        <StatusMessage title="Autenticação HTTPS verificada">
+        <StatusMessage
+          title={
+            amqps
+              ? "Autenticação AMQPS e vhost verificados"
+              : "Autenticação HTTPS verificada"
+          }
+        >
           Último teste:{" "}
           <time dateTime={outcome.checkedAt}>
             {new Intl.DateTimeFormat("pt-BR", {
@@ -121,7 +151,8 @@ export default function HttpsTest({
               timeStyle: "medium",
             }).format(new Date(outcome.checkedAt))}
           </time>{" "}
-          · {outcome.durationMs} ms. Nenhuma sessão foi ativada.
+          · {outcome.durationMs} ms. {amqps && "Conexão encerrada. "}Nenhuma
+          sessão foi ativada.
         </StatusMessage>
       )}
     </section>

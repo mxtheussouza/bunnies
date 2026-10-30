@@ -7,14 +7,14 @@ import {
 } from "../../shared/profiles";
 import { ProfileFailure } from "../profiles/errors";
 import type { ProfileService } from "../profiles/service";
-import type { HttpsTestService } from "../connections/httpsTestService";
+import type { ConnectionTestService } from "../connections/connectionTestService";
 import { parseConnectionRequest } from "../connections/validation";
 import { isTrustedSender } from "./desktop";
 export function registerConnectionsIpc(
   getWindow: () => BrowserWindow | null,
   entry: string,
   profiles: ProfileService,
-  tests: HttpsTestService,
+  tests: ConnectionTestService,
 ) {
   const tracked = new Map<number, () => void>();
   function track(window: BrowserWindow) {
@@ -84,6 +84,13 @@ export function registerConnectionsIpc(
             break;
           case "discardProfileCa":
             profiles.caSelections.discard(owner, request.selectionId);
+            value = undefined;
+            break;
+          case "testProfileAmqps":
+            value = await tests.testAmqps(owner, request.input);
+            break;
+          case "cancelProfileAmqpsTest":
+            tests.cancel(owner, request.operationId, "amqps");
             value = undefined;
             break;
           case "testProfileHttps":

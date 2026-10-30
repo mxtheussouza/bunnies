@@ -9,6 +9,7 @@ describe("preload API", () => {
       .mockResolvedValue({ ok: true, value: undefined, requestId: "id" });
     const api = createDesktopApi(invoke, invoke, invoke);
     expect(Object.keys(api).sort()).toEqual([
+      "cancelProfileAmqpsTest",
       "cancelProfileHttpsTest",
       "close",
       "discardProfileCa",
@@ -22,6 +23,7 @@ describe("preload API", () => {
       "saveProfile",
       "selectProfileCa",
       "showEditMenu",
+      "testProfileAmqps",
       "testProfileHttps",
       "toggleMaximize",
       "view",
@@ -63,5 +65,24 @@ describe("preload API", () => {
     const result = await api.listProfiles();
     expect(result).toMatchObject({ ok: false, error: { code: "UNAVAILABLE" } });
     expect(JSON.stringify(result)).not.toMatch(/sentinel|private|stack/);
+  });
+  it("routes AMQPS through the connection channel without desktop or profile authority", async () => {
+    const desktop = vi.fn(),
+      profiles = vi.fn(),
+      connections = vi.fn().mockResolvedValue({ ok: true });
+    const api = createDesktopApi(desktop, profiles, connections);
+    const input = {
+      profileId: "id",
+      revision: "revision",
+      operationId: "operation",
+    };
+    await api.testProfileAmqps(input);
+    await api.cancelProfileAmqpsTest(input.operationId);
+    expect(connections.mock.calls.map(([request]) => request.command)).toEqual([
+      "testProfileAmqps",
+      "cancelProfileAmqpsTest",
+    ]);
+    expect(desktop).not.toHaveBeenCalled();
+    expect(profiles).not.toHaveBeenCalled();
   });
 });

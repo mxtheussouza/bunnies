@@ -93,3 +93,12 @@ HTTPS explícito, com validação/cancelamento/resultado datado. Parte HTTPS de 
 é verificada localmente com fixtures, sem afirmar suporte real às versões de broker.
 AMQPS, sessão/reconexão e demais operações permanecem futuras. [M01](../04-modules/01-connection-manager.md)
 e [evidências](../07-testing/https-4a2a.md). Conclusão/commit aprovados por “Aprovado”.
+
+## Incremento implementado/aprovado — 4A.2B
+
+Execução autorizada por “Autorizo” em 2026-10-29: FR-001/002/003/028 recebem teste
+AMQPS separado, CA/credencial no main e abertura do vhost da URL, com cancelamento/
+resultado datado e encerramento. Ainda sem sessão/reconexão/permissão de recursos
+comprovadas; testes reais verificaram este recorte em 4.4.0/4.3.6 de nó único.
+Conclusão/commit aprovados em 2026-10-30; M01 permanece parcial.
+[M01](../04-modules/01-connection-manager.md), [evidências](../07-testing/amqps-4a2b.md).

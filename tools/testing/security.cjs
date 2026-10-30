@@ -38,6 +38,7 @@ module.exports = async function verifySecurity(application, page) {
   assert.deepEqual(
     await page.evaluate(() => Object.keys(window.bunnies).sort()),
     [
+      "cancelProfileAmqpsTest",
       "cancelProfileHttpsTest",
       "close",
       "discardProfileCa",
@@ -51,6 +52,7 @@ module.exports = async function verifySecurity(application, page) {
       "saveProfile",
       "selectProfileCa",
       "showEditMenu",
+      "testProfileAmqps",
       "testProfileHttps",
       "toggleMaximize",
       "view",
@@ -290,6 +292,15 @@ module.exports = async function verifySecurity(application, page) {
   );
   assert.equal(testDenied.ok, false);
   assert.equal(testDenied.error.code, "FORBIDDEN");
+  const amqpDenied = await foreign.evaluate(() =>
+    window.bunnies.testProfileAmqps({
+      profileId: "01234567-89ab-4def-89ab-0123456789ab",
+      revision: "absent",
+      operationId: "01234567-89ab-4def-89ab-0123456789ac",
+    }),
+  );
+  assert.equal(amqpDenied.ok, false);
+  assert.equal(amqpDenied.error.code, "FORBIDDEN");
   let current = page;
   for (let index = 0; index < 2; index++) {
     const closed = current.waitForEvent("close");

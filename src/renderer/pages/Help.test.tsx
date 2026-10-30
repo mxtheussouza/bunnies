@@ -31,6 +31,7 @@ describe("offline user help", () => {
       "Ambiente",
       "Endpoint HTTPS",
       "Endpoint AMQPS",
+      "Vhost AMQPS interpretado",
       "Usuário",
       "Senha",
       "Armazenamento da senha",

@@ -195,3 +195,17 @@ Os links de código acima apontam para o commit auditado, preservando o conteúd
 achados mesmo após remoções/movimentações do legado. O status de remediação atual
 está nas [evidências da 2B](../07-testing/desktop-boundary-2b.md); o texto desta
 auditoria não é uma reavaliação do código atual.
+
+## Registro posterior à auditoria — cliente 4A.2B
+
+Em 2026-10-29, sob o contrato autorizado 4A.2B, instalado **amqplib 2.2.0** exato
+com tipos incluídos e sem dependências de produção transitivas. Manifesto/lock só
+adicionaram esse pacote; sem @types/amqplib, atualizações alheias ou auto-fix.
+Cliente restrito ao main, API callback pública sem recovery. A alteração não
+reescreve o diagnóstico histórico do legado acima nem homologa o runtime/broker.
+
+npm audit executado: 6 avisos conhecidos de tooling (2 baixos/4 moderados), sem
+alerta para amqplib na consulta. Dependências reportadas: plugin-webpack,
+fork-ts-checker-webpack-plugin, webpack-dev-server, deepmerge, sockjs e uuid.
+Ausência de alerta não comprova ausência de vulnerabilidade. Sem high/critical no
+relatório consultado. [Evidências da implementação](../07-testing/amqps-4a2b.md).

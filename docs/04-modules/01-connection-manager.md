@@ -1,18 +1,18 @@
 # M01 — Connection Manager
 
-Data: 2026-10-28. Status: **4A.1 e 4A.2A concluídas/aprovadas**.
+Data: 2026-10-30. Status: **4A.1/4A.2A/4A.2B concluídas/aprovadas**.
 Execução 4A.2A autorizada por “Autorizo”; conclusão/commit aprovados por “Aprovado”.
-M01/MVP ainda não completos. AMQPS e sessão dependem dos contratos 4A.2B/C.
+M01/MVP ainda não completos. 4A.2B concluída/aprovada, incluindo testes reais; sessão depende da 4A.2C.
 
 ## Objetivo e responsabilidades
 
-Organizar perfis locais e verificar autenticação HTTPS do perfil salvo somente
+Organizar perfis locais e verificar autenticação HTTPS/AMQPS do perfil salvo somente
 após ação explícita. O main mantém configuração, senha, certificados e transporte.
 A UI cadastra/edita/lista/seleciona/remove perfis sem gerar rede; o botão Testar
-HTTPS dispara uma consulta limitada e não ativa sessão de broker.
+HTTPS ou AMQPS dispara somente seu teste limitado e não ativa sessão de broker.
 
-Sem filas/exchanges/mensagens, AMQP, polling, reconexão ou administração avançada.
-A ausência de broker real na validação local é limite, não compatibilidade comprovada.
+Sem filas/exchanges/mensagens, sessão AMQP, polling, reconexão ou administração avançada.
+Testes reais 4.4.0/4.3.6 cobrem o recorte de conexão, sem homologar todo o M01.
 
 ## Requisitos e dependências
 
@@ -154,3 +154,55 @@ próprios. [Evidências 4A.1](../07-testing/profiles-4a1.md) e
 Pendentes: aprovação de conclusão/commit 4A.2A; RabbitMQ real (daemon Docker ausente),
 AMQPS/sessão e demais M01; providers reais/release/assinatura; seletor/diálogos nativos
 visuais, teclado de tema herdado, tecnologias assistivas e outros SOs/CPUs.
+
+## Incremento 4A.2B — AMQPS explícito (implementado para revisão)
+
+Autorizado por “Autorizo” em 2026-10-29. Cliente amqplib 2.2.0 exato no main, sem
+transitivas de produção. M01 continua parcial: não há sessão/vhost ativo de trabalho,
+reconexão, polling, canais, publicação ou consumo. Conclusão/commit pendentes.
+
+Interface adiciona vhost interpretado (leitura) e Testar AMQPS/cancelar/resultado
+datado. ProfileTests coordena dois ConnectionTest sem duplicar o ciclo; o main,
+via ConnectionTestService, também impede HTTPS e AMQPS simultâneos na mesma janela.
+Testar só resolve perfil salvo/revision/senha/CA; não há rede ao abrir/salvar/selecionar.
+
+Parser puro em shared/amqpsEndpoint preserva path bruto, vhost UTF-8 e escapes;
+sem caminho significa /, /%2F explicita /, barra final vazia é rejeitada. Um segmento
+literal, até 255 bytes sem C0/DEL; barras no nome exigem %2F. Não normalizar pontos,
+espaços ou dupla codificação. Porta padrão 5671, sem userinfo/query/hash/amqp.
+Snapshot interno passa amqpsUrl; DTO público nunca inclui senha, CA ou ciphertext.
+Perfis v1/v2 antigos permanecem legíveis/editáveis sem regravação ao testar.
+
+Adapter amqpsProbe usa socket TCP próprio, espera connect antes de TLS, valida
+cadeia/validade/hostname ou IP e usa CA default/custom já salva. SASL PLAIN só dentro
+de TLS; sem guest, proxy/túnel ou recovery. Username com dois-pontos é válido no
+AMQP, ao contrário de Basic; texto malformado/NUL é recusado antes da rede.
+Negociação: heartbeat 10 s/frameMax 128 KiB/channelMax 1, sem abrir canal.
+
+Só open-ok + close confirmado permite sucesso; prazo total 15 s, close até 1 s
+no restante, destruição/invalidação em erro/abort/prazo/reload/crash/close/quit.
+API callback pública identifica close síncrono sem confirmação no estado blocked,
+sem stream/estado privado. Erros fixos distinguem TLS/rede/negociação/recusa/close;
+não expõem replyText nem adivinham se a causa é senha/vhost/permissão.
+
+A ponte tem 18 métodos específicos, com testProfileAmqps/cancelProfileAmqpsTest.
+Origem integral, janela/frame, DTO e pós-await revalidados; cancelamento confinado
+a owner/id/modalidade. Mudanças de configuração invalidam testes/credenciais conforme
+regras existentes. Resultado não comprova permissão de recurso ou broker idêntico
+nos dois endpoints. Tentativas geram conexões/login/logs/métricas transitórias.
+
+Critérios adicionais: dez itens do contrato 4A.2B no roadmap. Testes perto das
+unidades + fixture TLS/AMQP roteirizada e smoke tools/testing/amqps.cjs, além das
+regressões anteriores. [Evidências 4A.2B](../07-testing/amqps-4a2b.md) distinguem
+resultados locais de RabbitMQ real, nativos manuais, outros alvos e providers.
+Guia/Ajuda são atualizados na mesma fonte canônica. Sessão 4A.2C exige novo contrato.
+
+Complemento posterior autorizado pelo pedido de teste real: RabbitMQ 4.4.0/4.3.6
+passaram no mesmo executável (20 checks por versão), incluindo HTTPS/AMQPS, TLS/CA,
+vhosts/recusas/cancelamento/prazo e cleanup. [Resultados](../07-testing/amqps-4a2b.md).
+A pendência de broker real foi resolvida para esse recorte; não homologa recursos
+M01 futuros, cluster/HA ou outros alvos. Conclusão/commit 4A.2B continuam pendentes.
+
+Aceite de conclusão 4A.2B: “Aprove a 4A.2B, e siga para a próxima etapa”, em
+2026-10-30, aprovou entrega/commit e limitações. Preparar contrato próprio 4A.2C;
+sessão/reconexão e conclusão do módulo permanecem futuras.

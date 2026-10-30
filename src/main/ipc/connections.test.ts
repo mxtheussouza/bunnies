@@ -4,7 +4,7 @@ import { EventEmitter } from "node:events";
 import { randomUUID } from "node:crypto";
 import type { BrowserWindow, IpcMainInvokeEvent } from "electron";
 import type { ProfileService } from "../profiles/service";
-import type { HttpsTestService } from "../connections/httpsTestService";
+import type { ConnectionTestService } from "../connections/connectionTestService";
 import { CONNECTIONS_CHANNEL } from "../../shared/connections";
 import { APP_URL } from "../security/desktopPolicy";
 const electron = vi.hoisted(() => ({
@@ -46,6 +46,9 @@ function fixture() {
     disposeOwner: vi.fn(),
   };
   const tests = {
+    testAmqps: vi
+      .fn()
+      .mockResolvedValue({ outcome: "authenticated", vhost: "/" }),
     test: vi.fn().mockResolvedValue({ outcome: "authenticated" }),
     cancel: vi.fn(),
     cancelOwner: vi.fn(),
@@ -54,7 +57,7 @@ function fixture() {
     () => window as unknown as BrowserWindow,
     APP_URL,
     { caSelections: ca } as unknown as ProfileService,
-    tests as unknown as HttpsTestService,
+    tests as unknown as ConnectionTestService,
   );
   return { frame, contents, window, event, ca, tests, dispose };
 }
@@ -182,6 +185,60 @@ describe("HTTPS/CA IPC boundary", () => {
       expect(JSON.stringify(result)).not.toMatch(
         /PRIVATE|private|CERTIFICATE|stack|Authorization/,
       );
+    } finally {
+      f.dispose();
+    }
+  });
+  it("validates and routes AMQPS only for the trusted owner, with transport-scoped cancel", async () => {
+    const f = fixture();
+    const input = {
+      profileId: randomUUID(),
+      revision: "absent",
+      operationId: randomUUID(),
+    };
+    try {
+      for (const invalid of [
+        { ...input, url: "amqps://arbitrary" },
+        { ...input, operationId: "bad" },
+      ])
+        expect(
+          await electron.handler!(f.event, {
+            command: "testProfileAmqps",
+            input: invalid,
+          }),
+        ).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
+      expect(
+        await electron.handler!(
+          { ...f.event, senderFrame: null } as unknown as IpcMainInvokeEvent,
+          { command: "testProfileAmqps", input },
+        ),
+      ).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+      expect(f.tests.testAmqps).not.toHaveBeenCalled();
+      expect(
+        await electron.handler!(f.event, {
+          command: "testProfileAmqps",
+          input,
+        }),
+      ).toMatchObject({ ok: true });
+      expect(f.tests.testAmqps).toHaveBeenCalledWith(42, input);
+      await electron.handler!(f.event, {
+        command: "cancelProfileAmqpsTest",
+        operationId: input.operationId,
+      });
+      expect(f.tests.cancel).toHaveBeenCalledWith(
+        42,
+        input.operationId,
+        "amqps",
+      );
+      f.tests.testAmqps.mockRejectedValue(
+        new Error("PRIVATE-SECRET-CERTIFICATE"),
+      );
+      const result = await electron.handler!(f.event, {
+        command: "testProfileAmqps",
+        input,
+      });
+      expect(result).toMatchObject({ ok: false, error: { code: "INTERNAL" } });
+      expect(JSON.stringify(result)).not.toContain("PRIVATE");
     } finally {
       f.dispose();
     }

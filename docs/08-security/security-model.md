@@ -227,3 +227,26 @@ de login já recebido pelo servidor. Os testes usam apenas infraestrutura própr
 Testes locais de TLS e proxy/IPC/pacote passaram; não equivalem a RabbitMQ real,
 revogação CRL/OCSP, pentest, provider seguro ou release. Nativos/assistivas/outros
 alvos continuam pendentes. [Evidências](../07-testing/https-4a2a.md).
+
+## Fronteira do probe AMQPS — 4A.2B
+
+Execução autorizada por “Autorizo” em 2026-10-29. amqplib/callback_api restrito ao
+main; credenciais em opções estruturadas, nunca em URI/log/DTO de retorno.
+CA do perfil vale para cada endpoint com identidade validada separadamente.
+TLS >=1.2, rejectUnauthorized/checkServerIdentity, SNI DNS e validação de IP;
+sem trust global, downgrade, túnel/proxy, provider real ou fallback guest.
+
+Uma tentativa total por janela (HTTPS ou AMQPS), prazo 15 s AMQPS e close até 1 s
+no prazo restante. Main possui socket TCP desde o início, espera connect antes de
+TLS e o destrói em cancelamento/prazo/erro/encerramento; recursos tardios são
+invalidados. Sucesso exige abertura e fechamento confirmado; atalho blocked
+síncrono do cliente não é apresentado como sucesso. Nenhum canal/mensagem/topologia.
+
+Vhost é validado/limitado a partir do caminho bruto; perfis anteriores continuam
+legíveis. Novos métodos IPC são específicos, shape fechado e mesma autoridade
+2B. Erros de recusa preservam ambiguidade e não interpretam replyText arbitrário.
+Tentativa pode produzir logs/métricas no broker; cancelar não desfaz esse efeito.
+
+[Evidências 4A.2B](../07-testing/amqps-4a2b.md) registram resultados reais. Limites do
+parser amqplib não são prova de orçamento global de memória ou proteção contra
+servidor arbitrariamente hostil. Nada habilita canais, auto-recovery ou sessão 4A.2C.

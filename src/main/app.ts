@@ -5,6 +5,8 @@ import { createAppWindow, getAppWindow, rendererEntry } from "./appWindow";
 import { registerDesktopIpc } from "./ipc/desktop";
 import { ConnectionTestService } from "./connections/connectionTestService";
 import { ConnectionActivity } from "./connections/activity";
+import { ManagementService } from "./management/service";
+import { registerManagementIpc } from "./ipc/management";
 import { SessionService } from "./sessions/sessionService";
 import { registerSessionIpc } from "./ipc/session";
 import { registerConnectionsIpc } from "./ipc/connections";
@@ -67,11 +69,18 @@ if (squirrelStartup) {
         entry,
         brokerSession,
       );
+      const management = new ManagementService(brokerSession, profiles);
+      const disposeManagement = registerManagementIpc(
+        getAppWindow,
+        entry,
+        management,
+      );
       let quitting = false;
       app.on("before-quit", event => {
         if (quitting) return;
         event.preventDefault();
         quitting = true;
+        management.dispose();
         void brokerSession.dispose().finally(() => app.quit());
       });
       const disposeConnections = registerConnectionsIpc(
@@ -81,6 +90,8 @@ if (squirrelStartup) {
         connectionTests,
       );
       app.once("will-quit", () => {
+        disposeManagement();
+        management.dispose();
         disposeSessions();
         dispose();
         disposeProfiles();

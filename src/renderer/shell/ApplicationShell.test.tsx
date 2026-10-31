@@ -92,7 +92,9 @@ describe("offline application shell", () => {
     expect(queues.getAttribute("aria-describedby")).toBe("sidebar-unavailable");
     expect(
       document.getElementById("sidebar-unavailable")?.textContent,
-    ).toContain("ainda não estão disponíveis");
+    ).toContain(
+      "Gerenciamento de filas, exchanges e mensagens ainda indisponível.",
+    );
     expect(location.href).toBe(url);
   });
   it("navigates locally to About, presents real metadata and returns focus to the heading", async () => {

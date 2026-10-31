@@ -67,7 +67,7 @@ export default function NavigationSidebar({
         })}
       </nav>
       <p id={`${id}-unavailable`} className="navigation-reason">
-        Os recursos do broker ainda não estão disponíveis nesta versão.
+        Gerenciamento de filas, exchanges e mensagens ainda indisponível.
       </p>
       <div className="sidebar-preferences">
         <div className="theme-picker">

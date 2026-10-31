@@ -99,6 +99,11 @@ async function smoke() {
           (win, size) => win.setContentSize(size.width, size.height),
           { width, height },
         );
+      await application.evaluate(({ app }) => app.focus({ steal: true }));
+      await window.evaluate(win => {
+        win.show();
+        win.focus();
+      });
       try {
         await page.waitForFunction(
           ({ width, height }) =>
@@ -109,6 +114,11 @@ async function smoke() {
         console.error(
           JSON.stringify({
             resizeExpected: { width, height },
+            renderer: await page.evaluate(() => ({
+              width: window.innerWidth,
+              height: window.innerHeight,
+              focus: document.hasFocus(),
+            })),
             actual: await window.evaluate(win => ({
               content: win.getContentSize(),
               bounds: win.getBounds(),

@@ -846,3 +846,63 @@ dos 61 arquivos/ASAR e Git antes de sincronizar somente o aceite documental.
 Resultados/limitações mantidos; testes funcionais não repetidos nesta Task.
 Este registro acompanha o commit de entrega (pai ea116de; hash em git log -1).
 Sem push ou execução/preparação automática da 4B.
+
+## 2026-10-30 — Próxima proposta 4B.1
+
+4A.2C registrada em aba792d, branch chore/modernization-app, working tree limpo no
+início. “Continuar para a próxima etapa” autorizou preparar/apresentar o contrato
+[4B.1](roadmap.md), ainda Proposed; não há aprovação de implementação.
+
+Incremento proposto: três GETs específicos para versão/vhosts visíveis/vhost atual,
+quatro métodos adicionais com cancelamento, UI em Conexões, limites e gate real nas
+duas versões antes de integrar dependentes. Sem seleção/troca de vhost, CRUD,
+catálogo universal de capacidades, métricas ou dependência nova. B1-D01–08 e
+B1-01–10 aguardam aceite. Código real e fontes oficiais consultados; consultas
+novas não foram executadas ou homologadas durante a preparação.
+
+PROJECTS/AGENTS/estado/roadmap sincronizados. Guia/Ajuda preservados até implementar
+com autorização. Sem código/dependências/brokers/package/smokes/commit/push.
+docs:check/whitespace passaram; 41 Markdown/335 links relativos sem alvo ausente.
+Revisão concluída e resultados registrados no PROJECTS; apresentar para aceite.
+
+## 2026-10-30 — 4B.1 autorizada; decisão após gate real
+
+“Autorizado” aceitou contrato/limites 4B.1 e gate. Duas versões oficiais isoladas
+4.4.0/4.3.6: quatro cenários passaram/onze falharam por versão; 48 respostas de
+diagnóstico por versão e cleanup completo. Paginação de vhosts retorna 500;
+GET individual exige admin (401) e nomes dot-segments não preservam o destino.
+[Evidências](../07-testing/management-4b1.md) registram hipóteses reprovadas, logs e
+limites. Check existente passou 237 testes + seis Node; não aprova esse gate.
+
+Trabalho dependente interrompido conforme contrato. [ADR-0009 Proposed](../03-architecture/adr/0009-management-vhost-read-contract.md)
+recomenda A (lista completa limitada 200/256 KiB, presença do vhost atual e 25 métodos
+totais), sujeita a aceite e gate revisado; não implementada. Outras alternativas
+registradas. Produto/guia/lock/assets/patch preservados, sem package/smokes novos,
+commit/push ou 4B.2. Próxima ação: apresentar decisão e aguardar aprovação.
+
+## 2026-10-30 — 4B.1 / ADR-0009 A implementadas e verificadas
+
+A aceita por “Autorizado” e gate de 24 checks aprovados liberaram a retomada
+prevista: adapter/serviço/IPC/UI, três métodos (25 total), dois GETs, lista completa
+200/256 KiB e presença do vhost atual, sem seleção/GET individual. Guia/Ajuda 15
+tópicos/12 campos, README/Sobre e módulos sincronizados. A falha original paginada
+permanece documentada, sem exigir patch ou privilégio elevado no broker do usuário.
+
+Check final passou 266 testes/36 arquivos + seis Node; package/seis smokes e
+60 verificações reais no executável, 30 por 4.4.0/4.3.6, passaram com cleanup.
+ASAR/capturas/fronteiras revisados, patch ADR-0008/identidade/dependências preservados.
+[Evidências](../07-testing/management-4b1.md) distinguem pacotes intermediários e
+limitações (macOS arm64/nó único; demais alvos/HA/nativos/providers sem homologação).
+
+Entrega pronta para revisão, conclusão/commit pendentes. Próxima ação: solicitar
+aceite e commit feat(management): add bounded broker information and vhost reads.
+Sem push ou preparação/execução automática da 4B.2.
+
+## 2026-10-31 — Conclusão/commit 4B.1 aprovados
+
+“Autorizado” aceitou a conclusão apresentada e autorizou o commit
+feat(management): add bounded broker information and vhost reads. Conferidos os 46
+arquivos/ASAR por hash antes de sincronizar somente o aceite documental.
+Resultados/limitações mantidos; não houve nova execução funcional nesta Task.
+Registro neste commit de entrega, pai aba792d (identificador em git log -1).
+Sem push ou preparação/execução automática da etapa seguinte.

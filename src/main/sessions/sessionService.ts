@@ -79,6 +79,33 @@ export class SessionService {
         : { ...emptySession(), sequence: this.sequence };
     return structuredClone(state);
   }
+  // Main-only authorization context; never exposed by the bridge.
+  managementContext(
+    owner: number,
+    ref: { sessionId: string; generation: number },
+  ) {
+    const c = this.context;
+    if (
+      !c ||
+      c.owner !== owner ||
+      c.snapshot.sessionId !== ref.sessionId ||
+      c.snapshot.generation !== ref.generation
+    )
+      throw new ProfileFailure("CONFLICT");
+    if (
+      !this.live(c) ||
+      c.snapshot.stopping ||
+      this.paused ||
+      c.snapshot.https.phase !== "available" ||
+      !c.snapshot.profile
+    )
+      throw new ProfileFailure("UNAVAILABLE");
+    return {
+      profileId: c.snapshot.profile.id,
+      revision: c.revision,
+      vhost: c.snapshot.profile.vhost,
+    };
+  }
   private live(c: Context) {
     return this.context === c && c.snapshot.desired && !this.disposed;
   }

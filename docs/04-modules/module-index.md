@@ -142,3 +142,23 @@ M01 adiciona teste AMQPS/vhost explícito, separado do HTTPS, com fechamento e
 resultado datado, sem sessão de trabalho. M08/Ajuda acompanha campos/efeitos e
 erros reais. Execução autorizada; conclusão/commit em revisão.
 [Evidências](../07-testing/amqps-4a2b.md). Nenhum outro módulo de broker habilitado.
+
+## Recorte em validação — 4B.1
+
+[M06 — Administration](06-administration.md) recebe documentação própria para
+versões informadas/vhosts visíveis, três métodos administrativos (25 total), lista
+completa limitada e presença do vhost atual, conforme ADR-0009 A aceita. M01 fornece
+contexto no main; Conexões apresenta o painel sem dependência de telas M02/M03.
+M06 continua parcial: sem seleção/troca de vhost ou administração avançada.
+Gate real aprovado e implementação em validação, com conclusão/commit pendentes.
+
+### Resultado vigente — leitura administrativa 4B.1
+
+ADR-0009 A aceita e gate revisado aprovado; consultas manuais de versões/vhosts
+visíveis implementadas/verificadas, sem seleção/troca do vhost ou CRUD. Lista
+completa limitada 200/256 KiB, metadados descartados e presença do nome atual,
+sem inferir permissões AMQP ou capacidades por versão/tag. FR-019/020 e M01/M06
+continuam parciais; seleção depende da 4B.2. Check 266 + seis Node, package/seis
+smokes e matriz final 60 checks reais aprovados no recorte macOS arm64/nó único.
+Conclusão e commit da 4B.1 aprovados por “Autorizado” em 2026-10-31; demais
+limitações mantidas. Registro nesta entrega, sem autorizar push ou 4B.2.

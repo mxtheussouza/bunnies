@@ -1,3 +1,4 @@
+import { MANAGEMENT_CHANNEL } from "../shared/management";
 import { contextBridge, ipcRenderer } from "electron";
 import { CONNECTIONS_CHANNEL } from "../shared/connections";
 import { PROFILES_CHANNEL } from "../shared/profiles";
@@ -33,6 +34,7 @@ if (process.isMainFrame) {
           ipcRenderer.removeListener(SESSION_EVENT, receive);
         };
       },
+      request => ipcRenderer.invoke(MANAGEMENT_CHANNEL, request),
     ),
   );
 }

@@ -239,3 +239,27 @@ continuam parciais e outros alvos/providers/cluster não homologados.
 Aceite posterior: “Aprovado”, em 2026-10-30, aceitou a conclusão da 4A.2C e seu
 commit de entrega. M01 permanece parcial; os resultados/limitações apresentados
 continuam válidos, sem autorização de etapa seguinte ou push.
+
+## Incremento 4B.1 / ADR-0009 A — contexto de leitura
+
+A aceita por “Autorizado”, gate real revisado aprovado e implementação integrada
+em validação. SessionService fornece contexto administrativo somente no main,
+com owner/sessionId/generation/revisão/vhost e verificação de disponibilidade
+HTTPS/foreground. ManagementService não altera sessão, cotas ou perfil.
+
+Em Conexões, perfil da sessão ativa permite consultas manuais de versões e vhosts
+visíveis (lista completa limitada 200/256 KiB). Cancelamento/navegação/background
+invalida consultas. Sem seleção de vhost ou GET individual. Detalhes de regras,
+interfaces/aceitação/testes em [M06](06-administration.md). M01/FR-019 continuam
+parciais; conclusão/commit dessa entrega ainda dependem da revisão e do proprietário.
+
+### Resultado vigente — leitura administrativa 4B.1
+
+ADR-0009 A aceita e gate revisado aprovado; consultas manuais de versões/vhosts
+visíveis implementadas/verificadas, sem seleção/troca do vhost ou CRUD. Lista
+completa limitada 200/256 KiB, metadados descartados e presença do nome atual,
+sem inferir permissões AMQP ou capacidades por versão/tag. FR-019/020 e M01/M06
+continuam parciais; seleção depende da 4B.2. Check 266 + seis Node, package/seis
+smokes e matriz final 60 checks reais aprovados no recorte macOS arm64/nó único.
+Conclusão e commit da 4B.1 aprovados por “Autorizado” em 2026-10-31; demais
+limitações mantidas. Registro nesta entrega, sem autorizar push ou 4B.2.

@@ -9,6 +9,7 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 - [O que está disponível nesta versão](#disponibilidade)
 - [Primeiros passos e distribuição](#primeiros-passos)
 - [Conectar, acompanhar e encerrar uma sessão](#manter-sessao)
+- [Consultar versões e vhosts visíveis](#informacoes-administrativas)
 - [Criar um perfil local](#criar-perfil)
 - [Selecionar um perfil e recarregar a lista](#selecionar-e-recarregar)
 - [Editar um perfil e descartar alterações](#editar-e-cancelar)
@@ -25,7 +26,7 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 
 ## O que está disponível nesta versão
 
-Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, usar temas e consultar a Ajuda.
+Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, consultar versões informadas e vhosts visíveis por HTTPS, usar temas e consultar a Ajuda.
 
 Salvar ou selecionar um perfil não conecta ao broker. Testar HTTPS e Testar AMQPS usam conexões transitórias. Conectar mantém uma conexão AMQPS e verifica a autenticação HTTPS periodicamente. Os dois endereços são independentes: o aplicativo não comprova que apontam ao mesmo broker.
 
@@ -68,6 +69,35 @@ O encerramento aguarda até um segundo pela confirmação AMQP. Se ela não cheg
 
 - Os formulários continuam disponíveis durante a sessão; salvar uma alteração encerra a sessão de forma conservadora. Selecionar outro perfil na lista apenas muda a seleção, mantendo o contexto ativo identificado no cabeçalho.
 - A sessão não desbloqueia operações de filas, exchanges ou mensagens nesta versão.
+
+<a id="informacoes-administrativas"></a>
+
+## Consultar versões e vhosts visíveis
+
+Em Conexões, mantenha selecionado o perfil da sessão ativa. O painel Informações administrativas permite duas consultas manuais: Consultar informações e Listar vhosts. É necessário HTTPS disponível e janela ativa; AMQPS pode estar indisponível. Entrar na tela, abrir Ajuda ou restaurar a janela não inicia essas consultas automaticamente.
+
+Consultar informações mostra as versões RabbitMQ e Management informadas pelo endpoint HTTPS. Campo ausente aparece Desconhecido. Série da matriz de referência não homologa todas as funcionalidades, permissões ou configurações. Outra versão ou prerelease aparece fora da matriz; isso não altera o broker nem habilita operações.
+
+Listar vhosts mostra uma lista completa limitada: até 200 nomes e 256 KiB de resposta. Não há paginação, pesquisa ou seleção de vhost. Se algum limite for ultrapassado, a resposta inteira é recusada; nenhum subconjunto é apresentado como completo. Metadados extras do broker são descartados e não aparecem no painel.
+
+O nome exato do vhost atual é procurado na lista recebida. Visível no snapshot HTTPS não comprova acesso AMQP, direito de criar filas ou publicar. Não listado não comprova inexistência e não encerra a sessão. Monitoring e administrator podem visualizar vhosts sem acesso AMQP. Os dois endpoints do perfil podem apontar para brokers diferentes.
+
+As consultas são apenas leitura, mas geram requisições/logs no servidor. O servidor pode construir uma lista maior antes da interrupção do cliente; o limite local não garante baixo custo para ambientes grandes. Para esses ambientes, o aplicativo pode recusar a listagem nesta versão.
+
+Somente uma consulta administrativa ocorre por vez, com prazo total de 10 segundos; não há repetição automática. A verificação whoami da sessão continua independente. Cancelar consulta interrompe apenas a consulta manual, mantendo a sessão e suas cotas de recuperação.
+
+O horário do último sucesso permanece visível. Se uma nova consulta falhar, seu horário de falha aparece separado, e o resultado anterior fica marcado Desatualizado. Não trate um resultado antigo como disponibilidade atual.
+
+Sair de Conexões, selecionar outro perfil, salvar/remover perfil, desconectar, recarregar/fechar a janela, sair, perder foco/minimizar ou suspender cancela a consulta pendente e limpa seu contexto. Ao voltar, consulte novamente. Nenhum resultado é persistido em disco.
+
+Uma recusa HTTP pode decorrer de permissão ou tag mesmo com senha válida. O aplicativo distingue motivos conhecidos de negação sem mostrar a mensagem bruta do broker. Não aumente privilégios nem desabilite TLS para contornar falhas; confirme URL, CA e direitos com o responsável pelo ambiente.
+
+1. Selecione o perfil, confira ambiente e vhost e clique em Conectar. Aguarde o estado HTTPS Verificado e mantenha o aplicativo em primeiro plano.
+2. No painel Informações administrativas, clique em Consultar informações para ler as versões ou em Listar vhosts para receber a lista visível.
+3. Confira fonte, vhost atual, data e eventuais erros. Use Cancelar consulta durante uma requisição; para atualizar o resultado, execute novamente a mesma ação.
+4. Para trocar o vhost da sessão, desconecte e edite o Endpoint AMQPS. A lista deste painel não altera o perfil ou o contexto ativo.
+
+- O painel não consulta rotas individuais de vhost. As versões de referência testadas apresentaram falhas de paginação e restrições dessas rotas; este recorte usa uma lista completa com limites explícitos. Filas, exchanges, mensagens e demais operações administrativas continuam indisponíveis.
 
 <a id="criar-perfil"></a>
 

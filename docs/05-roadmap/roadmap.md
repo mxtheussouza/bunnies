@@ -1,11 +1,10 @@
 # Roadmap e contratos de execução
 
-Data: 2026-10-28. Status: Etapas 0, 1A, 1B, 2A, 2B, 3A e 3B concluídas e aprovadas;
-sete ADRs e D3A-01–08 aceitos. Conclusão/commit da 3B aprovados por “Aprovado”.
-4A.1 concluída/aprovada e registrada em `fe4a252`. DOC.1 concluída/aprovada por
-“Aprovado”; registrada em `66183f7`. Conclusão/commit 4A.2A aprovados por “Aprovado”.
-4A.2A registrada em `966b4a2`; HEAD `9401448` inclui ajuste posterior do proprietário
-na barra de título macOS. Contrato 4A.2B abaixo foi autorizado por “Autorizo” em 2026-10-29.
+Atualizado em: 2026-10-31. Etapas 0–3B, 4A.1, DOC.1 e 4A.2A/B/C concluídas e
+aprovadas. Última entrega: `aba792d` (4A.2C, incluindo alternativa A da ADR-0008).
+Oito ADRs e D3A-01–08 aceitos. Contrato 4B.1 autorizado por “Autorizado”;
+gate original reprovou e ADR-0009 A foi aceita. Gate revisado aprovado nas duas
+versões; conclusão/commit aprovados em 2026-10-31. Histórico preservado.
 
 ## Sequência proposta
 
@@ -20,8 +19,9 @@ na barra de título macOS. Contrato 4A.2B abaixo foi autorizado por “Autorizo�
 | 3B | Interface base acessível, temas e estados | Concluída e aprovada; commit autorizado por “Aprovado” |
 | 4A.1 | Perfis locais e proteção condicionada de credenciais | Concluída e aprovada; commit autorizado |
 | DOC.1 | Histórico vivo, guia e Ajuda offline | Concluída e aprovada; commit 66183f7 |
-| 4A.2 | Testes HTTPS/AMQPS, CA customizada e ciclo de sessão | 4A.2A/B concluídas/aprovadas; contrato 4A.2C a preparar |
-| 4B | Management API, capacidades e consultas de leitura | Proposta |
+| 4A.2 | Testes HTTPS/AMQPS, CA customizada e ciclo de sessão | A/B/C concluídas/aprovadas; última entrega aba792d |
+| 4B.1 | Contexto administrativo: versão, vhosts visíveis e leitura do vhost atual | Concluída/aprovada; registro neste commit |
+| 4B.2 | Seleção de vhost e transição de contexto; detalhar próximas consultas | Sem contrato/autorização |
 | 5 | Filas e proteção das operações destrutivas | Proposta |
 | 6 | Exchanges e bindings | Proposta |
 | 7 | Publicação AMQP, confirmações e falhas de rede | Proposta |
@@ -1172,3 +1172,236 @@ Em 2026-10-30, “Aprovado” aceitou a conclusão e autorizou o commit
 feat(connections): maintain broker session and bounded recovery. Entrega e
 limitações apresentadas preservadas; aceite/documentação no mesmo commit.
 Não autoriza push ou a etapa seguinte, que precisa de contrato e aceite próprios.
+
+## Contrato autorizado — 4B.1: contexto administrativo de leitura
+
+Data: 2026-10-30. Status: **Autorizado por “Autorizado” após apresentação**.
+O proprietário aceitou este contrato/B1-D01–08/B1-01–10, inclusive gate real e
+verificações previstas. Não inclui conclusão/commit, push ou próxima etapa.
+A redação abaixo preserva os parâmetros apresentados e agora aceitos.
+
+A 4B será dividida em 4B.1 (versão, visibilidade e consultas limitadas) e 4B.2
+(seleção de vhost e transição do contexto), seguida das consultas necessárias às
+filas. Essa divisão permite validar respostas/permissões reais antes de mudar o
+vhost da conexão AMQPS. FR-019/020 continuam parciais após este primeiro incremento.
+
+| Campo | Proposta para aprovação |
+| --- | --- |
+| Identificador/nome | 4B.1 — Contexto administrativo de leitura |
+| Objetivo | Consultar a versão informada pelo endpoint HTTPS, listar vhosts visíveis e verificar a leitura do vhost atual, com origem, data e limites explícitos |
+| Justificativa | whoami prova autenticação, mas não versão, visibilidade ou autorização de consultar recursos; estabelecer essa fronteira antes de filas e troca de contexto |
+| Escopo | Adapter HTTPS restrito no main, três consultas GET específicas, cancelamento, DTOs/IPC, painel em Conexões, guia/Ajuda e testes isolados |
+| Tarefas | Provar contratos reais/paginação primeiro; implementar transporte limitado e casos de uso vinculados à sessão; integrar IPC/preload/UI; cobrir falhas/lifecycle; atualizar documentação e executar verificações |
+| Módulos afetados | M01 e M06 parciais; shell/contexto, segurança, guia/Ajuda e testes transversais |
+| Arquivos previstos | Lista abaixo; sem reorganização geral da base |
+| Dependências | 4A.2C aprovada em aba792d, ADRs 0002/0003/0005/0008, APIs Node e tooling já instalados; nenhum pacote novo ou atualização de lock |
+| Riscos | Lista visível confundida com autorização AMQP, dados de outra sessão, paginação ignorada, resposta excessiva, inferência de capacidades por versão/tag, confusão entre endpoints de brokers diferentes |
+| Critérios de aceitação | B1-01–10 abaixo, gate real inicial aprovado, regressões e documentação sincronizadas, sem prometer suporte não verificado |
+| Estratégia de testes | Unidade/contrato/IPC/componentes, fixtures HTTPS adversariais, package e smokes sequenciais, integração com RabbitMQ 4.4.0/4.3.6 isolados |
+| Resultado esperado | Usuário consulta informações administrativas reais e datadas sem alterar broker, perfil ou vhost da sessão |
+| Impacto documental | PROJECTS/AGENTS/estado/progresso/roadmap, NFR e requisitos afetados, M01/M06/índice, arquitetura/segurança, guia canônico/Markdown/README e evidências da 4B.1 |
+
+### Escolhas e limites propostos
+
+1. **B1-D01 — Consultas explícitas, vinculadas à sessão atual.** Painel
+   “Informações administrativas” em Conexões, disponível para sessão desejada,
+   HTTPS disponível e janela em foreground. Ações Consultar informações,
+   Listar vhosts e Verificar vhost atual; atualizar/repetir por ação manual.
+   Entrar na tela, ler estado, abrir Ajuda ou restaurar a janela não faz consulta
+   administrativa automática. O whoami da sessão mantém seu contrato existente.
+   AMQPS indisponível não impede leitura HTTPS; blocked não prova falha HTTP.
+2. **B1-D02 — Allowlist GET no núcleo.** Somente `/api/overview`, `/api/vhosts`
+   paginado e `/api/vhosts/{vhost-atual}`. Base HTTPS, usuário, senha transitória e
+   CA vêm do perfil/revisão da sessão no main. Preservar prefixo da URL salva;
+   nomes são segmentos codificados uma única vez, sem normalização de `.`, `..`,
+   barras ou escapes literais. Renderer nunca fornece URL, caminho, headers, CA,
+   credenciais, nome de vhost consultado ou método HTTP arbitrários.
+3. **B1-D03 — Informação mínima e capacidades observadas.** Overview retorna
+   somente versão RabbitMQ e versão Management quando presentes, até 128 bytes
+   UTF-8 por campo, mais origem lógica HTTPS, sessionId/generation e checkedAt.
+   Campo ausente significa desconhecido; formato inesperado gera erro sanitizado,
+   sem corpo bruto. Versão reconhecida 4.3/4.4 indica apenas série da matriz de
+   referência, não homologação integral. Outras versões/prereleases aparecem como
+   fora da matriz validada ou desconhecidas; não habilitar escrita ou recursos por
+   comparação de versão. Sucesso/403/404/formato incompatível são observações
+   daquela consulta, não catálogo de privilégios. Não consultar usuários,
+   permissões, feature flags, definições, plugins ou nós para inferir direitos.
+4. **B1-D04 — Vhosts visíveis, sem seleção.** Pedir páginas de 100 nomes,
+   `page`, `page_size=100`, `pagination=true`, ordenação por nome,
+   `disable_stats=true` e projeção `columns=name`, conforme contrato real provado.
+   Somente uma página na memória da UI; anterior/próxima sem varredura/preload de
+   todas as páginas. Página é inteiro seguro positivo, page_size fixo; validar
+   envelope/items/contagens e rejeitar mais de 100 itens, nomes duplicados na
+   mesma página ou resposta sem paginação. Não usar fallback de download completo.
+   Nome preservado exatamente, até 255 bytes UTF-8, sem controles, conforme recorte
+   atual do produto; fora desse recorte produz erro explícito, sem truncar nome.
+   Mudanças concorrentes no broker podem alterar páginas; não prometer snapshot
+   consistente ou interpretar ausência em uma página como vhost inexistente.
+5. **B1-D05 — Acesso ao vhost atual é outra observação.** GET específico do
+   vhost derivado da sessão, com estatísticas desabilitadas e projeção mínima;
+   devolver apenas nome validado e data. 403 é negado; 404 é não encontrado ou
+   não visível; não diagnosticar exclusão com certeza nem fechar AMQPS funcional.
+   Monitoring/administrator podem visualizar vhosts sem autorização AMQP; nenhum
+   item da lista recebe rótulo “acessível por AMQP”. HTTPS e AMQPS continuam
+   independentes; nem nomes/versionamento iguais provam que apontam ao mesmo broker.
+6. **B1-D06 — Recursos limitados.** Prazo total 10 s por consulta desde aceitação,
+   incluindo resolução DNS/TLS/leitura; headers até 16 KiB, corpo até **256 KiB**
+   por resposta e profundidade JSON até 16. Sublimite inferior aos 10 MiB NFR-015,
+   próprio para estas projeções. Validar UTF-8, JSON e shape; tolerar campos novos
+   sem repassá-los. Aceitar só application/json e codificação identity, sem
+   descompressão/fallback. Sem redirect, downgrade, proxy de ambiente ou bypass TLS.
+   Uma consulta administrativa em voo por janela, rejeitando nova enquanto ocupada;
+   junto do whoami, no máximo duas leituras HTTPS simultâneas, abaixo de NFR-017.
+   Sem fila ilimitada, retry automático administrativo, polling novo ou cache em
+   disco. Rate limit/5xx/rede/TLS/auth/permissão/formato/limite/timeout/cancelamento
+   recebem códigos distintos quando identificáveis, sem ecoar resposta do broker.
+7. **B1-D07 — Autoridade e invalidação.** Conferir janela/frame/URL, UUID de
+   operação, sessão/generation e revisão antes e após I/O. Trocar/salvar/remover
+   perfil, desconectar, recarregar, crash, fechar, quit, background ou suspend
+   aborta consulta e invalida resultado tardio. Mudança externa de arquivo segue
+   detecção nas leituras/revisões existentes, sem promessa de watcher instantâneo.
+   Navegar para fora do painel cancela operação própria e limpa conteúdo; voltar
+   exige nova ação. Falha de consulta não altera cota de recuperação ou estado do
+   whoami/AMQPS. Dentro do painel, uma falha pode preservar último sucesso datado
+   da mesma operação/contexto, marcado desatualizado com failedAt separado; ao mudar
+   página, nunca exibir nomes da página anterior como se fossem a nova.
+8. **B1-D08 — IPC específico e UX.** Quatro métodos adicionais propostos:
+   `getBrokerInfo`, `listSessionVhosts`, `getCurrentVhostInfo`,
+   `cancelManagementRead` (22 → **26** no total), em canal administrativo próprio.
+   Inputs fechados com sessionId/generation/operationId e página só na listagem;
+   main resolve perfil/revisão/vhost. Cancelamento somente do UUID em voo do mesmo
+   dono/contexto, idempotente, sem cancelar whoami ou sessão. Respostas validadas
+   também no preload, nenhum objeto Electron entregue, sem novo evento genérico.
+   Loading/cancelar/vazio/erro/limite/indisponibilidade/atualidade explícitos;
+   foco visível/restaurado, teclado e temas, produção com texto/símbolo. Sem novo
+   formulário de conexão nem nova rota de dashboard/administração completa.
+
+### Gate inicial obrigatório
+
+Antes de integrar UI, estender o harness real exclusivamente em recursos próprios
+para provar nas duas versões: overview/campos, listagem com **mais de 100 vhosts**,
+projeção/paginação e consulta de nomes codificados, perfis management/monitoring e
+usuário sem tag administrativa. Verificar visibilidade diferente e recusa real,
+sem elevar tags/permissões de usuário externo. A criação de vhosts/usuários ocorre
+só no provisionamento isolado do harness, nunca por ação do produto.
+
+Se alguma versão ignorar paginação/projeção, o formato ou permissões divergirem
+sem solução dentro deste contrato, interromper o trabalho dependente e apresentar
+opção concreta. Não simular paginação no cliente, baixar tudo nem expandir allowlist
+ou trocar versão/dependência silenciosamente. Docker indisponível impede aprovar
+esse gate; registrar limitação em vez de substituí-lo por fixture roteirizada.
+
+### Arquivos previstos para implementação após aprovação
+
+- Novos `src/main/management/{httpsRead,service,validation}.ts` e testes próximos;
+  `src/main/ipc/management.ts`/teste; `src/shared/management.ts`/teste.
+- Integrações pontuais em `src/main/sessions/sessionService.ts`, composição main,
+  registro/disposal de IPC, preload/API compartilhada e respectivos testes.
+- `src/renderer/pages/ManagementInfo.tsx` e testes/estilos locais, integração em
+  Connections, sem refatorar shell/UI legada ou alterar assets/barra nativa.
+- Harness `tools/testing/management.cjs` e extensão restrita de
+  `tools/testing/rabbitmq-real.cjs`/fixtures isoladas; atualizar allowlist da ponte
+  nos smokes existentes e repetir verificações conforme impacto.
+- Documentos citados no contrato e novo `docs/07-testing/management-4b1.md` com
+  resultados reais; guia JSON/Markdown gerado e Help seguem fonte única existente.
+
+Reaproveitar validações/segurança HTTPS existentes quando adequado; qualquer
+extração deve preservar integralmente sublimits/semântica do probe whoami e patch
+ADR-0008. Sem nova dependência, migração de JSON, provider de senha ou troca do
+cliente AMQP. Ajustes internos nesses caminhos não autorizam ampliar funcionalidades.
+
+### Critérios de aceitação verificáveis
+
+1. **B1-01:** gate real nas duas versões comprova formato, mais de uma página,
+   projeção e visibilidade por permissões antes de integrar dependentes.
+2. **B1-02:** produto emite exclusivamente os três GETs permitidos, com perfil/CA
+   no main e encoding preservado, incluindo `/`, Unicode, espaços, `%`, `.`/`..`.
+3. **B1-03:** nenhuma consulta ocorre sem ação manual/sessão elegível; uma operação
+   em voo e limites de bytes/headers/deadline/profundidade efetivamente aplicados.
+4. **B1-04:** versão ausente/fora da matriz, 401/403/404/429/5xx, corpo inválido,
+   certificado inválido, redirect, timeout e cancelamento têm saída explícita e
+   sanitizada; ausência/erro nunca vira lista vazia, zero ou suporte aprovado.
+5. **B1-05:** páginas de 100 preservam nomes/metadados coerentes; resposta completa
+   inesperada é recusada e não é paginada visualmente; dados antigos não cruzam páginas.
+6. **B1-06:** lifecycle, navegação, revisão e geração antigas descartam resultados
+   e liberam sockets/listeners; cancelar operação antiga não afeta nova sessão.
+7. **B1-07:** ponte com 26 métodos fechados passa testes de origem/frame/shape e
+   resposta; renderer não tem rede externa, URL genérica, segredo ou API Node.
+8. **B1-08:** UI mostra perfil/ambiente/vhost atual, datas e caráter apenas visível
+   dos vhosts; teclado/foco/temas/zoom e estados vazios/erros revisados no pacote.
+9. **B1-09:** check/package, cinco smokes existentes e novo smoke administrativo
+   sequenciais passam; integração real nas duas versões confirma leituras e
+   cancelamento sem canais/publicação/consumo, com cleanup de recursos próprios.
+10. **B1-10:** guia/README/Ajuda, PROJECTS/estado e evidências sincronizados;
+    limitações dos outros alvos/cluster/nativos/providers permanecem explícitas.
+    Revisão e aceite de conclusão próprios antes de commit, sem push automático.
+
+### Fora deste contrato
+
+Selecionar/trocar vhost, conectar em nome da seleção, editar perfil automaticamente,
+CRUD de recursos/usuários/permissões/policies, filas/exchanges/bindings/mensagens,
+catálogo completo de capacidades, dashboard/métricas/gráficos/histórico, persistir
+segredos, novas dependências, alterar ADR-0008, CI remoto/assinatura/releases/push.
+4B.2 e demais etapas exigem propostas e autorizações independentes.
+
+### Fontes e limites da preparação
+
+Consulta em 2026-10-30: [referência HTTP oficial](https://www.rabbitmq.com/docs/http-api-reference)
+(overview, vhosts, projeção/disable_stats e paginação) e
+[tags e permissões Management](https://www.rabbitmq.com/docs/management#access-and-permissions).
+O [handler 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_wm_vhosts.erl)
+usa list_visible_vhosts e augment_resources; essa leitura não comprova os contratos
+em execução. Documentação corrente identificada como 4.4; URLs específicas 4.3 e
+raw 4.4 não ficaram acessíveis pelo navegador nesta preparação. Não afirmar
+homologação do incremento sem gate real. Nenhum broker/teste funcional executado
+para esta proposta; resultados da 4A.2C não homologam consultas novas.
+
+### Resultado do gate autorizado 4B.1 — decisão antes de dependentes
+
+“Autorizado” aprovou o contrato acima. A execução real em 4.4.0/4.3.6 reprovou
+paginação/permissões/rotas nos cenários descritos nas [evidências](../07-testing/management-4b1.md).
+Aplicou-se a interrupção prevista no próprio contrato. Não implementar dependentes,
+baixar tudo como fallback ou simular paginação sem nova decisão.
+
+[ADR-0009 Proposed](../03-architecture/adr/0009-management-vhost-read-contract.md)
+recomenda um recorte explícito A: lista completa limitada 200/256 KiB, sem paginação
+ou GET individual; presença do vhost atual na lista e três métodos adicionais
+(25 total). A ainda não foi aprovada/aplicada e seu novo gate será obrigatório.
+B/C registradas; nenhum patch de broker/versão novo presumido. Check existente
+passou 237 testes + seis Node, mas gate permanece reprovado. Sem pacote/smokes
+novos, conclusão/commit/push ou 4B.2. Próxima ação: apresentar evidências e decisão.
+
+### Revisão aceita — ADR-0009 alternativa A
+
+“Autorizado” aceitou A e retomada após gate, substituindo B1-D04/05/08 e critérios
+afetados: dois GETs fixos (overview e vhosts com disable_stats/columns/sort), lista
+completa até 200/256 KiB, sem paginação/GET individual, presença exata do vhost
+atual no snapshot; três métodos adicionais, ponte 25 total. Não há seleção de vhost.
+Demais limites/segurança/lifecycle/testes do contrato original preservados.
+
+Gate revisado com mesmo adapter passou 12 verificações por versão real (24 total),
+liberando retomada serviço/IPC/UI/guia. B1-01 prova esse recorte, B1-02 não emite
+rota individual, B1-05 exige lista completa validada e recusa 201/limites, B1-07
+exige 25 métodos e B1-08 lista sem seletor; demais critérios continuam aplicáveis.
+Nove ADRs Accepted; falha original permanece registrada. Implementação em
+verificação, sem conclusão/commit/push ou 4B.2 aprovados.
+
+### Resultado final 4B.1 — pronto para revisão
+
+Contrato revisado por A implementado e verificado: 266 testes/36 arquivos + seis
+Node, package/seis smokes e 60 checks reais (30 por versão), com cleanup completo.
+Guia/Ajuda 15 tópicos/12 campos e documentação sincronizados. [Evidências](../07-testing/management-4b1.md).
+B1-01–10 revisados atendidos no recorte local; outros alvos/cluster/nativos/providers
+mantêm limitações. M01/M06 e requisitos amplos permanecem parciais.
+
+Próxima ação: apresentar e solicitar aprovação de conclusão e do commit
+feat(management): add bounded broker information and vhost reads. Nada autoriza
+commit/push ou 4B.2 antes do aceite próprio.
+
+### Conclusão 4B.1 aprovada — 2026-10-31
+
+“Autorizado” aceitou a conclusão e autorizou o commit
+feat(management): add bounded broker information and vhost reads. Conferidos os 46
+arquivos/ASAR apresentados; este registro acompanha a entrega. Resultados e
+limitações preservados, sem código/guia alterados no aceite e sem nova execução
+funcional. Não autoriza push ou preparar/implementar a próxima fase automaticamente.

@@ -3,14 +3,16 @@
 Aplicação exclusivamente desktop para administração do RabbitMQ em Windows, Linux e
 macOS. O projeto está em modernização incremental. Já permite organizar perfis
 locais, configurar CA e testar autenticação HTTPS/AMQPS, usar temas e consultar a Ajuda
-offline. Conectar mantém AMQPS e verifica HTTPS periodicamente; operações de filas,
+offline. Conectar mantém AMQPS e verifica HTTPS periodicamente. O painel de leitura
+consulta versões informadas e lista até 200 vhosts visíveis/256 KiB por HTTPS;
+operações de filas,
 exchanges e mensagens ainda não estão disponíveis.
 
 ## Para usar o aplicativo
 
 Leia o **[Guia do usuário](docs/10-user-guide/README.md)**: primeiros passos,
 explicação de cada campo, cadastro/edição/remoção de perfis, senhas em memória,
-CA/testes HTTPS/AMQPS, sessão e reconexão limitada, temas, menus, teclado e solução de problemas. O mesmo guia está na aba **Ajuda**,
+CA/testes HTTPS/AMQPS, sessão e reconexão limitada, consultas de versão/vhosts visíveis, temas, menus, teclado e solução de problemas. O mesmo guia está na aba **Ajuda**,
 na barra lateral do aplicativo, e funciona offline.
 
 Esta é uma versão em desenvolvimento, sem instaladores publicados ou atualização

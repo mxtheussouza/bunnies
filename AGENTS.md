@@ -36,7 +36,7 @@ Consultar a [visão do produto](docs/00-overview/product-vision.md).
   [inventário](docs/01-audit/repository-inventory.md) descreve a estrutura existente.
 - Organizar por responsabilidades e funcionalidades; evitar dependências
   circulares, camadas artificiais e abstrações sem benefício concreto.
-- Os oito [ADRs](docs/03-architecture/architecture.md) estão Accepted. Os status são
+- Os nove [ADRs](docs/03-architecture/architecture.md) estão Accepted. Os status são
   Proposed, Accepted, Superseded ou Rejected. Somente Accepted
   registra decisão arquitetural aprovada explicitamente pelo proprietário.
 
@@ -106,13 +106,13 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **4A.2C concluída e aprovada; registro da entrega neste commit**.
-- Última etapa concluída e aprovada: **4A.2C — sessão ativa e recuperação**.
-- Entrega aprovada: `feat(connections): maintain broker session and bounded recovery`
-  (commit deste registro; pai `ea116de`, identificador em `git log -1`).
+- Etapa atual: **4B.1 concluída e aprovada; registro da entrega neste commit**.
+- Última etapa concluída e aprovada: **4B.1 — contexto administrativo de leitura / ADR-0009 A**.
+- Entrega aprovada: `feat(management): add bounded broker information and vhost reads`
+  (commit deste registro; pai `aba792d`, identificador em `git log -1`).
 - Mudança da barra macOS em `9401448` preservada.
-- Próxima ação: aguardar instrução para preparar a próxima etapa. Sem push/4B
-  ou nova implementação autorizados por este aceite.
+- Próxima ação: aguardar instrução para preparar a próxima etapa.
+  Sem push, preparação/execução automática da 4B.2 ou nova implementação autorizados.
 
 Ao retomar, ler este arquivo, [PROJECTS_STATUS.md](PROJECTS_STATUS.md), a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -375,3 +375,83 @@ revisados e o ASAR foram conferidos antes de sincronizar a documentação do ace
 Resultados e limitações apresentados permanecem válidos. Registrar somente essa
 entrega e o aceite; não repetir implementação, fazer push ou avançar à 4B sem
 contrato/autorização próprios. Este registro acompanha o commit de entrega.
+
+## Preparação vigente — 4B.1
+
+Após aba792d, “Continuar para a próxima etapa” iniciou preparação/apresentação do
+[contrato 4B.1](docs/05-roadmap/roadmap.md): contexto administrativo de leitura,
+versão informada, vhosts visíveis paginados e consulta do vhost atual. Status
+**Proposed**, com B1-D01–08 e B1-01–10. Quatro novos métodos (22 → 26), limites
+específicos e gate real nas duas versões precisam de aceite antes da implementação.
+
+Nesta preparação, alterar somente documentos de planejamento/estado e PROJECTS;
+não implementar código, instalar dependências, alterar guia como se já disponível,
+executar brokers/build/smokes, commitar ou fazer push. Seleção/troca de vhost fica
+para contrato 4B.2 próprio. Resultados da 4A.2C não homologam essas novas consultas.
+
+## Autorização vigente — 4B.1
+
+Em 2026-10-30, “Autorizado” aceitou o contrato 4B.1/B1-D01–08/B1-01–10,
+com gate inicial real nas versões fixadas e implementação/verificações locais e
+isoladas previstas. A seção anterior é o registro histórico da preparação, agora
+aceita. Executar apenas o contrato: consultas administrativas de leitura, sem
+seleção de vhost, escrita no broker pelo produto, nova dependência ou alteração
+ADR-0008. Atualizar PROJECTS a cada bloco e guia conforme implementação real.
+Gate divergente deve interromper trabalho dependente. Conclusão/commit, push e
+4B.2 não estão autorizados por esta resposta.
+
+## Resultado vigente — gate 4B.1 / decisão pendente
+
+Gate real reprovou nas duas versões oficiais: quatro cenários passaram e onze
+falharam por versão, com cleanup completo. Paginação de vhosts gera HTTP 500;
+consulta individual exige administrator e não preserva `.`/`..` nas rotas testadas.
+Produto/IPC/UI/guia ainda não implementados; check existente passou 237 testes +
+seis Node. [Evidências](docs/07-testing/management-4b1.md) preservam execuções/limites.
+
+[ADR-0009](docs/03-architecture/adr/0009-management-vhost-read-contract.md) está
+**Proposed**, com A recomendada: lista completa limitada a 200/256 KiB, sem
+paginação/GET individual, presença do vhost atual derivada da lista e três métodos
+(25 total). Oito ADRs continuam Accepted; 0009 não aceita. Não aplicar A, elevar
+privilégios, mudar broker/versão/dependência ou implementar dependentes sem aceite.
+Conclusão/commit/push e 4B.2 continuam fora do escopo autorizado.
+
+## Autorização vigente — ADR-0009 A / 4B.1
+
+“Autorizado”, em 2026-10-30, aceitou A e retomada 4B.1 condicionada ao gate
+revisado aprovado, conforme solicitação apresentada/item 8 da ADR. Nove ADRs
+Accepted; registro anterior Proposed é histórico. Dois GETs apenas, lista completa
+200/256 KiB sem paginação/GET individual e presença do vhost atual, 25 métodos
+específicos. Sem dependência nova, mudança ADR-0008, escrita de produto, troca de
+vhost, conclusão/commit/push ou 4B.2. Executar gate antes de integrar UI; atualizar
+PROJECTS em cada bloco e guia conforme implementação efetiva.
+
+## Resultado vigente — 4B.1 pronta para revisão
+
+ADR-0009 A aceita, gate de 24 e retomada 4B.1 verificados. Check 266 testes/36
+arquivos + seis Node, package/seis smokes sequenciais e 60 checks reais (30 por
+4.4.0/4.3.6) passaram no pacote final macOS arm64. [Evidências](docs/07-testing/management-4b1.md).
+Guia/Ajuda 15 tópicos/12 campos sincronizados; patch/licença/isolamento preservados.
+
+Ponte 25 métodos: getBrokerInfo/listSessionVhosts/cancelManagementRead em
+bunnies:management, com respostas/contexto validados. Service/adapter em
+src/main/management; UI ManagementInfo em Conexões. Dois GETs fixos, lista completa
+200/256 KiB, presença exata do vhost atual; sem GET individual/paginação/seleção.
+Cancelamento/deadline/revisão/geração/owner e foreground no main; nenhum cache em disco.
+Após package: base, perfis, HTTPS, AMQPS, sessão e tools/testing/management.cjs em
+sequência, mais matriz rabbitmq-real.cjs; não sobrepor harnesses GUI. Gate
+--management-gate original continua reprovado historicamente; --management-gate-a
+prova recorte aceito em recursos próprios, sem instalar dependências.
+
+Apresentar resultados e solicitar conclusão/commit próprio; não registrar commit
+ou avançar 4B.2 sem aceite. Limitações dos demais alvos/cluster/assistivas/nativos/
+providers/releases mantidas. Atualizar PROJECTS em cada Task e guia em cada mudança.
+
+## Conclusão 4B.1 aprovada
+
+Em 2026-10-31, “Autorizado” aceitou a conclusão apresentada e autorizou o commit
+feat(management): add bounded broker information and vhost reads. Os 46 arquivos e
+ASAR apresentados foram conferidos por hash antes da sincronização documental do
+aceite. Resultados/limitações permanecem os apresentados; nenhum código ou guia
+alterado nesta Task, sem repetir execução funcional. Registrar somente essa entrega
+e seu aceite. Sem push ou preparação/execução da 4B.2 por inferência; este registro
+acompanha o commit de entrega.

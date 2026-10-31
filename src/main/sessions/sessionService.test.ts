@@ -307,3 +307,27 @@ describe("session ownership and bounded recovery", () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 });
+
+it("only grants main management context to the active foreground HTTPS session", async () => {
+  const f = setup();
+  f.service.connect(1, input);
+  await settle();
+  const state = f.service.getState(1),
+    ref = { sessionId: state.sessionId!, generation: state.generation };
+  expect(f.service.managementContext(1, ref)).toEqual({
+    profileId: "profile",
+    revision: "revision",
+    vhost: "/",
+  });
+  expect(() => f.service.managementContext(2, ref)).toThrow();
+  expect(() =>
+    f.service.managementContext(1, { ...ref, generation: ref.generation + 1 }),
+  ).toThrow();
+  f.service.setVisible(false);
+  expect(() => f.service.managementContext(1, ref)).toThrow();
+  f.service.setVisible(true);
+  f.service.setSuspended(true);
+  expect(() => f.service.managementContext(1, ref)).toThrow();
+  await f.service.stop();
+  expect(() => f.service.managementContext(1, ref)).toThrow();
+});

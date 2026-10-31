@@ -278,3 +278,35 @@ antigo antes de close. Nunca tratar pausa como dado recente: HTTPS exibe hora e
 pausa/erro; AMQP heartbeat continua em background estabelecido. TLS/CA validados,
 sem proxy herdado ou reconexão em erros de autenticação/certificado/protocolo.
 Não comprova saúde do cluster ou permissão de publicar. Sem canais ou mensagens.
+
+## Evidência de permissões/rotas no gate 4B.1
+
+Gate real autorizado reprovou; main/IPC/UI administrativos dependentes não foram
+implementados. Em 4.4.0/4.3.6 testados, GET individual de vhost exige administrator,
+retornando 401 por tag mesmo com senha válida; não diagnosticar automaticamente
+senha incorreta a partir do status. `.`/`..` no caminho testado não preservam o
+alvo individual, e a lista com paginação resulta em HTTP 500. Sem promoção de
+privilégios, redirect seguido ou relaxamento de TLS para contornar esses fatos.
+
+[ADR-0009 Proposed](../03-architecture/adr/0009-management-vhost-read-contract.md)
+propõe eliminar a rota individual e derivar só visibilidade do nome exato numa
+lista completa limitada. Não aplicada; requer aprovação e gate próprio antes de
+dependentes. [Evidências](../07-testing/management-4b1.md) distinguem observação de
+fixture de comportamento do produto e mantêm os riscos anteriores abertos.
+
+## Recorte aplicado — ADR-0009 A / 4B.1
+
+A aceita por “Autorizado”; gate revisado aprovado e implementação em validação.
+Somente GET overview projetado e vhosts com disable_stats/columns/sort fixos.
+Metadata extra é descartada no main e nunca recebida pela UI. Ausência na lista
+não promove exclusão/permissão; compare nomes como texto exato, sem rota individual.
+
+ManagementService revalida contexto/revisão/owner e usa deadline desde aceitação;
+sua única operação não altera whoami/AMQPS/retries. Cancelamento restrito ao UUID e
+contexto do dono, resposta tardia descartada e nenhum segredo ou resultado em disco.
+Preload valida shape/contexto/tipo de resultado e substitui mensagens remotas por
+textos locais. 401 por tags conhecidas mapeia DENIED; outros 401 não são prova de
+senha incorreta. Limites de 200/256 KiB não garantem baixo custo no servidor.
+
+Ponte 25 métodos nomeados; CSP/sandbox/TLS, patch ADR-0008 e gates de persistência
+preservados. Ver evidências antes de declarar homologação da entrega.

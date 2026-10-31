@@ -22,6 +22,21 @@ const versions = [
       "rabbitmq@sha256:54cb013d76cd1fd6c0a0708f34062ad61c452bb6f016b434c6c33f1a765d2b58",
   },
 ];
+const managementGate = process.argv.includes("--management-gate");
+const managementGateA = process.argv.includes("--management-gate-a");
+assert.ok(
+  process.argv.slice(2).length <= 1 &&
+    process.argv
+      .slice(2)
+      .every(arg => ["--management-gate", "--management-gate-a"].includes(arg)),
+);
+const managementFixture = managementGate || managementGateA;
+const reportPrefix = managementGateA
+  ? "management-gate-A-4b1"
+  : managementGate
+    ? "management-gate-4b1"
+    : "rabbitmq-real";
+let managementAdapter;
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function docker(...args) {
   return (
@@ -50,6 +65,15 @@ async function runVersion({ version, digest }) {
     "área pedidos",
     ".",
     "negado",
+    ...(managementFixture
+      ? [
+          "..",
+          ...Array.from(
+            { length: managementGateA ? 194 : 110 },
+            (_, i) => `page-${String(i).padStart(3, "0")}`,
+          ),
+        ]
+      : []),
   ];
   const config = path.join(root, "config");
   const userData = path.join(root, "user-data");
@@ -145,6 +169,20 @@ async function runVersion({ version, digest }) {
         password_hash: passwordHash(observerPassword),
         tags: ["administrator"],
       },
+      ...(managementFixture
+        ? [
+            {
+              name: "bunnies-monitor",
+              password_hash: passwordHash(password),
+              tags: ["monitoring"],
+            },
+            {
+              name: "bunnies-no-tag",
+              password_hash: passwordHash(password),
+              tags: [],
+            },
+          ]
+        : []),
     ].map(user => ({
       ...user,
       hashing_algorithm: "rabbit_password_hashing_sha256",
@@ -162,7 +200,27 @@ async function runVersion({ version, digest }) {
             configure: "^$",
             write: "^$",
             read: "^$",
-          })),
+          }))
+          .concat(
+            managementFixture
+              ? [
+                  {
+                    user: "bunnies-monitor",
+                    vhost: "/",
+                    configure: "^$",
+                    write: "^$",
+                    read: "^$",
+                  },
+                  {
+                    user: "bunnies-no-tag",
+                    vhost: "/",
+                    configure: "^$",
+                    write: "^$",
+                    read: "^$",
+                  },
+                ]
+              : [],
+          ),
       }),
       { mode: 0o644 },
     );
@@ -270,6 +328,244 @@ async function runVersion({ version, digest }) {
     console.log(`RabbitMQ ${version}: TLS ready (${inspection.Architecture})`);
     checks.push("exact-broker-version-and-TLS-readiness");
     await noConnections();
+    if (managementGateA) {
+      await require("./management-gate.cjs").runManagementGate({
+        adapter: managementAdapter,
+        port: httpsPort,
+        fixture,
+        username,
+        password,
+        vhosts,
+        checks,
+        version,
+        noConnections,
+        api,
+        deleteOne: async () => {
+          const owned = JSON.parse(await docker("inspect", container))[0];
+          assert.equal(owned.Config.Labels["bunnies.test"], name);
+          await docker(
+            "exec",
+            container,
+            "rabbitmqctl",
+            "delete_vhost",
+            "page-193",
+          );
+        },
+      });
+      report.passed = true;
+      console.log(`RabbitMQ ${version}: A gate ${checks.length} checks passed`);
+      return report;
+    }
+    if (managementGate) {
+      async function read(route, user = username) {
+        return new Promise((resolve, reject) => {
+          const request = https.get(
+            {
+              hostname: "127.0.0.1",
+              port: httpsPort,
+              path: `/api/${route}`,
+              ca: fixture.ca,
+              rejectUnauthorized: true,
+              minVersion: "TLSv1.2",
+              auth: `${user}:${user === "bunnies-observer" ? observerPassword : password}`,
+              agent: false,
+              maxHeaderSize: 16 * 1024,
+              headers: {
+                Accept: "application/json",
+                "Accept-Encoding": "identity",
+              },
+            },
+            response => {
+              const chunks = [];
+              let size = 0;
+              response.on("data", chunk => {
+                size += chunk.length;
+                if (size > 256 * 1024)
+                  request.destroy(new Error("Gate response limit"));
+                else chunks.push(chunk);
+              });
+              response.on("error", reject);
+              response.on("end", () => {
+                const bytes = Buffer.concat(chunks);
+                let body;
+                try {
+                  body = JSON.parse(bytes.toString("utf8"));
+                } catch {
+                  body = null;
+                }
+                report.responses ??= [];
+                report.responses.push({
+                  route,
+                  user,
+                  status: response.statusCode,
+                  contentType: response.headers["content-type"],
+                  bytes: bytes.length,
+                  shape: Array.isArray(body)
+                    ? `array:${body.length}`
+                    : body && typeof body === "object"
+                      ? Object.keys(body)
+                      : "non-JSON",
+                  keys:
+                    Array.isArray(body) && body.length
+                      ? Object.keys(body[0])
+                      : undefined,
+                  reason:
+                    body && typeof body.reason === "string"
+                      ? body.reason.slice(0, 120)
+                      : undefined,
+                });
+                resolve({ status: response.statusCode, body });
+              });
+            },
+          );
+          const timer = setTimeout(
+            () => request.destroy(new Error("Gate deadline")),
+            10000,
+          );
+          request.once("close", () => clearTimeout(timer));
+          request.on("error", reject);
+        });
+      }
+      const failures = [];
+      async function check(label, task) {
+        try {
+          await task();
+          checks.push(label);
+        } catch (error) {
+          failures.push({ label, message: error.message.split("\n")[0] });
+        }
+      }
+      await check("overview-projected-version", async () => {
+        const r = await read(
+          "overview?columns=rabbitmq_version,management_version",
+        );
+        assert.equal(r.status, 200);
+        assert.equal(r.body.rabbitmq_version, version);
+        assert.equal(typeof r.body.management_version, "string");
+        assert.ok(
+          Object.keys(r.body).every(key =>
+            ["rabbitmq_version", "management_version"].includes(key),
+          ),
+        );
+      });
+      const query =
+        "pagination=true&page_size=100&sort=name&disable_stats=true&columns=name";
+      let first, second;
+      for (const page of [1, 2])
+        await check(`management-page-${page}-projection`, async () => {
+          const r = await read(`vhosts?${query}&page=${page}`);
+          assert.equal(r.status, 200);
+          assert.ok(
+            !Array.isArray(r.body),
+            "Server returned an unpaginated array",
+          );
+          assert.ok(Array.isArray(r.body.items), "Missing items envelope");
+          assert.equal(r.body.page, page);
+          assert.equal(r.body.page_size, 100);
+          assert.equal(r.body.total_count, vhosts.length - 1);
+          assert.equal(r.body.filtered_count, vhosts.length - 1);
+          assert.equal(r.body.page_count, 2);
+          assert.equal(
+            r.body.items.length,
+            page === 1 ? 100 : vhosts.length - 101,
+          );
+          for (const item of r.body.items)
+            assert.deepEqual(Object.keys(item), ["name"]);
+          if (page === 1) first = r.body.items;
+          else second = r.body.items;
+        });
+      await check("pages-complete-distinct-and-denied-hidden", async () => {
+        assert.ok(first && second);
+        const names = [...first, ...second].map(item => item.name);
+        assert.equal(new Set(names).size, vhosts.length - 1);
+        assert.deepEqual(
+          [...names].sort(),
+          vhosts.filter(v => v !== "negado").sort(),
+        );
+      });
+      await check("monitor-sees-vhost-without-AMQP-permission", async () => {
+        const r = await read(`vhosts?${query}&page=1`, "bunnies-monitor");
+        assert.equal(r.status, 200);
+        assert.equal(r.body.total_count, vhosts.length);
+      });
+      await check("no-management-tag-is-denied", async () => {
+        for (const route of [
+          "overview",
+          `vhosts?${query}&page=1`,
+          "vhosts/%2F?disable_stats=true&columns=name",
+        ])
+          assert.equal((await read(route, "bunnies-no-tag")).status, 401);
+      });
+      for (const name of [
+        "/",
+        "equipe/pedidos",
+        "literal%2F",
+        "área pedidos",
+        ".",
+        "..",
+      ]) {
+        await check(`current-vhost-encoded:${name}`, async () => {
+          const encoded = encodeURIComponent(name).replaceAll(".", "%2E");
+          const r = await read(
+            `vhosts/${encoded}?disable_stats=true&columns=name`,
+          );
+          assert.equal(r.status, 200);
+          assert.deepEqual(r.body, { name });
+        });
+      }
+      await check("current-vhost-denied-and-missing", async () => {
+        const denied = await read(
+          "vhosts/negado?disable_stats=true&columns=name",
+        );
+        assert.ok([403, 404].includes(denied.status));
+        assert.equal(
+          (await read("vhosts/missing-vhost?disable_stats=true&columns=name"))
+            .status,
+          404,
+        );
+      });
+      await check("zero-channels-connections-queues-consumers", async () => {
+        await noConnections();
+        assert.equal((await api("queues")).length, 0);
+        assert.equal((await api("consumers")).length, 0);
+      });
+      // Diagnostic permutations remain bounded and only target this isolated broker.
+      for (const route of [
+        "vhosts?page=1&page_size=100&pagination=true&sort=name&disable_stats=true",
+        "vhosts?page=1&page_size=100&pagination=true&sort=name&columns=name",
+        "vhosts?page=1&page_size=100&pagination=true&sort=name",
+        "vhosts/%2F?disable_stats=true",
+        "vhosts/%2F?columns=name",
+        "vhosts/%2F",
+        "vhosts/negado?disable_stats=true&columns=name",
+      ])
+        await read(route);
+      // Compare normal successful administrative reads with explicit permission refusals.
+      for (const user of [username, "bunnies-monitor", "bunnies-observer"]) {
+        await read("vhosts?disable_stats=true&columns=name", user);
+        for (const route of [
+          "vhosts/%2F?disable_stats=true&columns=name",
+          "vhosts/equipe%2Fpedidos?disable_stats=true&columns=name",
+          "vhosts/literal%252F?disable_stats=true&columns=name",
+          "vhosts/%C3%A1rea%20pedidos?disable_stats=true&columns=name",
+          "vhosts/%2E?disable_stats=true&columns=name",
+          "vhosts/%2E%2E?disable_stats=true&columns=name",
+          "vhosts/.?disable_stats=true&columns=name",
+          "vhosts/..?disable_stats=true&columns=name",
+        ])
+          await read(route, user);
+      }
+      const logs = (await docker("logs", container))
+        .replaceAll(password, "[REDACTED]")
+        .replaceAll(observerPassword, "[REDACTED]");
+      await writeFile(`out/${reportPrefix}-${version}-broker.log`, logs);
+      report.failures = failures;
+      report.passed = failures.length === 0;
+      console.log(
+        `RabbitMQ ${version}: gate ${checks.length} passed, ${failures.length} failed`,
+      );
+      return report;
+    }
     const profileId = randomUUID();
     const profileFile = path.join(userData, "profiles.json");
     const initial = JSON.stringify({
@@ -484,6 +780,18 @@ async function runVersion({ version, digest }) {
       });
       await page.getByRole("button", { name: "Conectar", exact: true }).click();
       await awaitSession(s => s.state === "ready");
+      checks.push(
+        ...(await require("./management.cjs").verifyManagement(page, version, [
+          "/",
+          ".",
+          "literal%2F",
+          "área pedidos",
+          "equipe/pedidos",
+        ])),
+      );
+      const current = await sessionState();
+      assert.equal(current.state, "ready");
+      checks.push("real-management-reads-preserve-session-and-privileges");
       const first = await sessionState();
       assert.equal(first.flow, "unknown");
       const holdUntil = Date.now() + 22000;
@@ -773,7 +1081,7 @@ async function runVersion({ version, digest }) {
     report.cleanup = cleanupErrors.length === 0;
     report.cleanupErrors = cleanupErrors;
     await writeFile(
-      `out/rabbitmq-real-${version}-results.json`,
+      `out/${reportPrefix}-${version}-results.json`,
       JSON.stringify(report, null, 2) + "\n",
     );
     assert.deepEqual(cleanupErrors, [], "Owned fixture cleanup failed");
@@ -784,10 +1092,24 @@ async function runVersion({ version, digest }) {
   return report;
 }
 async function run() {
+  if (managementGateA)
+    managementAdapter =
+      await require("./management-gate.cjs").prepareManagementGate();
+  try {
+    await runMatrix();
+  } finally {
+    await managementAdapter?.cleanup();
+  }
+}
+async function runMatrix() {
   const reports = [];
   for (const version of versions) reports.push(await runVersion(version));
   await writeFile(
-    "out/rabbitmq-real-4a2c-results.json",
+    managementGateA
+      ? "out/management-gate-A-4b1-results.json"
+      : managementGate
+        ? "out/management-gate-4b1-results.json"
+        : "out/rabbitmq-real-4b1-results.json",
     JSON.stringify(
       {
         platform: process.platform,
@@ -798,6 +1120,8 @@ async function run() {
       2,
     ) + "\n",
   );
+  if (reports.some(report => !report.passed || !report.cleanup))
+    process.exitCode = 1;
 }
 run().catch(error => {
   console.error(error);

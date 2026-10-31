@@ -135,3 +135,34 @@ Estado HTTPS é resultado datado de autenticação, não saúde contínua. AMQP
 estabelecido/fluxo inicialmente desconhecido não prova permissão para publicar.
 Sem fila, canal, publicação ou replay de escrita. ADR-0008 A está Accepted, sem
 alterar estes limites. Resultados reais e limitações ficam nas evidências.
+
+## 4B.1 — contrato autorizado; gate reprovado
+
+“Autorizado” aceitou os sublimits do contrato 4B.1: leitura total 10 s, headers
+16 KiB, corpo 256 KiB, profundidade 16 e uma consulta administrativa simultânea
+por janela (até duas HTTPS com whoami). Página solicitada fixa de 100 e sem
+fallback de lista completa. Esses limites não estão implementados no produto.
+
+O gate real reprovou nas duas versões, interrompendo dependentes. [ADR-0009
+Proposed](../03-architecture/adr/0009-management-vhost-read-contract.md) recomenda
+substituir paginação por lista completa limitada a 200/256 KiB, com indicação
+explícita de custo/limite; ainda exige aprovação. Não reinterpretar NFR-014/015
+como autorização automática para aplicar essa alternativa. [Evidências](../07-testing/management-4b1.md).
+
+## Sublimites vigentes — 4B.1 com ADR-0009 A aceita
+
+A resposta “Autorizado” aceitou A e a retomada condicional. O gate revisado passou
+12 verificações por versão 4.4.0/4.3.6; substitui os parâmetros de paginação/GET
+individual do contrato inicial, mantendo os registros históricos acima.
+
+| Referência | Recorte aprovado |
+| --- | --- |
+| NFR-013/015/016 | Prazo total administrativo 10 s desde aceitação; headers 16 KiB, corpo 256 KiB contado durante leitura antes do parsing, profundidade JSON 16; identity apenas |
+| NFR-014 | Lista completa até 200 nomes de 255 bytes UTF-8; acima do limite, recusa integral explícita, sem truncar/paginar visualmente ou fazer fallback |
+| NFR-017/018/019 | Uma leitura administrativa em voo por janela, até duas HTTPS com whoami; ação manual, sem retry/polling próprio, sem alterar cotas da sessão |
+| NFR-012/016 | Owner/sessionId/generation/operationId/revisão conferidos; invalidação/cancelamento em navegação e lifecycle; ponte 25 métodos, sem GET individual ou seleção de vhost |
+
+Limite do cliente não impede custo de preparar a lista no servidor. 401 pode ser
+negação por tag com senha válida; versão informada/visibilidade não comprovam
+permissão AMQP, saúde ou identidade comum dos dois endpoints. Implementação em
+validação, resultados finais nas evidências; sem nova homologação de escala/alvos.

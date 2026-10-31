@@ -18,6 +18,7 @@ import ProfileForm from "./ProfileForm";
 import "./profiles.scss";
 import { useSession } from "../shell/SessionProvider";
 import SessionControls from "./SessionControls";
+import ManagementInfo from "./ManagementInfo";
 
 const noProtection: SecretProtectionStatus = {
   persistence: "disabled",
@@ -295,6 +296,11 @@ export default function Connections() {
                 Salvar alterações encerra a sessão atual. Testes separados ficam
                 disponíveis após desconectar.
               </p>
+            )}
+            {session.desired && session.profile?.id === profile.id && (
+              <ManagementInfo
+                key={session.sessionId + ":" + session.generation}
+              />
             )}
             <ProfileTests
               key={profile.id + snapshot?.revision}

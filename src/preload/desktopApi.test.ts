@@ -45,30 +45,35 @@ describe("preload API", () => {
       .fn()
       .mockResolvedValue({ ok: true, value: undefined, requestId: "id" });
     const api = createDesktopApi(invoke, invoke, invoke);
-    expect(Object.keys(api).sort()).toEqual([
-      "cancelProfileAmqpsTest",
-      "cancelProfileHttpsTest",
-      "close",
-      "connectSession",
-      "discardProfileCa",
-      "disconnectSession",
-      "getInfo",
-      "getSecretProtectionStatus",
-      "getSessionState",
-      "listProfiles",
-      "minimize",
-      "onSessionState",
-      "openLink",
-      "quit",
-      "removeProfile",
-      "saveProfile",
-      "selectProfileCa",
-      "showEditMenu",
-      "testProfileAmqps",
-      "testProfileHttps",
-      "toggleMaximize",
-      "view",
-    ]);
+    expect(Object.keys(api).sort()).toEqual(
+      [
+        "cancelProfileAmqpsTest",
+        "cancelProfileHttpsTest",
+        "close",
+        "connectSession",
+        "discardProfileCa",
+        "disconnectSession",
+        "getInfo",
+        "getSecretProtectionStatus",
+        "getSessionState",
+        "listProfiles",
+        "minimize",
+        "onSessionState",
+        "getBrokerInfo",
+        "listSessionVhosts",
+        "cancelManagementRead",
+        "openLink",
+        "quit",
+        "removeProfile",
+        "saveProfile",
+        "selectProfileCa",
+        "showEditMenu",
+        "testProfileAmqps",
+        "testProfileHttps",
+        "toggleMaximize",
+        "view",
+      ].sort(),
+    );
     expect(Object.isFrozen(api)).toBe(true);
     await api.openLink("author");
     await api.showEditMenu();
@@ -126,4 +131,54 @@ describe("preload API", () => {
     expect(desktop).not.toHaveBeenCalled();
     expect(profiles).not.toHaveBeenCalled();
   });
+});
+
+it("validates administrative replies and replaces untrusted error messages", async () => {
+  const input = {
+    sessionId: "00000000-0000-4000-8000-000000000001",
+    generation: 1,
+    operationId: "00000000-0000-4000-8000-000000000002",
+  };
+  const invoke = vi.fn(async () => undefined),
+    management = vi.fn(async () => ({
+      ok: true,
+      requestId: "00000000-0000-4000-8000-000000000003",
+      value: {
+        ...input,
+        kind: "broker",
+        matrix: "unknown",
+        source: "https-management",
+        checkedAt: "2026-10-30T12:00:00.000Z",
+      },
+    }));
+  const api = createDesktopApi(
+    invoke,
+    invoke,
+    invoke,
+    undefined,
+    undefined,
+    management,
+  );
+  expect((await api.getBrokerInfo(input)).ok).toBe(true);
+  management.mockResolvedValueOnce({
+    ok: true,
+    requestId: "00000000-0000-4000-8000-000000000003",
+    value: {
+      ...input,
+      kind: "broker",
+      matrix: "unknown",
+      source: "https-management",
+      checkedAt: "2026-10-30T12:00:00.000Z",
+      password: "SENTINEL",
+    },
+  } as never);
+  expect((await api.getBrokerInfo(input)).ok).toBe(false);
+  management.mockResolvedValueOnce({
+    ok: false,
+    requestId: "00000000-0000-4000-8000-000000000003",
+    error: { code: "DENIED", message: "SENTINEL" },
+  } as never);
+  expect(JSON.stringify(await api.getBrokerInfo(input))).not.toContain(
+    "SENTINEL",
+  );
 });

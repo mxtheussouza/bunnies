@@ -1,3 +1,12 @@
+import {
+  closedObject,
+  isManagementSnapshot,
+  managementErrors,
+  managementId,
+  type ManagementRequest,
+  type ManagementResult,
+  type ManagementSnapshot,
+} from "../shared/management";
 import type { ConnectionRequest, ConnectionsApi } from "../shared/connections";
 import type { SessionRequest, SessionSnapshot } from "../shared/session";
 import { isSessionSnapshot } from "../shared/session";
@@ -24,7 +33,61 @@ export function createDesktopApi(
   subscribeSession: (
     listener: (state: SessionSnapshot) => void,
   ) => () => void = () => () => undefined,
+  invokeManagement: (
+    request: ManagementRequest,
+  ) => Promise<unknown> = async () => {
+    throw new Error("Unavailable");
+  },
 ): DesktopApi {
+  async function managementCall(
+    request: ManagementRequest,
+  ): Promise<
+    ManagementResult<ManagementSnapshot> | ManagementResult<undefined>
+  > {
+    try {
+      const result = await invokeManagement(request);
+      if (
+        !closedObject(result, ["ok", "requestId"], ["value", "error"]) ||
+        !managementId(result.requestId)
+      )
+        throw new Error();
+      if (
+        result.ok === true &&
+        closedObject(result, ["ok", "requestId", "value"]) &&
+        (request.command === "cancelManagementRead"
+          ? result.value === undefined
+          : isManagementSnapshot(result.value) &&
+            result.value.sessionId === request.input.sessionId &&
+            result.value.generation === request.input.generation &&
+            result.value.operationId === request.input.operationId &&
+            result.value.kind ===
+              (request.command === "getBrokerInfo" ? "broker" : "vhosts"))
+      )
+        return result as
+          ManagementResult<ManagementSnapshot> | ManagementResult<undefined>;
+      if (
+        result.ok === false &&
+        closedObject(result, ["ok", "requestId", "error"]) &&
+        closedObject(result.error, ["code", "message"]) &&
+        typeof result.error.code === "string" &&
+        Object.hasOwn(managementErrors, result.error.code)
+      ) {
+        const code = result.error.code as keyof typeof managementErrors;
+        return {
+          ok: false,
+          requestId: result.requestId,
+          error: { code, message: managementErrors[code] },
+        };
+      }
+      throw new Error();
+    } catch {
+      return {
+        ok: false,
+        requestId: "transport",
+        error: { code: "UNAVAILABLE", message: managementErrors.UNAVAILABLE },
+      };
+    }
+  }
   async function call<T = undefined>(
     request: DesktopRequest,
   ): Promise<DesktopResult<T>> {
@@ -85,6 +148,18 @@ export function createDesktopApi(
       profileCall({ command: "cancelProfileHttpsTest", operationId }),
   };
   return Object.freeze({
+    getBrokerInfo: input =>
+      managementCall({ command: "getBrokerInfo", input }) as Promise<
+        ManagementResult<ManagementSnapshot>
+      >,
+    listSessionVhosts: input =>
+      managementCall({ command: "listSessionVhosts", input }) as Promise<
+        ManagementResult<ManagementSnapshot>
+      >,
+    cancelManagementRead: input =>
+      managementCall({ command: "cancelManagementRead", input }) as Promise<
+        ManagementResult<undefined>
+      >,
     getSessionState: () => sessionCall({ command: "getSessionState" }),
     connectSession: input => sessionCall({ command: "connectSession", input }),
     disconnectSession: input =>

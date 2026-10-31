@@ -23,6 +23,7 @@ Referências: [avaliação e matriz tecnológica](technology-evaluation.md),
 | [ADR-0006](adr/0006-message-inspection.md) | Excluir inspeção/consumo do MVP e exigir semântica explícita depois |
 | [ADR-0007](adr/0007-desktop-distribution.md) | Build por alvo, smoke cedo e release sem publicação automática |
 | [ADR-0008](adr/0008-amqp-lifecycle-safety.md) | Alternativa A: patch mínimo verificável no agendamento inicial AMQP; aceita em 2026-10-30 |
+| [ADR-0009](adr/0009-management-vhost-read-contract.md) | Alternativa A: lista completa limitada de vhosts e presença do contexto atual, aceita em 2026-10-30 |
 
 ## Processos e confiança
 
@@ -469,3 +470,31 @@ encerram. Stop invalida antes de close≤1s; sem ack reporta liberação local.
 
 Guia/Ajuda descrevem a sessão implementada. Quatro páginas de recursos continuam
 desabilitadas. Ver contrato no roadmap e evidências 4A.2C para testes efetivos.
+
+## Decisão apresentada após gate 4B.1 (histórico antes do aceite)
+
+A [ADR-0009](adr/0009-management-vhost-read-contract.md) está **Proposed**, não
+Accepted: gate real mostrou paginação de vhosts em HTTP 500 e limites de
+permissões/rotas individuais nas duas versões fixadas. Dependentes suspensos
+conforme contrato. A proposta de lista completa limitada e presença do vhost
+atual derivada desse snapshot exige aprovação; não altera transporte/IPC do
+produto atual. Ver [evidências](../07-testing/management-4b1.md). Oito ADRs aceitos
+permanecem; não confundir escrita da proposta com decisão aprovada.
+
+## Implementação autorizada — 4B.1 / ADR-0009 A
+
+“Autorizado” aceitou aplicar/testar A e retomar 4B.1 após gate. Gate revisado passou
+12 verificações por versão real e liberou serviço/IPC/UI. Nove ADRs Accepted;
+registros anteriores Proposed/falha são históricos. Adapter main management/httpsRead
+emite somente GET overview projetado e lista vhosts com disable_stats/columns/sort;
+body 256 KiB, headers 16 KiB, profundidade 16 e 200 nomes, sem paginação ou GET de
+nome individual. Metadata desconhecida é descartada, não retornada ao renderer.
+
+ManagementService obtém perfil/revisão/vhost da SessionService no main, revalida
+antes/depois de I/O e vincula operação/owner/generation. Uma leitura administrativa
+manual por janela, total 10 s desde aceitação, sem retry/polling administrativo.
+Ciclo de sessão/background invalida operações; serviço não altera o estado dos
+transportes. Ponte 25 métodos nomeados; canal bunnies:management e respostas
+validadas no preload. Painel em Conexões e guia único. Conclusão/commit aprovados
+por “Autorizado” em 2026-10-31; resultados/limitações nas evidências. Esse aceite
+não homologa demais alvos/HA nem autoriza push ou próxima etapa.

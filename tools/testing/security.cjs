@@ -50,6 +50,9 @@ module.exports = async function verifySecurity(application, page) {
       "listProfiles",
       "minimize",
       "onSessionState",
+      "getBrokerInfo",
+      "listSessionVhosts",
+      "cancelManagementRead",
       "openLink",
       "quit",
       "removeProfile",
@@ -60,7 +63,7 @@ module.exports = async function verifySecurity(application, page) {
       "testProfileHttps",
       "toggleMaximize",
       "view",
-    ],
+    ].sort(),
   );
 
   const cdp = await page.context().newCDPSession(page);

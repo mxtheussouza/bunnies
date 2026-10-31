@@ -161,3 +161,20 @@
   padding-top: 20px;
   border-top: 1px solid var(--bn-separator);
 }
+
+.management-info {
+  margin-block: var(--bn-space-6, 24px);
+  padding-block-start: var(--bn-space-4, 16px);
+  border-top: 1px solid var(--bn-border);
+  overflow-wrap: anywhere;
+}
+.management-vhosts {
+  max-height: 20rem;
+  overflow: auto;
+  padding-inline-start: 1.5rem;
+}
+
+.management-info > p,
+.management-info > section > p {
+  margin-block: 8px;
+}

@@ -1,17 +1,17 @@
 # Bunnies — histórico vivo do projeto
 
-Atualizado em: 2026-10-30.
+Atualizado em: 2026-10-31.
 
 ## Estado atual
 
 - Branch: `chore/modernization-app`.
-- Última entrega aprovada: **4A.2C — sessão ativa e recuperação**, com ADR-0008 A e testes reais.
-- Aprovação atual: “Aprovado”, em 2026-10-30, aceitou a conclusão da 4A.2C e o
-  commit `feat(connections): maintain broker session and bounded recovery`.
-- Último commit: commit desta entrega 4A.2C (pai `ea116de`; identificador em `git log -1`).
-- Task atual: registrar o aceite e a entrega aprovada da 4A.2C neste commit.
-- Próxima ação: aguardar instrução para preparar a etapa seguinte; sem push ou 4B
-  autorizados pelo aceite da conclusão.
+- Última entrega aprovada: **4B.1 — contexto administrativo de leitura**, com ADR-0009 A e testes reais.
+- Aprovação atual: “Autorizado”, em 2026-10-31, aceitou conclusão e commit
+  `feat(management): add bounded broker information and vhost reads`.
+- Último commit: commit desta entrega 4B.1 (pai `aba792d`; identificador em `git log -1`).
+- Task atual: registrar o aceite e a entrega aprovada da 4B.1 neste commit.
+- Próxima ação: aguardar instrução para preparar a etapa seguinte; sem push,
+  preparação/execução automática da 4B.2 ou nova implementação autorizados.
 
 ## Tarefas concluídas
 
@@ -28,7 +28,8 @@ Atualizado em: 2026-10-30.
 | DOC.1 | Histórico vivo, guia do usuário e Ajuda offline | Concluída/aprovada; 66183f7 |
 | 4A.2A | CA por perfil, JSON v2/backup v1 e teste explícito HTTPS | Concluída/aprovada; 966b4a2 |
 | 4A.2B | Teste AMQPS/vhost, cancelamento e verificação real 4.4.0/4.3.6 | Concluída/aprovada; ea116de |
-| 4A.2C | Sessão única, estados independentes, recuperação limitada e ADR-0008 A | Conclusão/commit aprovados; commit deste registro |
+| 4A.2C | Sessão única, estados independentes, recuperação limitada e ADR-0008 A | Concluída/aprovada; aba792d |
+| 4B.1 | Versões informadas, vhosts visíveis limitados, cancelamento e ADR-0009 A | Concluída/aprovada; commit deste registro |
 
 ## Entrega DOC.1 aprovada
 
@@ -41,8 +42,8 @@ Atualizado em: 2026-10-30.
 
 ## Pendências e decisões
 
-- Conclusão e commit da 4A.2C aprovados; registrar somente a entrega apresentada.
-  Próxima etapa depende de contrato e autorização próprios.
+- 4A.2C concluída e registrada em aba792d, com working tree limpo na retomada.
+  4B.1/ADR-0009 A concluídas/aprovadas; registro nesta entrega, sem autorizar 4B.2.
 - Mudança da barra de título macOS foi registrada pelo proprietário em 9401448;
   preservar e revalidar no próximo pacote. Não integra o pacote/testes da 4A.2A.
 - Atualizar este arquivo a cada Task/fase/alteração, mantendo histórico de decisões,
@@ -1201,3 +1202,270 @@ documentais de aceite nesses mesmos caminhos; conferir commit/parent após grava
   recovery, na branch chore/modernization-app, com pai ea116de. Esta entrada integra
   o próprio commit da entrega; identificador verificável por git log -1.
 - Próxima ação: aguardar instrução para preparar a etapa seguinte. Sem push ou 4B.
+
+### 2026-10-30 — T-4B1-RETOMADA-E-PROPOSTA
+
+- Pedido: “Continuar para a próxima etapa” inicia preparação/apresentação do
+  contrato seguinte, conforme fluxo de aprovação; não aceita contrato inexistente.
+- Retomada: AGENTS/PROJECTS/arquitetura/avaliação/roadmap/estado/progresso e Git
+  consultados. Branch chore/modernization-app, HEAD aba792d, index e working tree
+  inicialmente limpos; entrega anterior registrada, sem push.
+- Escopo desta Task: inspecionar integração existente e fontes oficiais, delimitar
+  primeiro incremento Management API e documentar contrato Proposed verificável.
+  Sem código, dependências, brokers, build/smokes ou commits nesta preparação.
+- Evidência inicial: HTTPS atual só faz whoami; sessão mantém vhost da URL AMQPS.
+  FR-019/020 permanecem parciais. Planejar consultas de versão/vhosts antes de
+  seleção entre vhosts ou administração de recursos; guia disponível preservado.
+- Testes novos ainda não executados. Próxima ação: detalhar limites e critérios,
+  sincronizar documentos de estado e apresentar proposta para aceite.
+
+### 2026-10-30 — T-4B1-CONTRATO-PRONTO-PARA-ACEITE
+
+- Contrato Proposed no roadmap: 14 campos, B1-D01–08 e dez critérios B1-01–10;
+  três GETs, quatro métodos específicos (22 → 26), página de 100, corpo 256 KiB,
+  deadline 10 s, uma consulta administrativa por janela, cancelamento/lifecycle.
+- Gate inicial exige contratos/paginação/permissões reais em 4.4.0/4.3.6, mais de
+  100 vhosts e cleanup próprio antes de UI. Visibilidade não autoriza AMQP;
+  seleção/transição de vhost fica para contrato 4B.2. Sem pacote ou ADR novos.
+- Somente AGENTS, PROJECTS e três documentos de roadmap/estado/progresso alterados;
+  produto, lock, guia/Ajuda, assets, patch e barra macOS preservados. Index vazio,
+  HEAD aba792d e branch mantidos. Nenhum commit/push ou broker executado.
+- Verificações desta Task: npm run docs:check passou; git diff --check passou;
+  41 Markdown/335 links relativos conferidos, nenhum alvo ausente. Revisão do
+  contrato/diff e escopo de cinco arquivos concluída. Sem testes funcionais,
+  build/package/smokes novos; resultados anteriores não homologam esta proposta.
+- Fontes oficiais atuais consultadas, com limites de acesso por versão registrados
+  no contrato. Nenhuma alteração de versão ou compatibilidade presumida.
+- Próxima ação autorizada: apresentar contrato e solicitar aprovação de execução
+  4B.1/B1-D01–08; conclusão/commit e 4B.2 continuarão com aceites separados.
+
+### 2026-10-30 — T-4B1-AUTORIZACAO-E-INICIO
+
+- Pedido “Autorizado” aceitou o contrato detalhado 4B.1/B1-D01–08/B1-01–10,
+  incluindo gate real, implementação, documentação e verificações locais/isoladas.
+  Sem nova dependência, 4B.2, conclusão/commit ou push antecipados.
+- Retomada: AGENTS/PROJECTS/contrato/arquitetura/avaliação/estado/progresso e Git
+  consultados. HEAD aba792d, branch chore/modernization-app, index vazio; cinco
+  documentos da proposta preservados. Baseline de arquivos em out/4b1-start-baseline.json.
+- Docker Engine 29.8.0 aarch64 disponível. Próxima tarefa: estender somente harness
+  próprio para provar contratos/permissões/projeção/paginação nas versões fixadas.
+- Nenhuma nova execução funcional concluída neste ponto. Produto/guia preservados
+  até resolver o gate; divergência fora do contrato exige interrupção dependente.
+
+### 2026-10-30 — T-4B1-GATE-PRIMEIRA-RODADA
+
+- Harness real ganhou modo --management-gate sem lançar Electron, com usuários
+  sintéticos management/monitoring/sem tag, 117 vhosts e mais de uma página.
+- Primeira rodada nos dois brokers fixados: quatro verificações passaram e onze
+  falharam por versão; formato/projeção/paginação e GET de vhost divergiram.
+  Cleanup completo em ambas; sem canal/conexão/fila/consumidor do produto.
+- Trabalho dependente main/IPC/UI interrompido conforme gate. Não atribuir falha
+  à API antes de revisar transporte/harness e respostas controladas. Coletar
+  status/shape e logs redigidos, sem senha ou cabeçalhos, para diagnóstico.
+- Produto/guia/dependências continuam preservados; nenhuma aprovação funcional
+  da 4B.1, package/smoke ou commit/push nesta rodada.
+
+### 2026-10-30 — T-4B1-GATE-DIAGNOSTICO-E-DECISAO
+
+- Diagnóstico real nas duas versões confirma: paginação retorna 500, inclusive
+  sem projeção/disable_stats; logs mostram inject_dqt recebendo filtered_count.
+  GET individual retorna 401 Not administrator user com senha válida para
+  management/monitoring. `.` vira lista 200 e `..` redirect 301, crus/encoded.
+- Administrator confirmou consultas individuais de nomes comuns/especiais. Lista
+  sem paginação retorna 116 para management e 117 para monitor/admin, 28994/29242
+  bytes, com metadados extras apesar de columns=name. Observação de fixture não
+  homologa adapter/UI/capacidades nem custo em ambientes maiores.
+- Gate original permanece reprovado: quatro cenários passaram/onze falharam por
+  versão, com 48 respostas diagnósticas por versão na rodada final. Relatórios
+  e logs separados em out; cleanup completo, sem aplicação Electron lançada.
+- Check inicialmente parou no lint por diagnóstico inserido no escopo de startup;
+  movido ao gate, execução real/check repetidos. npm run check passou: 237 testes
+  em 31 arquivos + seis Node, typecheck/lint/formatação/guia. Gate não virou sucesso.
+- ADR-0009 Proposed/evidências preparados: A recomenda mudar explicitamente o
+  recorte para lista completa 200/256 KiB, sem paginação/GET individual, presença
+  do vhost atual no snapshot e três novos métodos (25 total). B investiga outro
+  patch de broker; C entrega apenas versão. Nenhuma alternativa aplicada.
+- Trabalho dependente suspenso conforme contrato; produto/guia/lock/assets/patch
+  preservados. Sem nova dependência, package/smoke/broker do usuário, commit/push.
+- Próxima ação: revisar/sincronizar estado e apresentar decisão concreta para
+  aprovação antes de retomar trabalho 4B.1 dependente.
+
+### 2026-10-30 — T-4B1-GATE-REVISAO-PARA-DECISAO
+
+- Revisão final: docs:check e whitespace passaram; 43 Markdown/351 links relativos
+  sem alvo ausente. Oito ADRs Accepted e somente 0009 Proposed, sem alterar decisões
+  anteriores. Contrato original preserva parâmetros aceitos e registra gate reprovado.
+- Onze caminhos no recorte (incluindo cinco documentos prévios da proposta,
+  extensão do harness, evidências/ADR/NFR/arquitetura/segurança). Baseline confirma
+  src, guia/Ajuda, manifesto/lock, assets, misc/barra e tools/patches inalterados.
+- ASAR anterior permanece idêntico: 03ac0e8c251a088ec4ff794db9f15e285d3689214c36d9caeb1f01616f44db25.
+  Não foi reempacotado nem recebe as consultas propostas. Index vazio e HEAD aba792d.
+- Docker ps/network por label bunnies.test sem recurso restante; relatórios das
+  duas versões confirmam cleanup. Nenhum Electron/harness deixado em execução.
+- Entrega revisável: evidências da falha e ADR-0009 A recomendada, com alternativas
+  e regras concretas de retomada após aceite/gate. Não é conclusão da 4B.1.
+  Próxima ação: solicitar decisão explícita; sem commit/push/4B.2 ou aplicação de A.
+
+### 2026-10-30 — T-ADR0009-A-AUTORIZACAO
+
+- Pedido “Autorizado” aceitou aplicar/testar A da ADR-0009 e retomar 4B.1 somente
+  após gate revisado aprovado. Recorte: dois GETs, lista completa 200/256 KiB,
+  visibilidade exata do vhost atual e três métodos novos (25 total).
+- AGENTS/PROJECTS/ADR/arquitetura/avaliação/roadmap/estado/progresso e Git relidos.
+  HEAD aba792d/branch chore/modernization-app, index vazio; onze caminhos da
+  revisão anterior conferidos por hash, sem alteração externa.
+- Autorização inclui adapter/gate/testes isolados e retomada condicional já
+  delimitada. Sem dependência/versão nova, alteração ADR-0008, conclusão/commit,
+  push ou 4B.2. Preservar histórico da falha original.
+- Próxima ação: implementar transporte/validação limitados e provar os contratos
+  reais de A, incluindo 200/201, antes da UI. Testes novos ainda não executados.
+
+### 2026-10-30 — T-ADR0009-A-GATE-APROVADO-E-RETOMADA
+
+- Adapter HTTPS/validação implementados sem novo pacote; gate compila esse mesmo
+  código em diretório temporário com Webpack instalado, removido no finally.
+- Gate A passou **12 verificações por versão, 24 total**, em 4.4.0/4.3.6 reais:
+  management 200 aceitos, monitor 201 recusados, lista monitor após remoção própria
+  200/negado visível, nomes exatos, sem tag negado, prefixo/allowlist e limites/
+  compressão/cancelamento. Zero canais/conexões/filas/consumidores e cleanup completo.
+- Primeira tentativa manteve fixture antiga de 117 em vez de 201; corrigida sua
+  contagem. Segunda esperou callback do servidor antes do evento close do socket;
+  cleanup agora aguarda todos os close antes de conferir Set. Rodada repetida com
+  sucesso, sem relaxar asserções. Registros da falha original paginada preservados.
+- 13 testes novos do transporte passaram, incluindo deadline total real de 10 s,
+  TLS/hostname/expiração, formatos/limites/status, cancelamento e sanitização.
+- Typecheck inicial apontou narrowing da guarda DTO; ajustado para Record após
+  validação de objeto. Check integrado ainda pendente, não declarar aprovação.
+- Conforme item 8 da ADR-0009 aceita, retomar serviço de sessão/IPC/UI/guia 4B.1.
+  Sem escrita de produto, troca de vhost, nova dependência, commit/push ou 4B.2.
+
+### 2026-10-30 — T-4B1-INTEGRACAO-E-GUIA
+
+- Após gate A aprovado, sessão expõe contexto administrativo somente no main;
+  serviço limita uma consulta/deadline, revisão/origem/geração e cancelamento.
+  IPC/preload integrado com três operações específicas e DTOs fechados (25 total).
+- Painel de Conexões implementa consultas manuais, lista completa/visibilidade,
+  datas separadas/falha/desatualizado, foco e cancelamento em navegação/background.
+  Não altera vhost/perfil/AMQPS ou cotas da sessão. Dois GETs apenas.
+- Guia canônico/Ajuda ganhou tópico administrativo (15 tópicos; mesmos 12 campos),
+  README/Sobre sincronizados; Markdown gerado. Sem funcionalidade futura disponível.
+- Unidade integrada passou 265 testes/36 arquivos; tipo/lint corrigidos para mocks,
+  ordenação da allowlist e fronteira de import dos testes. Check/package completos
+  e smoke administrativo novo em validação; ainda não declarar esses resultados.
+- Harness administrativo verifica executável; matriz real passa a incluir leitura
+  no produto e preservação de sessão. Nenhum pacote/dependência/schema novo.
+- Próxima ação: check/pacote, seis smokes sequenciais e matriz real no mesmo ASAR,
+  revisão visual/segurança/docs. Sem commit/push/4B.2.
+
+### 2026-10-30 — T-4B1-SMOKE-PAINEL-E-REVISAO
+
+- Smoke administrativo passou oito grupos no primeiro pacote integrado com foco
+  corrigido; cancelamento/permissão/201/stale/background/navegação/Ajuda/sessão e
+  ausência de escrita de perfil/rede renderer verificados em macOS arm64.
+- Primeira execução revelou foco retornando enquanto botão ainda disabled;
+  substituído microtask por layout effect após commit React. Check/package repetidos
+  e smoke passou; não relaxar asserção de foco no executável.
+- Capturas revisadas: tema escuro não tinha sido selecionado explicitamente e
+  zoom capturado antes de layout estabilizar. Harness agora força tema/zoom e
+  captura nativa após quadros; revalidar, sem declarar dark/zoom anteriores aprovados.
+- Ajustado texto residual da navegação e espaçamento do painel; novo pacote e
+  regressões finais necessários. Base smoke interrompeu na espera de resize apesar
+  de tamanho nativo correto; adicionar foco nativo/medidas de renderer à investigação,
+  preservando asserções. Demais smokes/matriz desse pacote não executados ainda.
+
+### 2026-10-30 — T-4B1-PACOTE-E-REGRESSOES
+
+- Check final até este bloco passou 265 testes/36 arquivos + seis Node; pacote
+  macOS arm64 passou. Ajuste do texto exigiu atualizar a expectativa legada de
+  destinos indisponíveis; suíte repetida com sucesso, sem alterar critérios.
+- Seis smokes sequenciais passaram no mesmo executável: painel (oito grupos),
+  base/Ajuda/segurança, perfis, HTTPS, AMQPS e sessão (dez grupos). Foco nativo
+  no harness resolveu espera de resize sem relaxar medidas/asserções. Nenhum
+  bypass/proteção de produto alterado. Guias/Ajuda 15 tópicos/12 campos.
+- Dark/light/zoom 200% revisados após seleção explícita e captura estável/nativa;
+  produção distinguida, conteúdo legível e sem overflow horizontal global.
+- ASAR em teste: 5cac9e219e51177c26c920db87ffbd8c3a520d26c939ba12b4818528fdbbb194,
+  998978 bytes, 15 entradas. Patch ADR-0008/MIT/proveniência presentes, preload só
+  require electron, três métodos administrativos, sem fixtures/testes/keys.
+- Matriz real 4.4.0 passou 30 verificações e cleanup completo; 4.3.6 em execução.
+  Não declarar a matriz final antes de concluir. Sem mudança de dependências,
+  commit/push ou 4B.2. Próximo bloco: concluir matriz e revisão documental/Git.
+
+### 2026-10-30 — T-4B1-REVISAO-DE-ENUMS-E-PACOTE-FINAL
+
+- Matriz do pacote anterior passou 30 verificações em cada versão real, 60 total,
+  cleanup completo. Resultados preservados como intermediários após revisão.
+- Revisão encontrou coerção String em enums do parser/guarda administrativa:
+  valores boxed/coercíveis poderiam passar por enum apesar de não serem string.
+  Agora exige tipo string antes da allowlist; teste prova que não executa coerção.
+  Sem ampliar comandos, vhosts ou permissões.
+- Check atualizado passou 266 testes/36 arquivos + seis Node; package passou.
+  Teste de guarda ajustado para isolar especificamente matrix boxed, sem campos
+  extras que causassem recusa por outro motivo; alvo repetido separadamente.
+- Nova rodada sequencial dos seis smokes e da matriz real iniciada no pacote final.
+  Não atribuir a ele os resultados do ASAR intermediário 5cac9e...; registrar
+  hash/evidências próprios ao concluir. Sem commit/push/4B.2.
+
+### 2026-10-30 — T-4B1-ENTREGA-PRONTA-PARA-REVISAO
+
+- Pacote final passou os seis smokes sequenciais e **60 verificações reais**,
+  30 em cada 4.4.0/4.3.6, incluindo consultas no executável, preservação da sessão,
+  TLS/permissões/vhosts/heartbeat/cortes/recuperação/encerramento. Cleanup completo;
+  zero canais/filas/consumidores/conexões restantes. Gate A de 24 checks separado.
+- Check final: **266 testes/36 arquivos + seis Node**, typecheck/lint/format/guia
+  aprovados; alvo de guarda refinado repetido com três testes aprovados.
+- ASAR final **cdaecf532c9e14e01c3ca894aa9cd705f6784d7a04201837096c9592e3b29862**,
+  999017 bytes, 15 entradas; guarda estrita/25 métodos/patch/MIT presentes,
+  preload só require electron, sem fixtures/keys/tools/testes. Intermediários
+  guardam hashes/resultados próprios; não confundir com entrega final.
+- Revisão visual dark/light/zoom 200%, teclado/foco, guia/Ajuda 15 tópicos/12 campos
+  e comportamento de produção concluída. Produto faz dois GETs manuais somente,
+  200/256 KiB, sem seleção de vhost, escrita, persistência de resposta ou segredo.
+- Documentação especializada/operacional sincronizada; nove ADRs Accepted como
+  decisões, sem equivaler a homologação universal. Limitações de outros alvos/HA/
+  nativos/assistivas/suspensão física/providers/releases permanecem.
+- Próxima ação: revisão final de links/Git/hashes e apresentar para aprovação de
+  conclusão/commit feat(management): add bounded broker information and vhost reads.
+  Sem commit/push/4B.2 ou recurso administrativo adicional.
+
+### 2026-10-30 — T-4B1-CONFERENCIA-FINAL
+
+- docs:check e whitespace passaram; **44 Markdown/361 links relativos** conferidos,
+  nenhum alvo ausente. Guia tem 15 tópicos e os 12 campos/descritivos de perfil
+  preservados (há outros cinco descritores de módulos, sem formulários novos).
+- **46 arquivos** no recorte; 175 arquivos baseline fora dele conferidos sem drift.
+  Dependências/lock, assets/misc/barra nativa, política de segurança, workflows e
+  patch ADR-0008 preservados. HEAD aba792d/branch mantidos, index vazio.
+- ASAR final permanece idêntico ao executado; seis smokes e 60 checks reais finais
+  confirmados, ambos brokers com cleanup. Docker por label sem container/rede
+  restante e nenhum processo de harness correspondente; imagens seguem em cache.
+- Revisão pronta para proprietário, sem commit/push. Próxima ação autorizada:
+  apresentar resultados e solicitar conclusão/commit próprio; 4B.2 não autorizada.
+
+### 2026-10-31 — T-4B1-ACEITE-E-REGISTRO
+
+- Pedido “Autorizado” respondeu à solicitação explícita de conclusão e commit
+  feat(management): add bounded broker information and vhost reads, aceitando a
+  entrega/limitações apresentadas da 4B.1. Não autoriza push ou próxima etapa.
+- Retomada: AGENTS/PROJECTS/arquitetura/avaliação/roadmap/estado/progresso e Git
+  consultados. Branch chore/modernization-app, HEAD aba792d e index vazio.
+  Todos os 46 arquivos conferem exatamente com out/4b1-final-review.json; ASAR
+  final idêntico ao apresentado, sem alteração externa ao recorte.
+- Escopo desta Task: sincronizar aceite somente em documentação de estado,
+  verificar guia/links/whitespace e registrar o único commit autorizado.
+  Não alterar produto/guia, executar brokers, reempacotar ou ampliar funcionalidades.
+- Resultados anteriores aceitos: 266 testes + seis Node, gate A de 24, package/
+  seis smokes e 60 checks reais. Não declarar nova execução funcional nesta Task.
+
+### 2026-10-31 — T-4B1-COMMIT-APROVADO
+
+- Aceite sincronizado em 12 documentos de estado/requisitos/módulos/evidências;
+  produto, testes, guia/Ajuda e ASAR conservam hashes da entrega apresentada.
+- Nesta Task, docs:check e whitespace passaram; 44 Markdown/361 links relativos
+  conferidos, nenhum alvo ausente. Testes funcionais anteriores não repetidos.
+- Registro coeso autorizado: feat(management): add bounded broker information and
+  vhost reads, na branch chore/modernization-app, com pai aba792d e exatamente os
+  46 arquivos revisados. Esta entrada integra o próprio commit; identificador
+  verificável por git log -1. Conferir commit/parent/árvore após gravação.
+- Próxima ação: aguardar instrução para preparar etapa seguinte, sem push,
+  preparação/execução automática da 4B.2 ou nova implementação.

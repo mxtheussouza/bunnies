@@ -111,3 +111,14 @@ whoami com data/pausa e recuperação limitada por endpoint; sem métricas/gráf
 ou atualização manual de métricas ainda. FR-019 permanece parcial: não há listagem
 ou seleção de vhosts pela sessão. Não declarar requisitos completos a partir deste
 incremento; ver M01/evidências e aguardar aprovação da conclusão da etapa.
+
+### Resultado vigente — leitura administrativa 4B.1
+
+ADR-0009 A aceita e gate revisado aprovado; consultas manuais de versões/vhosts
+visíveis implementadas/verificadas, sem seleção/troca do vhost ou CRUD. Lista
+completa limitada 200/256 KiB, metadados descartados e presença do nome atual,
+sem inferir permissões AMQP ou capacidades por versão/tag. FR-019/020 e M01/M06
+continuam parciais; seleção depende da 4B.2. Check 266 + seis Node, package/seis
+smokes e matriz final 60 checks reais aprovados no recorte macOS arm64/nó único.
+Conclusão e commit da 4B.1 aprovados por “Autorizado” em 2026-10-31; demais
+limitações mantidas. Registro nesta entrega, sem autorizar push ou 4B.2.

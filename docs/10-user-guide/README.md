@@ -49,7 +49,7 @@ Ainda não há instaladores publicados ou um fluxo de atualização automática.
 
 ## Conectar, acompanhar e encerrar uma sessão
 
-Em Conexões, selecione um perfil salvo que tenha senha disponível nesta execução e clique em Conectar. O vhost é o interpretado do Endpoint AMQPS; para mudá-lo, desconecte e edite esse campo. Não existe seleção de outro vhost pela sessão. Os testes avulsos ficam indisponíveis enquanto há sessão ou encerramento em curso.
+Em Conexões, selecione um perfil salvo que tenha senha disponível nesta execução e clique em Conectar. A sessão começa no vhost do Endpoint AMQPS. Para usar outro vhost temporariamente, consulte a lista no painel Informações administrativas. Os testes avulsos ficam indisponíveis enquanto há sessão ou encerramento em curso.
 
 O cabeçalho identifica nome, ambiente e vhost. Produção tem texto e símbolo de alerta. Conectado significa AMQPS estabelecido e autenticação HTTPS verificada, sem comprovar saúde do cluster, permissões de recursos ou capacidade de publicação. Fluxo não verificado significa que o broker ainda não enviou indicação de bloqueio/liberação; não é teste de publicação.
 
@@ -78,7 +78,7 @@ Em Conexões, mantenha selecionado o perfil da sessão ativa. O painel Informaç
 
 Consultar informações mostra as versões RabbitMQ e Management informadas pelo endpoint HTTPS. Campo ausente aparece Desconhecido. Série da matriz de referência não homologa todas as funcionalidades, permissões ou configurações. Outra versão ou prerelease aparece fora da matriz; isso não altera o broker nem habilita operações.
 
-Listar vhosts mostra uma lista completa limitada: até 200 nomes e 256 KiB de resposta. Não há paginação, pesquisa ou seleção de vhost. Se algum limite for ultrapassado, a resposta inteira é recusada; nenhum subconjunto é apresentado como completo. Metadados extras do broker são descartados e não aparecem no painel.
+Listar vhosts mostra uma lista completa limitada a 200 nomes e 256 KiB de resposta. Quando algum limite é ultrapassado, o painel recusa a lista inteira. Os metadados extras são descartados. A lista fica disponível para selecionar um vhost durante cinco minutos, enquanto a sessão e a janela permanecem no mesmo contexto.
 
 O nome exato do vhost atual é procurado na lista recebida. Visível no snapshot HTTPS não comprova acesso AMQP, direito de criar filas ou publicar. Não listado não comprova inexistência e não encerra a sessão. Monitoring e administrator podem visualizar vhosts sem acesso AMQP. Os dois endpoints do perfil podem apontar para brokers diferentes.
 
@@ -95,7 +95,9 @@ Uma recusa HTTP pode decorrer de permissão ou tag mesmo com senha válida. O ap
 1. Selecione o perfil, confira ambiente e vhost e clique em Conectar. Aguarde o estado HTTPS Verificado e mantenha o aplicativo em primeiro plano.
 2. No painel Informações administrativas, clique em Consultar informações para ler as versões ou em Listar vhosts para receber a lista visível.
 3. Confira fonte, vhost atual, data e eventuais erros. Use Cancelar consulta durante uma requisição; para atualizar o resultado, execute novamente a mesma ação.
-4. Para trocar o vhost da sessão, desconecte e edite o Endpoint AMQPS. A lista deste painel não altera o perfil ou o contexto ativo.
+4. Para trocar o vhost da sessão, clique em Usar este vhost ao lado do nome que deseja na lista. A seleção vale para esta sessão. Conectar novamente usa o vhost salvo no Endpoint AMQPS. Para mudar esse padrão, edite o perfil.
+5. A troca encerra a conexão AMQPS anterior antes de abrir a nova. Se o estado da conexão anterior ficar incerto, o aplicativo encerra os recursos locais e interrompe a troca. Verifique o broker antes de iniciar outra sessão. O painel mostra o vhost solicitado e informa quando o broker confirma o acesso. Uma recusa mantém o vhost solicitado sem voltar ao anterior.
+6. A abertura pode gerar registros no broker. Confira o ambiente e o nome exato antes da troca. O aplicativo mantém a verificação HTTPS da mesma sessão e invalida as listas anteriores. Clique em Listar vhosts para atualizar os nomes.
 
 - O painel não consulta rotas individuais de vhost. As versões de referência testadas apresentaram falhas de paginação e restrições dessas rotas; este recorte usa uma lista completa com limites explícitos. Filas, exchanges, mensagens e demais operações administrativas continuam indisponíveis.
 

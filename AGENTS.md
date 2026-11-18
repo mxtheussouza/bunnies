@@ -106,13 +106,13 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **4B.1 concluída e aprovada; registro da entrega neste commit**.
-- Última etapa concluída e aprovada: **4B.1 — contexto administrativo de leitura / ADR-0009 A**.
-- Entrega aprovada: `feat(management): add bounded broker information and vhost reads`
-  (commit deste registro; pai `aba792d`, identificador em `git log -1`).
+- Etapa atual: **4B.2 concluída e aprovada**.
+- Última etapa concluída e aprovada: **4B.2 — seleção temporária de vhost com
+  confirmação de fechamento**.
+- Entrega aprovada: `feat(connections): switch vhosts after confirmed close`
+  (entrega que contém este registro, pai `4a35424`).
 - Mudança da barra macOS em `9401448` preservada.
-- Próxima ação: aguardar instrução para preparar a próxima etapa.
-  Sem push, preparação/execução automática da 4B.2 ou nova implementação autorizados.
+- Próxima ação: aguardar solicitação para preparar o contrato da Etapa 5.
 
 Ao retomar, ler este arquivo, [PROJECTS_STATUS.md](PROJECTS_STATUS.md), a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -455,3 +455,54 @@ aceite. Resultados/limitações permanecem os apresentados; nenhum código ou gu
 alterado nesta Task, sem repetir execução funcional. Registrar somente essa entrega
 e seu aceite. Sem push ou preparação/execução da 4B.2 por inferência; este registro
 acompanha o commit de entrega.
+
+## Preparação vigente — 4B.2
+
+Em 2026-11-17, “Continue de onde parou” autorizou preparar/apresentar a etapa
+seguinte, não implementá-la. [Contrato 4B.2](docs/05-roadmap/roadmap.md) está
+**Proposed**, com B2-D01–08/B2-01–10: catálogo efêmero da lista 4B.1 no main,
+seleção explícita, 26 métodos propostos e transição AMQPS fail-closed apenas em
+memória. Não editar perfil nem tratar vhost visível como permissão AMQP.
+
+Gate real nas versões fixadas deve passar antes de UI/guia de funcionalidade.
+Sem nova consulta HTTPS, canal/recurso/fila, dependência, patch/ADR, persistência
+da seleção, código, broker, package/smoke, commit ou push nesta preparação.
+Etapa 5 exige contrato próprio. Consultar PROJECTS/estado antes de agir.
+
+## Autorização — 4B.2
+
+“Autoriz” respondeu à pergunta explícita de execução do contrato 4B.2 em
+2026-11-17. B2-D01–08 e B2-01–10 orientam a execução e as verificações locais.
+Executar primeiro o gate real no harness isolado. Uma divergência que exija
+mudar a semântica, cliente, patch ou dependências requer decisão antes dos
+dependentes. Conclusão, commit, push e Etapa 5 seguem sujeitos a aceites próprios.
+
+## Resultado inicial — Gate 4B.2 reprovado
+
+RabbitMQ 4.4.0 e 4.3.6 registraram duas conexões quando o fechamento anterior
+ficou sem confirmação e a substituta abriu. Quatro grupos passaram e um falhou
+por versão, com limpeza completa dos recursos próprios. A integração parou
+até o aceite de uma semântica revisada. Ver
+[evidências 4B.2](docs/07-testing/vhost-transition-4b2.md) e PROJECTS.
+
+## Revisão aprovada — 4B.2
+
+“Sim” aceitou exigir o fechamento confirmado. O gate revisto passou 12 checks
+reais, seis por versão. A implementação usa um catálogo efêmero no main e
+`selectSessionVhost` na ponte de 26 métodos. Estado remoto incerto bloqueia
+abertura automática pela transição. Aceite de conclusão e commit permanecem
+pendentes. Ver PROJECTS e evidências para resultados do pacote.
+
+## Resultado vigente — 4B.2 pronta para revisão
+
+Check 274 + seis Node, package/sete smokes, gate revisado 12 e matriz do pacote
+64 checks reais passaram. Guia/Ajuda e evidências sincronizados. A matriz foi
+repetida após oscilações de foco nativo, com foco e limpeza verificados no
+mesmo ASAR. Conclusão e commit aguardam aceite próprio.
+
+## Conclusão 4B.2 aprovada
+
+Em 2026-11-18, “Aprovado” aceitou a conclusão e autorizou o commit
+`feat(connections): switch vhosts after confirmed close`. Os 46 arquivos e
+o ASAR apresentado foram conferidos antes do registro. O aceite abrange a
+entrega local aprovada. A Etapa 5 exige solicitação e contrato próprios.

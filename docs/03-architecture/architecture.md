@@ -498,3 +498,12 @@ transportes. Ponte 25 métodos nomeados; canal bunnies:management e respostas
 validadas no preload. Painel em Conexões e guia único. Conclusão/commit aprovados
 por “Autorizado” em 2026-10-31; resultados/limitações nas evidências. Esse aceite
 não homologa demais alvos/HA nem autoriza push ou próxima etapa.
+
+## Seleção de vhost — 4B.2
+
+O catálogo no main vincula o identificador opaco ao snapshot completo e ao
+owner/sessionId/generation/revisão. `selectSessionVhost` revalida origem e revisão,
+invalida a geração antes da troca e altera só o argumento estruturado AMQPS.
+O serviço aguarda a confirmação do fechamento do handle anterior. Estado
+remoto incerto bloqueia o fluxo de troca e sua recuperação automática. O
+polling HTTPS continua independente. A ponte passa a 26 métodos específicos.

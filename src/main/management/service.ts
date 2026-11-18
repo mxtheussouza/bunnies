@@ -7,6 +7,8 @@ import type { SessionService } from "../sessions/sessionService";
 import type { ProfileService } from "../profiles/service";
 import { ProfileFailure } from "../profiles/errors";
 import { readManagement, ManagementFailure } from "./httpsRead";
+import type { SelectSessionVhostInput } from "../../shared/session";
+import { VhostCatalog } from "./vhostCatalog";
 type Active = {
   owner: number;
   input: ManagementInput;
@@ -16,12 +18,16 @@ export class ManagementService {
   private active?: Active;
   private disposed = false;
   private unsubscribe: () => void;
+  private catalog = new VhostCatalog();
   constructor(
     private readonly sessions: SessionService,
     private readonly profiles: ProfileService,
     private readonly read = readManagement,
   ) {
     this.unsubscribe = sessions.onChange(() => {
+      this.catalog.validateCurrent(
+        c => this.sessions.managementContext(c.owner, c).revision,
+      );
       const a = this.active;
       if (a)
         try {
@@ -81,12 +87,22 @@ export class ManagementService {
       await this.profiles.assertRevision(context.revision);
       signal.throwIfAborted();
       this.context(a);
-      return {
+      const header = {
         ...input,
-        source: "https-management",
+        source: "https-management" as const,
         checkedAt: new Date().toISOString(),
-        ...data,
       };
+      if (data.kind === "broker") return { ...header, ...data };
+      const selectionId = this.catalog.replace(
+        {
+          owner,
+          sessionId: input.sessionId,
+          generation: input.generation,
+          revision: context.revision,
+        },
+        data.names,
+      );
+      return { ...header, ...data, selectionId };
     };
     try {
       return await Promise.race([work(), aborted]);
@@ -120,8 +136,14 @@ export class ManagementService {
       a.controller.abort(new ManagementFailure("CANCELLED"));
     return undefined;
   }
+  authorizeVhost(owner: number, input: SelectSessionVhostInput) {
+    if (this.disposed) throw new ProfileFailure("UNAVAILABLE");
+    const { revision } = this.sessions.managementContext(owner, input);
+    this.catalog.authorize(owner, revision, input);
+  }
   dispose() {
     this.disposed = true;
+    this.catalog.clear();
     this.unsubscribe();
     this.active?.controller.abort(new ManagementFailure("CANCELLED"));
   }

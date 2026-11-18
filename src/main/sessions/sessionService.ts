@@ -4,6 +4,7 @@ import {
   type SessionSnapshot,
   type ConnectSessionInput,
   type SessionRef,
+  type SelectSessionVhostInput,
 } from "../../shared/session";
 import type { ProfileErrorCode } from "../../shared/profiles";
 import { parseAmqpsEndpoint } from "../../shared/amqpsEndpoint";
@@ -15,6 +16,7 @@ import {
   openAmqpsConnection,
   type AmqpsConnection,
 } from "../connections/amqpsConnection";
+import { VhostSwitchGuard } from "./vhostSwitch";
 type Kind = "https" | "amqps";
 type Work = {
   token: number;
@@ -31,6 +33,7 @@ type Context = {
   snapshot: SessionSnapshot;
   https: Work;
   amqps: Work;
+  vhostGuard: VhostSwitchGuard;
   release: () => void;
   loaded: boolean;
   stop?: Promise<void>;
@@ -136,6 +139,7 @@ export class SessionService {
         !a &&
         !s.https.checking &&
         !s.amqps.checking &&
+        !s.switching &&
         !c.https.pending &&
         !c.amqps.pending &&
         !this.paused
@@ -177,6 +181,7 @@ export class SessionService {
       loaded: false,
       https: { token: 0, attempted: false },
       amqps: { token: 0, attempted: false },
+      vhostGuard: new VhostSwitchGuard(),
     };
     this.context = c;
     c.bootstrap = setTimeout(() => {
@@ -237,12 +242,28 @@ export class SessionService {
       work.timer.unref();
     }
   }
-  private failed(c: Context, kind: Kind, code: ProfileErrorCode) {
+  private failed(
+    c: Context,
+    kind: Kind,
+    code: ProfileErrorCode,
+    connectionEnded = false,
+  ) {
     const work = c[kind];
     work.token++;
     clearTimeout(work.deadline);
     work.controller?.abort(new ProfileFailure(code));
     const state = c.snapshot[kind];
+    if (kind === "amqps") {
+      // Explicit refusals and TLS validation failures cannot leave an admitted vhost.
+      c.vhostGuard.disconnected(
+        !connectionEnded &&
+          !work.handle &&
+          (code === "AMQP_REFUSED" || code === "TEST_TLS"),
+      );
+      if (c.snapshot.profile?.savedVhost !== undefined && c.vhostGuard.blocked)
+        code = "AMQP_REMOTE_UNCONFIRMED";
+      c.snapshot.switching = undefined;
+    }
     state.phase = "failed";
     state.checking = false;
     state.error = code;
@@ -265,6 +286,12 @@ export class SessionService {
     const work = c[kind],
       state = c.snapshot[kind];
     if (!this.live(c) || this.paused || work.controller || work.handle) return;
+    if (
+      kind === "amqps" &&
+      (c.snapshot.switching?.phase === "closing" ||
+        (c.snapshot.profile?.savedVhost !== undefined && c.vhostGuard.blocked))
+    )
+      return;
     if (retry && state.retries >= 5) {
       this.publish(c);
       return;
@@ -273,6 +300,8 @@ export class SessionService {
       state.retries++;
       if (kind === "amqps") {
         c.snapshot.generation = ++this.generation;
+      }
+      if (kind === "amqps" && c.snapshot.profile?.savedVhost === undefined) {
         const pending = c.https.pending;
         const checking = c.snapshot.https.checking;
         this.cancelWork(c, "https");
@@ -324,17 +353,25 @@ export class SessionService {
       controller.signal.throwIfAborted();
       if (kind === "https") await this.httpsProbe(profile, controller.signal);
       else {
-        const handle = await this.open(profile, controller.signal, event => {
-          if (!valid()) return;
-          if (event.kind === "flow") {
-            c.snapshot.flow = event.blocked ? "blocked" : "unblocked";
-            state.phase = event.blocked ? "blocked" : "available";
-            this.publish(c);
-          } else {
-            clearTimeout(work.deadline);
-            this.failed(c, kind, event.code);
-          }
-        });
+        const handle = await this.open(
+          profile,
+          controller.signal,
+          event => {
+            if (!valid()) return;
+            if (event.kind === "flow") {
+              c.snapshot.flow = event.blocked ? "blocked" : "unblocked";
+              state.phase = event.blocked ? "blocked" : "available";
+              this.publish(c);
+            } else {
+              clearTimeout(work.deadline);
+              this.failed(c, kind, event.code, true);
+            }
+          },
+          {
+            vhost: c.snapshot.profile!.vhost,
+            onHandshakeStart: () => c.vhostGuard.handshakeStarted(),
+          },
+        );
         if (!valid() || controller.signal.aborted) {
           handle.destroy();
           controller.signal.throwIfAborted();
@@ -361,7 +398,7 @@ export class SessionService {
       if (kind === "https") {
         work.controller = undefined;
         this.schedule(c, kind, 5000, false);
-      }
+      } else c.snapshot.switching = undefined;
       this.publish(c);
     } catch (error) {
       if (!valid()) return;
@@ -390,6 +427,67 @@ export class SessionService {
     w.controller = undefined;
     c.snapshot[kind].checking = false;
   }
+  async selectVhost(
+    owner: number,
+    input: SelectSessionVhostInput,
+    authorize: () => void,
+  ) {
+    const { revision } = this.managementContext(owner, input);
+    authorize();
+    await this.profiles.assertRevision(revision);
+    this.managementContext(owner, input);
+    authorize();
+    const c = this.context!;
+    const s = c.snapshot;
+    const profile = s.profile!;
+    if (s.switching || profile.vhost === input.vhost)
+      throw new ProfileFailure("CONFLICT");
+    if (c.vhostGuard.blocked)
+      throw new ProfileFailure("AMQP_REMOTE_UNCONFIRMED");
+
+    const old = c.amqps.handle;
+    const from = profile.vhost;
+    const generation = ++this.generation;
+    s.generation = generation;
+    profile.savedVhost ??= from;
+    profile.vhost = input.vhost;
+    s.switching = {
+      from,
+      to: input.vhost,
+      startedAt: new Date().toISOString(),
+      phase: "closing",
+    };
+    s.amqps = { phase: "connecting", checking: true, retries: 0 };
+    s.flow = "unknown";
+    c.amqps.token++;
+    clearTimeout(c.amqps.timer);
+    clearTimeout(c.amqps.deadline);
+    c.amqps.pending = undefined;
+    c.amqps.handle = undefined;
+    if (!old) this.cancelWork(c, "amqps");
+    s.amqps.checking = true;
+    this.publish(c);
+    void this.finishVhostSwitch(c, generation, old);
+    return this.getState(owner);
+  }
+  private async finishVhostSwitch(
+    c: Context,
+    generation: number,
+    previous?: AmqpsConnection,
+  ) {
+    const confirmed = await c.vhostGuard.retire(previous).catch(() => false);
+    if (!this.live(c) || c.snapshot.generation !== generation) return;
+    this.cancelWork(c, "amqps");
+    const { snapshot: s } = c;
+    if (!confirmed) {
+      this.failed(c, "amqps", "AMQP_REMOTE_UNCONFIRMED");
+      return;
+    }
+    s.switching!.phase = "opening";
+    if (this.paused) this.schedule(c, "amqps", 0, false);
+    else void this.run(c, "amqps", false);
+    if (this.paused) this.publish(c);
+  }
   setVisible(visible: boolean) {
     this.visible = visible;
     this.visibilityChanged(false);
@@ -403,10 +501,26 @@ export class SessionService {
     if (!c || !this.live(c) || !c.loaded) return;
     if (this.paused) {
       for (const kind of ["https", "amqps"] as const) {
+        if (kind === "amqps" && c.snapshot.switching?.phase === "closing") {
+          if (suspend) this.cancelWork(c, kind);
+          continue;
+        }
         if (kind === "amqps" && c.amqps.handle && !suspend) continue;
         const w = c[kind],
           wasChecking = c.snapshot[kind].checking;
         this.cancelWork(c, kind);
+        if (kind === "amqps") {
+          c.vhostGuard.disconnected();
+          if (
+            c.snapshot.profile?.savedVhost !== undefined &&
+            c.vhostGuard.blocked
+          ) {
+            w.handle?.destroy();
+            w.pending = undefined;
+            this.failed(c, kind, "AMQP_REMOTE_UNCONFIRMED");
+            continue;
+          }
+        }
         if (kind === "amqps" && w.handle) {
           w.handle.destroy();
           w.handle = undefined;
@@ -463,6 +577,7 @@ export class SessionService {
       generation: c.snapshot.generation,
     };
     c.snapshot.desired = false;
+    c.snapshot.switching = undefined;
     c.snapshot.stopping = true;
     c.snapshot.generation = ++this.generation;
     c.snapshot.reason = reason;

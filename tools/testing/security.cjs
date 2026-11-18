@@ -52,6 +52,7 @@ module.exports = async function verifySecurity(application, page) {
       "onSessionState",
       "getBrokerInfo",
       "listSessionVhosts",
+      "selectSessionVhost",
       "cancelManagementRead",
       "openLink",
       "quit",

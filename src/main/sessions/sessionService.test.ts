@@ -4,7 +4,10 @@ import { SessionService } from "./sessionService";
 import { ConnectionActivity } from "../connections/activity";
 import { ProfileFailure } from "../profiles/errors";
 import type { ProfileService } from "../profiles/service";
-import type { AmqpsEvent } from "../connections/amqpsConnection";
+import type {
+  AmqpsEvent,
+  openAmqpsConnection,
+} from "../connections/amqpsConnection";
 const input = {
   profileId: "profile",
   revision: "revision",
@@ -44,17 +47,22 @@ function setup() {
     destroy: ReturnType<typeof vi.fn>;
   }> = [];
   const events: Array<(event: AmqpsEvent) => void> = [];
-  const open = vi.fn(async (_profile, _signal, onEvent) => {
-    events.push(onEvent);
-    const handle = {
-      vhost: "/",
-      flow: "unknown" as const,
-      close: vi.fn(async () => true),
-      destroy: vi.fn(),
-    };
-    handles.push(handle);
-    return handle;
-  });
+  const open = vi.fn(
+    async (
+      ...[, , onEvent, options]: Parameters<typeof openAmqpsConnection>
+    ) => {
+      events.push(onEvent!);
+      options?.onHandshakeStart?.();
+      const handle = {
+        vhost: "/",
+        flow: "unknown" as const,
+        close: vi.fn(async () => true),
+        destroy: vi.fn(),
+      };
+      handles.push(handle);
+      return handle;
+    },
+  );
   const https = vi.fn(async () => undefined),
     activity = new ConnectionActivity();
   const service = new SessionService(
@@ -80,6 +88,151 @@ const settle = () => vi.advanceTimersByTimeAsync(0);
 afterEach(async () => {
   for (const s of services.splice(0)) await s.dispose();
   vi.useRealTimers();
+});
+
+describe("temporary vhost transitions", () => {
+  const selection = (state: ReturnType<SessionService["getState"]>) => ({
+    sessionId: state.sessionId!,
+    generation: state.generation,
+    operationId: "operation",
+    selectionId: "snapshot",
+    vhost: "equipe/pedidos",
+  });
+
+  it("publishes the new context, waits for confirmed close, and connects using a structured override", async () => {
+    const f = setup();
+    f.service.connect(1, input);
+    await settle();
+    let confirm!: (value: boolean) => void;
+    f.handles[0].close.mockImplementation(
+      () =>
+        new Promise(resolve => {
+          confirm = resolve;
+        }),
+    );
+    const previous = f.service.getState(1);
+    const target = selection(previous);
+    const accepted = await f.service.selectVhost(1, target, () => undefined);
+    expect(accepted.generation).toBeGreaterThan(previous.generation);
+    expect(accepted.switching?.phase).toBe("closing");
+    expect(f.open).toHaveBeenCalledTimes(1);
+    await expect(
+      f.service.selectVhost(1, target, () => undefined),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+    confirm(true);
+    await settle();
+    expect(f.open).toHaveBeenCalledTimes(2);
+    expect(f.handles[0].destroy).toHaveBeenCalledOnce();
+    expect(f.open.mock.calls[1][0].amqpsUrl).toBe("amqps://localhost/%2F");
+    expect(f.open.mock.calls[1][3]?.vhost).toBe("equipe/pedidos");
+    expect(f.https).toHaveBeenCalledOnce();
+    const switched = f.service.getState(1);
+    expect(switched.profile).toMatchObject({
+      savedVhost: "/",
+      vhost: "equipe/pedidos",
+    });
+    expect(switched.switching).toBeUndefined();
+    f.events[0]({ kind: "closed", code: "AMQP_NETWORK" });
+    expect(f.service.getState(1).state).toBe("ready");
+    await f.service.disconnect(1, {
+      sessionId: switched.sessionId!,
+      generation: switched.generation,
+    });
+    f.service.connect(1, input);
+    await settle();
+    expect(f.service.getState(1).profile?.vhost).toBe("/");
+  });
+
+  it("keeps HTTPS and stops AMQP after unconfirmed close, even after restoring foreground", async () => {
+    const f = setup();
+    f.service.connect(1, input);
+    await settle();
+    f.handles[0].close.mockResolvedValue(false);
+    await f.service.selectVhost(
+      1,
+      selection(f.service.getState(1)),
+      () => undefined,
+    );
+    await settle();
+    f.service.setVisible(false);
+    f.service.setVisible(true);
+    await vi.advanceTimersByTimeAsync(35000);
+    expect(f.open).toHaveBeenCalledOnce();
+    expect(f.service.getState(1)).toMatchObject({
+      state: "degraded",
+      profile: { vhost: "equipe/pedidos", savedVhost: "/" },
+      amqps: { error: "AMQP_REMOTE_UNCONFIRMED", retries: 0 },
+      https: { phase: "available" },
+    });
+  });
+
+  it("cancels an unresolved prior handshake and never starts a replacement", async () => {
+    const f = setup();
+    f.open.mockImplementationOnce(async (...[, signal, , options]) => {
+      options?.onHandshakeStart?.();
+      return new Promise((_, reject) =>
+        signal.addEventListener("abort", () => reject(signal.reason), {
+          once: true,
+        }),
+      );
+    });
+    f.service.connect(1, input);
+    await settle();
+    await f.service.selectVhost(
+      1,
+      selection(f.service.getState(1)),
+      () => undefined,
+    );
+    await vi.advanceTimersByTimeAsync(35000);
+    expect(f.open).toHaveBeenCalledOnce();
+    expect(f.service.getState(1).amqps.error).toBe("AMQP_REMOTE_UNCONFIRMED");
+  });
+
+  it("preserves the requested vhost and does not retry or roll back after a broker refusal", async () => {
+    const f = setup();
+    f.service.connect(1, input);
+    await settle();
+    f.open.mockImplementationOnce(async (...[, , , options]) => {
+      options?.onHandshakeStart?.();
+      throw new ProfileFailure("AMQP_REFUSED");
+    });
+    await f.service.selectVhost(
+      1,
+      selection(f.service.getState(1)),
+      () => undefined,
+    );
+    await vi.advanceTimersByTimeAsync(35000);
+    expect(f.open).toHaveBeenCalledTimes(2);
+    expect(f.service.getState(1)).toMatchObject({
+      state: "degraded",
+      profile: { savedVhost: "/", vhost: "equipe/pedidos" },
+      amqps: { error: "AMQP_REFUSED", retries: 0 },
+    });
+  });
+
+  it("revalidates lifecycle after the profile read before starting a transition", async () => {
+    const f = setup();
+    f.service.connect(1, input);
+    await settle();
+    let finish!: () => void;
+    f.profiles.assertRevision.mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          finish = () => resolve(undefined);
+        }),
+    );
+    const state = f.service.getState(1);
+    const pending = f.service.selectVhost(1, selection(state), () => undefined);
+    await f.service.disconnect(1, {
+      sessionId: state.sessionId!,
+      generation: state.generation,
+    });
+    finish();
+    await expect(pending).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(f.open).toHaveBeenCalledOnce();
+    expect(f.handles[0].close).toHaveBeenCalledOnce();
+    expect(f.service.getState(1).profile?.vhost).toBe("/");
+  });
 });
 describe("session ownership and bounded recovery", () => {
   it("does no automatic network; owns one context and closes before permitting a probe", async () => {

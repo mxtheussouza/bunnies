@@ -4,13 +4,14 @@ import {
   type ManagementInput,
   type ManagementSnapshot,
 } from "../../shared/management";
+import { profileErrorMessages } from "../../shared/profiles";
 import { useSession } from "../shell/SessionProvider";
 import Button from "../components/Button";
 import StatusMessage from "../components/StatusMessage";
 type Kind = "broker" | "vhosts";
 type Entry = { data?: ManagementSnapshot; error?: string; failedAt?: string };
 export default function ManagementInfo() {
-  const { state } = useSession();
+  const { state, selectVhost, busy } = useSession();
   const eligible =
     state.desired &&
     !state.stopping &&
@@ -27,6 +28,15 @@ export default function ManagementInfo() {
   const brokerButton = React.useRef<HTMLButtonElement>(null),
     vhostsButton = React.useRef<HTMLButtonElement>(null);
   const returnFocus = React.useRef<Kind | null>(null);
+  const selectionHint = React.useId();
+  const switchStatus = React.useRef<HTMLParagraphElement>(null);
+  const focusSwitch = React.useRef(false);
+  React.useLayoutEffect(() => {
+    if (focusSwitch.current && state.profile?.savedVhost !== undefined) {
+      switchStatus.current?.focus();
+      focusSwitch.current = false;
+    }
+  }, [context, state.profile?.savedVhost]);
   React.useLayoutEffect(() => {
     if (!running && returnFocus.current) {
       (returnFocus.current === "broker"
@@ -131,6 +141,39 @@ export default function ManagementInfo() {
         Fonte: HTTPS Management · {state.profile?.name} · Vhost atual:{" "}
         <b>{state.profile?.vhost}</b>.
       </p>
+      {state.profile?.savedVhost !== undefined && (
+        <p ref={switchStatus} tabIndex={-1} role="status">
+          Vhost salvo <b>{state.profile.savedVhost}</b>.{" "}
+          {state.profile.vhost !== state.profile.savedVhost &&
+            "A seleção atual é temporária. "}
+          {state.switching ? (
+            <>
+              {state.switching.phase === "closing"
+                ? "Encerrando AMQPS em"
+                : "Abrindo AMQPS para"}{" "}
+              <b>
+                {state.switching.phase === "closing"
+                  ? state.switching.from
+                  : state.switching.to}
+              </b>
+              {" desde "}
+              <time dateTime={state.switching.startedAt}>
+                {new Date(state.switching.startedAt).toLocaleTimeString(
+                  "pt-BR",
+                )}
+              </time>
+              .
+            </>
+          ) : state.amqps.error ? (
+            profileErrorMessages[state.amqps.error]
+          ) : state.amqps.phase === "available" ||
+            state.amqps.phase === "blocked" ? (
+            "Vhost aceito por AMQPS."
+          ) : (
+            "Aguardando AMQPS."
+          )}
+        </p>
+      )}
       <p className="profile-hint">
         Consultas manuais de leitura. Vhosts visíveis não comprovam acesso AMQP.
         Os endpoints HTTPS e AMQPS podem apontar para brokers diferentes.
@@ -177,7 +220,12 @@ export default function ManagementInfo() {
         </p>
       )}
       {(["broker", "vhosts"] as const).map(kind => {
-        const { data, error, failedAt } = entries[kind];
+        const { data: stored, error, failedAt } = entries[kind];
+        const data =
+          stored?.sessionId === state.sessionId &&
+          stored?.generation === state.generation
+            ? stored
+            : undefined;
         return (
           <section
             key={kind}
@@ -232,10 +280,49 @@ export default function ManagementInfo() {
                         : "não listado no snapshot HTTPS; não comprova inexistência"}
                       .
                     </p>
+                    {data.names.some(name => name !== data.currentVhost) && (
+                      <p className="profile-hint" id={selectionHint}>
+                        Usar este vhost encerra a conexão AMQPS atual e pode
+                        gerar registros no broker. A lista serve para seleção
+                        por cinco minutos.
+                      </p>
+                    )}
                     {data.names.length ? (
                       <ul className="management-vhosts">
                         {data.names.map(name => (
-                          <li key={name}>{name}</li>
+                          <li key={name}>
+                            <span className="management-vhost-name">
+                              {name}
+                            </span>
+                            {name !== data.currentVhost && (
+                              <Button
+                                aria-label={`Usar este vhost: ${name}`}
+                                aria-describedby={selectionHint}
+                                disabled={
+                                  !!error ||
+                                  !!running ||
+                                  busy ||
+                                  !!state.switching ||
+                                  state.amqps.error ===
+                                    "AMQP_REMOTE_UNCONFIRMED"
+                                }
+                                onClick={() => {
+                                  focusSwitch.current = true;
+                                  void selectVhost({
+                                    sessionId: data.sessionId,
+                                    generation: data.generation,
+                                    operationId: crypto.randomUUID(),
+                                    selectionId: data.selectionId,
+                                    vhost: name,
+                                  }).then(success => {
+                                    if (!success) focusSwitch.current = false;
+                                  });
+                                }}
+                              >
+                                Usar este vhost
+                              </Button>
+                            )}
+                          </li>
                         ))}
                       </ul>
                     ) : (
@@ -253,8 +340,7 @@ export default function ManagementInfo() {
       })}
       <p className="profile-hint">
         A lista inteira é recusada se ultrapassar os limites. O servidor pode
-        construir uma resposta maior antes da interrupção pelo cliente. Não há
-        seleção de vhost ou alteração de recursos neste painel.
+        construir uma resposta maior antes da interrupção pelo cliente.
       </p>
     </section>
   );

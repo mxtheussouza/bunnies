@@ -9,6 +9,7 @@ const input = {
 const snapshot = {
   ...input,
   kind: "vhosts",
+  selectionId: "00000000-0000-4000-8000-000000000003",
   names: ["/", ".."],
   currentVhost: "/",
   currentVisible: true,
@@ -42,6 +43,7 @@ describe("closed management boundary DTOs", () => {
       { ...snapshot, names: Array(201).fill("/") },
       { ...snapshot, checkedAt: "now" },
       { ...snapshot, currentVhost: "\ud800" },
+      { ...snapshot, selectionId: "stale" },
     ])
       expect(isManagementSnapshot(v)).toBe(false);
   });

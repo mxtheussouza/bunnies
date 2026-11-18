@@ -164,6 +164,8 @@ export function createDesktopApi(
     connectSession: input => sessionCall({ command: "connectSession", input }),
     disconnectSession: input =>
       sessionCall({ command: "disconnectSession", input }),
+    selectSessionVhost: input =>
+      sessionCall({ command: "selectSessionVhost", input }),
     onSessionState: listener =>
       typeof listener === "function"
         ? subscribeSession(listener)
@@ -186,6 +188,21 @@ export function createDesktopApi(
       const result = (await invokeSession(
         request,
       )) as ProfileResult<SessionSnapshot>;
+      if (
+        request.command === "selectSessionVhost" &&
+        (!managementId(result?.requestId) ||
+          (result?.ok === true &&
+            (!closedObject(result, ["ok", "requestId", "value"]) ||
+              !isSessionSnapshot(result.value) ||
+              result.value.sessionId !== request.input.sessionId ||
+              result.value.generation <= request.input.generation ||
+              result.value.profile?.vhost !== request.input.vhost)) ||
+          (result?.ok === false &&
+            (!closedObject(result, ["ok", "requestId", "error"]) ||
+              !closedObject(result.error, ["code", "message"]) ||
+              typeof result.error.code !== "string")))
+      )
+        throw new Error("Invalid vhost selection response");
       if (result?.ok === true && isSessionSnapshot(result.value)) return result;
       if (
         result?.ok === false &&

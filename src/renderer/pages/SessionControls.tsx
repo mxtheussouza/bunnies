@@ -58,8 +58,8 @@ export default function SessionControls({
       </div>
       <p className="profile-hint">
         Conectar mantém AMQPS aberto e verifica HTTPS periodicamente. Não cria
-        canais, publica ou consome mensagens. Para trocar perfil ou vhost,
-        desconecte primeiro.
+        canais, publica ou consome mensagens. Para trocar de perfil, desconecte
+        primeiro.
       </p>
       {error && <StatusMessage tone="danger" title={error} />}
       {state.reason && (

@@ -310,3 +310,11 @@ senha incorreta. Limites de 200/256 KiB não garantem baixo custo no servidor.
 
 Ponte 25 métodos nomeados; CSP/sandbox/TLS, patch ADR-0008 e gates de persistência
 preservados. Ver evidências antes de declarar homologação da entrega.
+
+### Seleção de vhost 4B.2
+
+O main autoriza somente igualdade exata de nome em catálogo vigente da própria
+sessão. O renderer transmite referência opaca, nome e IDs de contexto. O destino
+TLS e as credenciais são resolvidos pelo perfil salvo. A troca invalida resultados
+da geração antiga e depende da confirmação de fechamento quando havia conexão
+anterior. A confirmação não pode ser inferida de uma destruição local de socket.

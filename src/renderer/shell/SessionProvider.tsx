@@ -3,6 +3,7 @@ import {
   emptySession,
   type SessionSnapshot,
   type ConnectSessionInput,
+  type SelectSessionVhostInput,
 } from "../../shared/session";
 import { profileErrorMessages } from "../../shared/profiles";
 type Value = {
@@ -11,6 +12,7 @@ type Value = {
   busy: boolean;
   connect(input: ConnectSessionInput): Promise<void>;
   disconnect(): Promise<void>;
+  selectVhost(input: SelectSessionVhostInput): Promise<boolean>;
 };
 const Context = React.createContext<Value>({
   state: emptySession(),
@@ -18,6 +20,7 @@ const Context = React.createContext<Value>({
   busy: false,
   connect: async () => undefined,
   disconnect: async () => undefined,
+  selectVhost: async () => false,
 });
 export const useSession = () => React.useContext(Context);
 export const sessionLabels = {
@@ -74,7 +77,7 @@ export default function SessionProvider({
   async function command(
     operation: () => ReturnType<typeof window.bunnies.getSessionState>,
   ) {
-    if (pending.current) return;
+    if (pending.current) return false;
     pending.current = true;
     setBusy(true);
     setError("");
@@ -84,8 +87,10 @@ export default function SessionProvider({
         if (result.ok) accept(result.value);
         else setError(profileErrorMessages[result.error.code]);
       }
+      return result.ok;
     } catch {
       if (mounted.current) setError(profileErrorMessages.UNAVAILABLE);
+      return false;
     } finally {
       pending.current = false;
       if (mounted.current) setBusy(false);
@@ -97,15 +102,20 @@ export default function SessionProvider({
         state,
         error,
         busy,
-        connect: input => command(() => window.bunnies.connectSession(input)),
-        disconnect: () =>
-          command(() => {
+        connect: async input => {
+          await command(() => window.bunnies.connectSession(input));
+        },
+        selectVhost: input =>
+          command(() => window.bunnies.selectSessionVhost(input)),
+        disconnect: async () => {
+          await command(() => {
             const s = current.current;
             return window.bunnies.disconnectSession({
               sessionId: s.sessionId!,
               generation: s.generation,
             });
-          }),
+          });
+        },
       }}
     >
       {children}

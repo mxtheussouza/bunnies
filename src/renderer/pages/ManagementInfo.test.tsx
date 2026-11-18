@@ -6,6 +6,7 @@ import { emptySession } from "../../shared/session";
 import ManagementInfo from "./ManagementInfo";
 const mock = vi.hoisted(() => ({
   state: {} as ReturnType<typeof emptySession>,
+  selectVhost: vi.fn(),
 }));
 vi.mock("../shell/SessionProvider", () => ({ useSession: () => mock }));
 const broker = vi.fn(),
@@ -63,7 +64,8 @@ describe("explicit administrative UI", () => {
     );
     await waitFor(() => expect(document.activeElement).toBe(button));
   });
-  it("shows complete-list visibility without AMQP authorization or a selector", async () => {
+  it("lists exact names and switches only after an explicit action", async () => {
+    mock.selectVhost.mockResolvedValue(true);
     vhosts.mockImplementation(async input => ({
       ok: true,
       value: {
@@ -73,6 +75,7 @@ describe("explicit administrative UI", () => {
         currentVhost: "/",
         currentVisible: false,
         checkedAt: "2026-10-30T12:00:00.000Z",
+        selectionId: "00000000-0000-4000-8000-000000000002",
       },
     }));
     render(<ManagementInfo />);
@@ -85,6 +88,17 @@ describe("explicit administrative UI", () => {
       "não listado no snapshot HTTPS",
     );
     expect(document.body.textContent).toContain("Não há paginação");
+    expect(mock.selectVhost).not.toHaveBeenCalled();
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Usar este vhost: .." }));
+    expect(mock.selectVhost).toHaveBeenCalledWith(
+      expect.objectContaining({
+        selectionId: "00000000-0000-4000-8000-000000000002",
+        vhost: "..",
+        generation: 1,
+      }),
+    );
   });
   it("marks last success stale after sanitized failure with a separate failure date", async () => {
     broker

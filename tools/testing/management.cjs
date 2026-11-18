@@ -41,17 +41,25 @@ async function verifyManagement(page, version, names) {
     exact: true,
   });
   await list.getByText(/Lista completa recebida/).waitFor();
-  const actual = await list.getByRole("listitem").allTextContents();
+  const actual = await list.locator(".management-vhost-name").allTextContents();
   for (const name of names) assert.ok(actual.includes(name));
   assert.equal(await region.locator("select").count(), 0);
   assert.ok((await region.locator("time").count()) >= 2);
   assert.ok((await list.textContent()).includes("Não há paginação"));
   return [
     "management-manual-overview-dated-and-keyboard-focus",
-    "management-visible-vhosts-exact-names-without-selector",
+    "management-visible-vhosts-exact-names",
   ];
 }
-async function run() {
+async function selectVhost(page, target) {
+  const button = page.getByRole("button", {
+    name: `Usar este vhost: ${target}`,
+    exact: true,
+  });
+  await button.focus();
+  await page.keyboard.press("Enter");
+}
+async function run(transitionSmoke) {
   const fixture = await createTlsFixture(),
     root = await mkdtemp(path.join(tmpdir(), "bunnies-management-smoke-"));
   const file = path.join(root, "profiles.json"),
@@ -208,6 +216,169 @@ async function run() {
       name: "Listar vhosts",
       exact: true,
     });
+    if (transitionSmoke) {
+      const initial = await state();
+      const stale = await page.evaluate(async () => {
+        const s = (await window.bunnies.getSessionState()).value;
+        return (
+          await window.bunnies.listSessionVhosts({
+            sessionId: s.sessionId,
+            generation: s.generation,
+            operationId: window.crypto.randomUUID(),
+          })
+        ).value;
+      });
+      await listButton.click();
+      await until(async () => await listButton.isEnabled());
+      const denied = await page.evaluate(
+        v =>
+          window.bunnies.selectSessionVhost({
+            sessionId: v.sessionId,
+            generation: v.generation,
+            selectionId: v.selectionId,
+            operationId: window.crypto.randomUUID(),
+            vhost: "..",
+          }),
+        stale,
+      );
+      assert.equal(denied.error?.code, "CONFLICT");
+      assert.equal(peer.attempts, 1);
+      await selectVhost(page, "..");
+      await until(async () => {
+        const s = await state();
+        return (
+          s.generation > initial.generation &&
+          s.state === "ready" &&
+          s.profile.vhost === ".."
+        );
+      });
+      assert.deepEqual(
+        peer.records.map(r => r.vhost),
+        ["/", ".."],
+      );
+      assert.equal(peer.records[0].closeConfirmed, true);
+      assert.equal((await state()).profile.savedVhost, "/");
+      assert.equal(await readFile(file, "utf8"), before);
+      await until(() =>
+        region
+          .locator("[role=status]")
+          .filter({ hasText: "Vhost aceito por AMQPS." })
+          .evaluate(e => document.activeElement === e),
+      );
+      assert.equal(
+        await region
+          .getByRole("button", { name: "Usar este vhost: ..", exact: true })
+          .count(),
+        0,
+      );
+      checks.push(
+        "select-dated-vhost-keyboard-focus-confirmed-close-no-profile-write",
+      );
+
+      await listButton.click();
+      await region
+        .getByText("visível no snapshot HTTPS", { exact: false })
+        .waitFor();
+      const sample = region.getByRole("button", {
+        name: "Usar este vhost: equipe/pedidos",
+        exact: true,
+      });
+      for (const [theme, zoom] of [
+        ["dark", 1],
+        ["light", 2],
+      ]) {
+        await page
+          .getByRole("combobox", { name: "Tema", exact: true })
+          .selectOption(theme);
+        await page.waitForFunction(
+          value => document.documentElement.dataset.theme === value,
+          theme,
+        );
+        await win.evaluate(
+          (w, factor) => w.webContents.setZoomFactor(factor),
+          zoom,
+        );
+        await page.waitForFunction(
+          width => window.innerWidth === width,
+          1200 / zoom,
+        );
+        await sample.scrollIntoViewIfNeeded();
+        await sample.evaluate(el => el.scrollIntoView({ block: "center" }));
+        await page.evaluate(
+          () =>
+            new Promise(resolve =>
+              window.requestAnimationFrame(() =>
+                window.requestAnimationFrame(resolve),
+              ),
+            ),
+        );
+        assert.equal(await sample.isVisible(), true);
+        assert.equal(
+          await sample.evaluate(el => {
+            const box = el.getBoundingClientRect();
+            return el.contains(
+              document.elementFromPoint(
+                box.x + box.width / 2,
+                box.y + box.height / 2,
+              ),
+            );
+          }),
+          true,
+        );
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= window.innerWidth,
+          ),
+          true,
+        );
+        await writeFile(
+          `out/vhost-transition-4b2-${theme}-${zoom * 100}.png`,
+          Buffer.from(
+            await win.evaluate(async w =>
+              (await w.capturePage()).toPNG().toString("base64"),
+            ),
+            "base64",
+          ),
+        );
+      }
+      await win.evaluate(w => w.webContents.setZoomFactor(1));
+      await page.waitForFunction(() => window.innerWidth === 1200);
+      checks.push("selection-visible-in-both-themes-and-zoom-200");
+      peer.mode = "stallClose";
+      await selectVhost(page, "equipe/pedidos");
+      await until(
+        async () => (await state()).amqps.error === "AMQP_REMOTE_UNCONFIRMED",
+      );
+      assert.equal((await state()).https.phase, "available");
+      assert.equal(peer.attempts, 2);
+      checks.push("unconfirmed-close-blocks-replacement-and-keeps-https");
+      await page
+        .getByRole("button", { name: "Desconectar", exact: true })
+        .click();
+      await until(
+        async () => !(await state()).desired && !(await state()).stopping,
+      );
+      peer.mode = "ok";
+      await page.getByRole("button", { name: "Conectar", exact: true }).click();
+      await until(async () => (await state()).state === "ready");
+      assert.equal((await state()).profile.vhost, "/");
+      assert.equal(peer.records[2].vhost, "/");
+      assert.equal(await readFile(file, "utf8"), before);
+      assert.ok(
+        peer.records.every(record =>
+          record.channels.every(channel => channel === 0),
+        ),
+      );
+      assert.deepEqual(errors, []);
+      assert.deepEqual(external, []);
+      checks.push("explicit-reactivation-uses-saved-vhost-and-zero-channels");
+      await writeFile(
+        "out/vhost-transition-4b2-smoke-results.json",
+        JSON.stringify({ passed: true, checks }, null, 2) + "\n",
+      );
+      console.log(`Vhost transition smoke: ${checks.length} groups passed`);
+      return;
+    }
     mode = "denied";
     await listButton.click();
     await region
@@ -368,9 +539,9 @@ async function run() {
     await rm(root, { recursive: true, force: true });
   }
 }
-module.exports = { verifyManagement };
+module.exports = { verifyManagement, selectVhost };
 if (require.main === module)
-  run().catch(error => {
+  run(process.argv.includes("--vhost-transition")).catch(error => {
     console.error(error);
     process.exitCode = 1;
   });

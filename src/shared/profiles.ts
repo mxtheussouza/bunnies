@@ -92,6 +92,8 @@ export const profileErrorMessages = {
     "O endpoint não concluiu uma negociação AMQP 0-9-1 compatível.",
   AMQP_CLOSE:
     "O fechamento da conexão AMQPS não foi confirmado no prazo. Os recursos locais foram encerrados.",
+  AMQP_REMOTE_UNCONFIRMED:
+    "A conexão AMQPS anterior pode continuar no broker. A troca foi interrompida. Verifique o broker antes de iniciar outra sessão.",
 } as const;
 export type ProfileErrorCode = keyof typeof profileErrorMessages;
 export type ProfileResult<T> =

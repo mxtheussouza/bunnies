@@ -263,3 +263,13 @@ continuam parciais; seleção depende da 4B.2. Check 266 + seis Node, package/se
 smokes e matriz final 60 checks reais aprovados no recorte macOS arm64/nó único.
 Conclusão e commit da 4B.1 aprovados por “Autorizado” em 2026-10-31; demais
 limitações mantidas. Registro nesta entrega, sem autorizar push ou 4B.2.
+
+## Controle de contexto — 4B.2
+
+Uma ação explícita em Conexões seleciona o vhost por meio do catálogo
+administrativo. A geração muda antes de qualquer I/O. O novo vhost usa os
+mesmos parâmetros do perfil no main e altera somente a sessão. A troca
+aguarda a confirmação de fechamento e conserva a verificação HTTPS. A
+reativação explícita volta ao vhost salvo. Em caso de estado remoto incerto,
+consulte o broker antes de iniciar outra sessão.
+[Evidências](../07-testing/vhost-transition-4b2.md).

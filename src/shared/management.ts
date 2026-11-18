@@ -53,7 +53,7 @@ export type VhostsData = {
 export type ManagementSnapshot = ManagementInput & {
   source: "https-management";
   checkedAt: string;
-} & (BrokerData | VhostsData);
+} & (BrokerData | (VhostsData & { selectionId: string }));
 export type ManagementRequest = {
   command: "getBrokerInfo" | "listSessionVhosts" | "cancelManagementRead";
   input: ManagementInput;
@@ -134,7 +134,7 @@ export function isManagementSnapshot(
     v.kind === "broker"
       ? ["matrix"]
       : v.kind === "vhosts"
-        ? ["names", "currentVhost", "currentVisible"]
+        ? ["names", "currentVhost", "currentVisible", "selectionId"]
         : null;
   if (
     !extra ||
@@ -168,6 +168,7 @@ export function isManagementSnapshot(
     );
   return (
     boundedManagementText(v.currentVhost, 255) &&
+    managementId(v.selectionId) &&
     Array.isArray(v.names) &&
     v.names.length <= MAX_VISIBLE_VHOSTS &&
     v.names.every(name => boundedManagementText(name, 255)) &&

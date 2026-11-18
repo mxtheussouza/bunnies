@@ -1,10 +1,9 @@
 # Roadmap e contratos de execução
 
-Atualizado em: 2026-10-31. Etapas 0–3B, 4A.1, DOC.1 e 4A.2A/B/C concluídas e
-aprovadas. Última entrega: `aba792d` (4A.2C, incluindo alternativa A da ADR-0008).
-Oito ADRs e D3A-01–08 aceitos. Contrato 4B.1 autorizado por “Autorizado”;
-gate original reprovou e ADR-0009 A foi aceita. Gate revisado aprovado nas duas
-versões; conclusão/commit aprovados em 2026-10-31. Histórico preservado.
+Atualizado em: 2026-11-18. Etapas 0–3B, 4A.1, DOC.1, 4A.2A/B/C e 4B.1/4B.2
+concluídas e aprovadas. Nove ADRs e D3A-01–08 aceitos. O gate 4B.2 inicial
+falhou nas duas versões e o gate revisto passou após o aceite do fechamento
+confirmado. “Aprovado” aceitou a conclusão e o commit da 4B.2.
 
 ## Sequência proposta
 
@@ -20,8 +19,8 @@ versões; conclusão/commit aprovados em 2026-10-31. Histórico preservado.
 | 4A.1 | Perfis locais e proteção condicionada de credenciais | Concluída e aprovada; commit autorizado |
 | DOC.1 | Histórico vivo, guia e Ajuda offline | Concluída e aprovada; commit 66183f7 |
 | 4A.2 | Testes HTTPS/AMQPS, CA customizada e ciclo de sessão | A/B/C concluídas/aprovadas; última entrega aba792d |
-| 4B.1 | Contexto administrativo: versão, vhosts visíveis e leitura do vhost atual | Concluída/aprovada; registro neste commit |
-| 4B.2 | Seleção de vhost e transição de contexto; detalhar próximas consultas | Sem contrato/autorização |
+| 4B.1 | Contexto administrativo: versão, vhosts visíveis e leitura do vhost atual | Concluída/aprovada; commit `4a35424` |
+| 4B.2 | Seleção de vhost e transição de contexto | Concluída e aprovada em 2026-11-18 |
 | 5 | Filas e proteção das operações destrutivas | Proposta |
 | 6 | Exchanges e bindings | Proposta |
 | 7 | Publicação AMQP, confirmações e falhas de rede | Proposta |
@@ -1405,3 +1404,217 @@ feat(management): add bounded broker information and vhost reads. Conferidos os 
 arquivos/ASAR apresentados; este registro acompanha a entrega. Resultados e
 limitações preservados, sem código/guia alterados no aceite e sem nova execução
 funcional. Não autoriza push ou preparar/implementar a próxima fase automaticamente.
+
+## Contrato autorizado — 4B.2: seleção de vhost e transição de contexto
+
+Data: 2026-11-17. Status: **autorizado; revisão confirmada por “Sim” e gate revisto aprovado**.
+Base observada: `4a35424`, branch `chore/modernization-app`, Git limpo e entrega
+4B.1 aprovada. O pedido “Continue de onde parou” iniciou a preparação da
+proposta. O aceite posterior autoriza B2-D01–08/B2-01–10.
+
+| Campo                  | Proposta para aprovação                                                                                                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Identificador/nome     | 4B.2 — Seleção de vhost e transição de contexto                                                                                                                                                                           |
+| Objetivo               | Permitir escolher explicitamente um nome retornado pela lista limitada da 4B.1 e transicionar a conexão AMQPS da sessão para esse vhost, sem editar o perfil                                                              |
+| Justificativa          | A sessão hoje usa apenas o vhost salvo na URL; filas e demais recursos precisam de um contexto selecionado, mas visibilidade HTTPS não comprova permissão AMQP                                                            |
+| Escopo                 | Catálogo efêmero no main, comando específico de seleção, transição fail-closed da sessão/AMQPS, estado/UX/guia e testes isolados/reais                                                                                    |
+| Tarefas                | Provar gate de lifecycle nas duas versões; implementar catálogo/autoridade e override estruturado de vhost; transicionar sessão; integrar IPC/preload/UI; atualizar guia/documentos; executar check/package/smokes/matriz |
+| Módulos afetados       | M01 e M06; sessão, conexão AMQPS, ManagementInfo/Conexões, IPC, segurança, Ajuda e testes transversais                                                                                                                    |
+| Arquivos previstos     | Lista abaixo; sem reorganização geral, schema de perfil ou nova rota de produto                                                                                                                                           |
+| Dependências           | 4A.2C/ADR-0008 A e 4B.1/ADR-0009 A aprovadas; amqplib 2.2.0/patch vigente; nenhuma dependência ou alteração de lock nova                                                                                                  |
+| Riscos                 | Nome arbitrário vindo do renderer, snapshot antigo, duas conexões simultâneas, contexto antigo reaparecer, confundir visibilidade com acesso, editar perfil sem consentimento ou reaproveitar resposta de outra geração   |
+| Critérios de aceitação | B2-01–10 abaixo, gate real inicial aprovado, regressões/documentação sincronizadas e limitações apresentadas para aceite de conclusão                                                                                     |
+| Estratégia de testes   | Unidade/contrato/IPC/componentes, fixture AMQP adversarial, package e sete smokes sequenciais, matriz isolada RabbitMQ 4.4.0/4.3.6                                                                                        |
+| Resultado esperado     | Sessão permanece única e passa a usar, somente em memória, o vhost escolhido e efetivamente aceito pelo AMQP; falha deixa estado explícito sem rollback silencioso                                                        |
+| Impacto documental     | PROJECTS/AGENTS/roadmap/estado/progresso, requisitos/NFR, arquitetura/segurança, M01/M06/índice, guia canônico/Markdown/README e novas evidências 4B.2                                                                    |
+
+### Escolhas e limites propostos
+
+1. **B2-D01 — Origem autorizada da seleção.** Uma listagem 4B.1 aprovada
+   passa a devolver `selectionId` opaco, criado no main. O main mantém no máximo
+   um catálogo completo de até 200 nomes por sessão/janela, somente em memória,
+   vinculado a owner, sessionId, generation, revision e instante. Seleção recebe
+   `selectionId` e nome exato; o main exige pertinência ao catálogo. Renderer não
+   fornece URL, endpoint, credencial, CA ou opção de transporte. Catálogo expira
+   em **cinco minutos**, é substituído pela próxima lista e invalidado por nova
+   generation, mudança de perfil/revisão, background/suspend, reload/close/quit,
+   desconexão ou descarte do serviço. Não persistir nomes/token em disco.
+2. **B2-D02 — Ação explícita e sem persistência.** A UI oferece “Usar este
+   vhost” somente após listagem manual e em linha distinta do vhost atual. Abrir a
+   tela, listar, focar, restaurar ou reconectar não seleciona nada automaticamente.
+   A troca não altera `amqpsUrl`, JSON, revision, senha, CA ou perfil; ao encerrar e
+   ativar novamente, vale o vhost salvo na URL. Não adicionar preferência de
+   “último vhost”. Produção continua identificada por texto/símbolo; a ação
+   informa que fecha a conexão AMQPS atual e pode gerar login/logs no broker.
+3. **B2-D03 — Transição fail-closed.** Ao aceitar a seleção, o main incrementa
+   generation e publica o novo contexto desejado **antes** de I/O; cancela retry/
+   abertura AMQPS antiga, fecha a conexão antiga por até 1 s e a destrói antes de
+   abrir a nova. Nunca manter duas conexões AMQPS de trabalho simultâneas nem
+   continuar no vhost anterior enquanto a UI mostra o novo. Abertura usa o mesmo
+   destino, TLS, usuário, senha e CA do perfil/revisão, mudando somente o campo
+   estruturado de vhost no main; sem remontar URL com segredo ou aceitar override
+   genérico. Vhost atual selecionado deve ficar visível durante connecting/falha.
+4. **B2-D04 — Falha sem rollback implícito.** Visibilidade HTTPS não é rotulada
+   como permissão AMQP. Se o broker recusar o vhost/usuário, TLS/protocolo falhar
+   ou o prazo terminar, a sessão fica degradada no novo contexto desejado, HTTPS
+   pode continuar disponível e o vhost antigo não é reaberto automaticamente.
+   Erros terminais não recebem retry; somente rede/timeout seguem a cota restante
+   de até cinco tentativas da ativação, reiniciada para essa ação explícita e
+   sem reset por sucesso. Usuário pode escolher outro catálogo vigente, listar de
+   novo ou desconectar. Não diagnosticar vhost inexistente versus sem permissão a
+   partir da recusa AMQP sanitizada.
+5. **B2-D05 — HTTPS e dados antigos.** A troca não reinicia whoami nem muda o
+   endpoint HTTPS. Incrementar generation invalida consulta administrativa em voo,
+   catálogo anterior e resultados de recursos futuros; o polling HTTPS da mesma
+   sessão pode continuar conforme 4A.2C, sem sobrepor chamadas. Após a transição,
+   a próxima listagem deriva `currentVisible` do vhost selecionado. Endpoints HTTPS
+   e AMQPS ainda podem apontar a brokers diferentes; sucesso em ambos não prova
+   identidade comum. Nenhuma consulta nova à API Management é adicionada na 4B.2.
+6. **B2-D06 — Lifecycle e concorrência.** Uma transição por vez; seleção
+   repetida/concorrente, nome atual ou token antigo é recusado antes de rede. Não
+   há fila de trocas. Desconectar, editar/remover perfil, mudança externa, reload,
+   crash, close, quit ou suspend aborta/destroi o trabalho; background aborta a
+   abertura e conserva o contexto desejado pausado, sem rajada ao voltar. Resultado
+   tardio nunca restaura generation/vhost/handle antigo. Seleção não interfere em
+   probes de teste, que permanecem mutuamente exclusivos com sessão ativa.
+7. **B2-D07 — Prazo e conexão.** Fechamento antigo usa o limite vigente de 1 s;
+   a nova abertura AMQPS usa deadline total de 15 s e heartbeat/frame/channelMax
+   vigentes. O fechamento acontece antes da abertura; por isso o tempo percebido
+   pode chegar a 16 s, sem esconder as duas fases. Nenhum canal, mensagem, fila,
+   exchange, binding ou consulta de topologia é criado. O gate deve provar conexões
+   zero/uma e cleanup, não apenas observar estado da UI.
+8. **B2-D08 — IPC e interface.** Um método específico adicional,
+   `selectSessionVhost({ sessionId, generation, operationId, selectionId, vhost })`,
+   no canal de sessão: ponte **25 → 26 métodos**. Retorna snapshot inicial e
+   progresso/final chegam pelo evento tipado existente; sem invoke/send/evento
+   genérico. Inputs/respostas fechados, UUIDs e nome limitado a 255 bytes UTF-8
+   sem C0/DEL. `SessionSnapshot` indica transição de vhost de forma limitada
+   (origem, destino e início, sem endpoint/segredo). Loading, conectado, degradado,
+   recusado, prazo e contexto salvo versus temporário ficam explícitos; foco volta
+   à linha/aviso adequado e teclado/temas/zoom seguem os contratos existentes.
+
+### Gate inicial obrigatório
+
+Antes de integrar UI/guia como funcionalidade disponível, estender somente o
+harness isolado para provar nas imagens fixadas 4.4.0/4.3.6:
+
+- conexão inicial no vhost salvo e transição para `/`, Unicode, espaços, `%`,
+  barra no nome, `.` e `..`, preservando exatamente o nome no AMQP;
+- usuário monitoring que enxerga um nome mas não possui acesso AMQP, com recusa
+  sanitizada e sem reabrir o vhost anterior;
+- ordem fechar/destruir antes de abrir, no máximo uma conexão, zero canais e cleanup;
+- catálogo/membership, expiração, generation/revision antigas, seleção repetida,
+  timeout, corte durante close/open, disconnect e evento tardio;
+- nenhuma gravação no perfil e nova ativação usando novamente o vhost da URL salva.
+
+O harness cria apenas usuários/vhosts/permissões/container/rede/certificados
+próprios, em loopback, e remove tudo no `finally`. Divergência que exija outro
+patch amqplib, nova dependência, duas conexões simultâneas, API privada ou mudança
+de semântica interrompe o trabalho dependente e volta para decisão. Fixture local
+não substitui esse gate; Docker indisponível é limitação/reprovação do gate.
+
+### Arquivos previstos para implementação após aprovação
+
+- Novo catálogo pequeno em `src/main/management/vhostCatalog.ts` (ou nome local
+  equivalente) e testes; integração pontual no `ManagementService` para emitir e
+  invalidar `selectionId`, sem mudar os dois GETs da ADR-0009 A.
+- `src/main/sessions/sessionService.ts`, validação/IPC da sessão, contratos em
+  `src/shared/session.ts`/`management.ts`, composição main e respectivos testes.
+- `src/main/connections/amqpsConnection.ts` aceita override estruturado somente
+  interno; parser/limites existentes e patch ADR-0008 preservados. Nenhum novo
+  método público de transporte ou exposição ao preload.
+- Preload/API compartilhada e testes de fronteira; `ManagementInfo.tsx`/estilos e
+  integração de estado em Conexões, sem nova rota, asset ou refatoração do shell.
+- Estender `tools/testing/sessions.cjs`, `management.cjs` e
+  `rabbitmq-real.cjs`; repetir smokes base/perfis/HTTPS/AMQPS/sessão/management e
+  acrescentar smoke 4B.2 sequencial, sem sobrepor harnesses GUI.
+- Documentos citados no contrato e novo `docs/07-testing/vhost-transition-4b2.md`;
+  guia JSON/Markdown/Ajuda somente depois de o gate liberar a implementação.
+
+### Critérios de aceitação verificáveis
+
+1. **B2-01:** gate real nas duas versões prova nomes especiais, recusa por
+   permissão e ordem/cleanup da transição antes de integrar UI.
+2. **B2-02:** apenas nome pertencente ao catálogo main vigente pode ser escolhido;
+   token/nome/owner/sessão/generation/revision expirados ou divergentes não abrem rede.
+3. **B2-03:** perfil/JSON/revision/URL/segredo/CA permanecem byte a byte sem escrita;
+   reativar sessão volta ao vhost salvo, sem preferência oculta.
+4. **B2-04:** generation muda antes do I/O, dados antigos são descartados e a
+   conexão antiga é fechada/destruída antes da nova; nunca há duas conexões.
+5. **B2-05:** sucesso exige open-ok no nome exato. Recusa/TLS/protocolo/timeout/
+   rede/cancelamento ficam sanitizados; nenhuma falha reabre silenciosamente o antigo.
+6. **B2-06:** lifecycle, background/suspend, mudança de perfil, desconexão e
+   resultados atrasados liberam sockets/timers/listeners e não cruzam contexto.
+7. **B2-07:** ponte com 26 métodos passa origem/frame/shape/resposta; renderer não
+   recebe URL, credencial, CA, socket, cliente, invoke/send ou opção AMQP genérica.
+8. **B2-08:** UI distingue visível/conectado/salvo/temporário/transição/falha,
+   ambiente de produção, datas e efeitos; teclado/foco/temas/zoom 200% revisados.
+9. **B2-09:** check/package e sete smokes sequenciais passam no mesmo ASAR; matriz
+   real confirma transição sem canais/escritas e cleanup nas duas versões.
+10. **B2-10:** guia/README/Ajuda e documentos técnicos/estado/evidências ficam
+    sincronizados, sem declarar filas/próxima etapa; resultados/limitações são
+    apresentados para aceite de conclusão antes de commit, sem push automático.
+
+### Fora deste contrato
+
+Persistir a seleção, editar automaticamente o perfil, seleção livre fora da
+lista 4B.1, sessões/conexões simultâneas, elevação de permissões, canais, filas,
+exchanges, bindings, mensagens, CRUD administrativo, métricas/dashboard, nova
+consulta HTTP, dependência/patch/ADR, provider de senha, CI remoto, assinatura,
+release, commit ou push. A Etapa 5 terá contrato próprio para listar/detalhar filas
+no contexto selecionado; esta proposta apenas estabelece sua pré-condição.
+
+### Evidência da preparação
+
+O código em `4a35424` mantém uma sessão, generation no main, conexão AMQPS sem
+canais e lista limitada a 200 nomes. Hoje `openAmqpsConnection` deriva o vhost
+somente da URL salva; `SessionService` invalida consultas por generation e
+`ManagementService` não armazena catálogo. A proposta adiciona apenas as fronteiras
+necessárias, preservando ADR-0008/0009 e os limites NFR-012–19 vigentes.
+
+Nenhum broker, teste funcional, build, package ou smoke foi executado nesta
+preparação; nenhum comportamento 4B.2 está disponível. Fontes oficiais já
+registradas para URI, acesso, heartbeats e Management continuam sendo referência,
+mas os contratos decisivos serão provados na matriz fixa antes de UI. Próxima
+ação: revisar esta proposta e obter autorização explícita B2-D01–08/B2-01–10.
+
+### Resultado do gate 4B.2
+
+O gate passou quatro grupos e reprovou um em cada RabbitMQ 4.4.0 e 4.3.6.
+Sob interrupção de rede durante o fechamento, a nova conexão recebeu open-ok
+enquanto a anterior ainda constava do registro interno do broker. Isso impede
+atender ao contrato atual ao prosseguir após fechamento sem confirmação.
+A recomendação é interromper a troca nesse estado e exigir confirmação remota
+para abrir a substituta. A revisão e o gate correspondente dependem de aceite
+específico. [Evidências e alternativas](../07-testing/vhost-transition-4b2.md).
+
+### Revisão aprovada em 2026-11-17
+
+“Sim” aprovou o fechamento confirmado como condição para iniciar a nova
+conexão. Esta revisão complementa B2-D03/D04/D06/D07 e B2-01/B2-04/B2-06.
+O limite de até 1 s para fechar continua válido. Sem confirmação ou quando
+uma abertura anterior puder ter sido aceita pelo broker, interromper a troca
+com diagnóstico explícito e bloquear novas aberturas automáticas de AMQPS
+por essa transição. Destruir os recursos locais. O usuário pode encerrar a
+sessão e fazer uma nova ativação explícita. Essa ativação segue o contrato
+4A.2C, sem inferir que o broker já removeu conexões antigas.
+
+O gate revisto deve demonstrar fechamento confirmado, recusa segura durante
+partição e abertura anterior de resultado incerto, além dos demais checks
+de seleção e lifecycle. Manter os resultados do gate original como histórico.
+
+### Resultado final 4B.2 para revisão
+
+Gate revisado de 12 checks, check 274 + seis Node, package/sete smokes e
+matriz de 64 checks reais no ASAR final passaram. A seleção altera somente o
+contexto da sessão e bloqueia a substituta quando a conexão anterior pode
+permanecer no broker. Guia e Ajuda mostram a ação e seus efeitos. A entrega
+aguarda aceite da conclusão e do commit
+`feat(connections): switch vhosts after confirmed close`.
+[Evidências](../07-testing/vhost-transition-4b2.md).
+
+### Conclusão 4B.2 aprovada em 2026-11-18
+
+“Aprovado” aceitou a entrega, suas evidências e o commit
+`feat(connections): switch vhosts after confirmed close`. A Etapa 5 segue
+sujeita a solicitação e contrato próprios.

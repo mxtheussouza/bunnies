@@ -24,19 +24,34 @@ const versions = [
 ];
 const managementGate = process.argv.includes("--management-gate");
 const managementGateA = process.argv.includes("--management-gate-a");
+const revisedVhostGate = process.argv.includes("--vhost-gate-revised");
+const vhostGate = process.argv.includes("--vhost-gate") || revisedVhostGate;
 assert.ok(
   process.argv.slice(2).length <= 1 &&
     process.argv
       .slice(2)
-      .every(arg => ["--management-gate", "--management-gate-a"].includes(arg)),
+      .every(arg =>
+        [
+          "--management-gate",
+          "--management-gate-a",
+          "--vhost-gate",
+          "--vhost-gate-revised",
+        ].includes(arg),
+      ),
 );
-const managementFixture = managementGate || managementGateA;
-const reportPrefix = managementGateA
-  ? "management-gate-A-4b1"
-  : managementGate
-    ? "management-gate-4b1"
-    : "rabbitmq-real";
+const managementFixture = managementGate || managementGateA || vhostGate;
+const reportPrefix = vhostGate
+  ? revisedVhostGate
+    ? "vhost-gate-revised-4b2"
+    : "vhost-gate-4b2"
+  : managementGateA
+    ? "management-gate-A-4b1"
+    : managementGate
+      ? "management-gate-4b1"
+      : "rabbitmq-real-4b2";
 let managementAdapter;
+let amqpsAdapter;
+let switchAdapter;
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function docker(...args) {
   return (
@@ -69,7 +84,7 @@ async function runVersion({ version, digest }) {
       ? [
           "..",
           ...Array.from(
-            { length: managementGateA ? 194 : 110 },
+            { length: vhostGate ? 0 : managementGateA ? 194 : 110 },
             (_, i) => `page-${String(i).padStart(3, "0")}`,
           ),
         ]
@@ -328,6 +343,44 @@ async function runVersion({ version, digest }) {
     console.log(`RabbitMQ ${version}: TLS ready (${inspection.Architecture})`);
     checks.push("exact-broker-version-and-TLS-readiness");
     await noConnections();
+    if (vhostGate) {
+      await require("./vhost-gate.cjs").runVhostGate({
+        managementAdapter,
+        amqpsAdapter,
+        SwitchGuard: switchAdapter?.VhostSwitchGuard,
+        amqpsPort,
+        httpsPort,
+        fixture,
+        username,
+        password,
+        vhosts,
+        checks,
+        report,
+        api,
+        noConnections,
+        liveConnections: async () => {
+          const owned = JSON.parse(await docker("inspect", container))[0];
+          assert.equal(owned.Config.Labels["bunnies.test"], name);
+          return JSON.parse(
+            await docker(
+              "exec",
+              container,
+              "rabbitmqctl",
+              "list_connections",
+              "vhost",
+              "channels",
+              "--formatter",
+              "json",
+            ),
+          );
+        },
+      });
+      report.passed = report.failures.length === 0;
+      console.log(
+        `RabbitMQ ${version}: vhost gate ${checks.length} passed, ${report.failures.length} failed`,
+      );
+      return report;
+    }
     if (managementGateA) {
       await require("./management-gate.cjs").runManagementGate({
         adapter: managementAdapter,
@@ -749,18 +802,47 @@ async function runVersion({ version, digest }) {
       assert.equal(result.ok, true);
       return result.value;
     }
+    const win = await app.browserWindow(page);
+    async function focusSessionWindow() {
+      await win.evaluate(w => {
+        if (w.isMinimized()) w.restore();
+        if (!w.isVisible()) w.show();
+      });
+      await app.evaluate(({ app }) => app.focus({ steal: true }));
+      await win.evaluate(w => {
+        w.focus();
+        w.webContents.focus();
+      });
+    }
     async function awaitSession(predicate, limit = 25000, foreground = true) {
       const end = Date.now() + limit;
-      while (!(await predicate(await sessionState()))) {
-        assert.ok(Date.now() < end, "Real session transition timed out");
-        if (foreground && (await sessionState()).paused) {
-          await app.evaluate(({ app }) => app.focus({ steal: true }));
-          const window = await app.browserWindow(page);
-          await window.evaluate(w => {
-            w.restore();
-            w.show();
-            w.focus();
-          });
+      let nextFocus = 0;
+      for (;;) {
+        const state = await sessionState();
+        if (await predicate(state)) return;
+        if (Date.now() >= end) {
+          const nativeWindow = await win.evaluate(w => ({
+            visible: w.isVisible(),
+            focused: w.isFocused(),
+            minimized: w.isMinimized(),
+          }));
+          throw new Error(
+            "Real session transition timed out: " +
+              JSON.stringify({
+                paused: state.paused,
+                state: state.state,
+                amqps: state.amqps.phase,
+                https: state.https.phase,
+                httpsChecking: state.https.checking,
+                httpsCheckedAt: state.https.checkedAt,
+                httpsError: state.https.error,
+                nativeWindow,
+              }),
+          );
+        }
+        if (foreground && state.paused && Date.now() >= nextFocus) {
+          nextFocus = Date.now() + 250;
+          await focusSessionWindow();
         }
         await sleep(50);
       }
@@ -772,12 +854,7 @@ async function runVersion({ version, digest }) {
         "Endpoint AMQPS": `amqps://127.0.0.1:${amqpForward.port}/%2F`,
         "Endpoint HTTPS": `https://127.0.0.1:${httpsForward.port}`,
       });
-      const win = await app.browserWindow(page);
-      await win.evaluate(window => {
-        window.restore();
-        window.show();
-        window.focus();
-      });
+      await focusSessionWindow();
       await page.getByRole("button", { name: "Conectar", exact: true }).click();
       await awaitSession(s => s.state === "ready");
       checks.push(
@@ -792,13 +869,43 @@ async function runVersion({ version, digest }) {
       const current = await sessionState();
       assert.equal(current.state, "ready");
       checks.push("real-management-reads-preserve-session-and-privileges");
+      const saved = await readFile(profileFile);
+      const { selectVhost } = require("./management.cjs");
+      await selectVhost(page, "literal%2F");
+      await awaitSession(
+        s =>
+          s.generation > current.generation &&
+          s.state === "ready" &&
+          s.profile.vhost === "literal%2F",
+      );
+      const [selected] = await oneConnection();
+      assert.equal(selected.vhost, "literal%2F");
+      assert.equal(selected.channels, 0);
+      assert.equal((await sessionState()).profile.savedVhost, "/");
+      assert.deepEqual(await readFile(profileFile), saved);
+      await page
+        .getByRole("button", { name: "Listar vhosts", exact: true })
+        .click();
+      await page.getByText(/Lista completa recebida:/).waitFor();
+      await selectVhost(page, "/");
+      await awaitSession(s => s.state === "ready" && s.profile.vhost === "/");
+      await page
+        .getByRole("button", { name: "Desconectar", exact: true })
+        .click();
+      await awaitSession(s => s.state === "closed" && !s.stopping);
+      await noConnections();
+      await page.getByRole("button", { name: "Conectar", exact: true }).click();
+      await awaitSession(s => s.state === "ready" && s.profile.vhost === "/");
+      assert.deepEqual(await readFile(profileFile), saved);
+      checks.push(
+        "real-vhost-switch-preserves-profile-exact-name-and-reactivation",
+      );
       const first = await sessionState();
       assert.equal(first.flow, "unknown");
       const holdUntil = Date.now() + 22000;
       while (Date.now() < holdUntil) {
         if ((await sessionState()).paused) {
-          await app.evaluate(({ app }) => app.focus({ steal: true }));
-          await win.evaluate(window => window.focus());
+          await focusSessionWindow();
         }
         await sleep(400);
       }
@@ -828,11 +935,8 @@ async function runVersion({ version, digest }) {
       await sleep(8000);
       assert.equal((await sessionState()).https.checkedAt, paused);
       assert.equal((await oneConnection()).length, 1);
-      await win.evaluate(window => {
-        window.restore();
-        window.show();
-        window.focus();
-      });
+      await focusSessionWindow();
+      await awaitSession(s => !s.paused);
       await awaitSession(s => !s.paused && s.https.checkedAt > paused);
       checks.push("real-background-retains-AMQP-pauses-HTTPS-and-resumes");
       amqpForward.cut();
@@ -888,6 +992,35 @@ async function runVersion({ version, digest }) {
       assert.equal((await sessionState()).closeConfirmed, true);
       await noConnections();
       checks.push("real-session-close-ack-and-zero-retained-connections");
+      const partitionRelay =
+        await require("./vhost-gate.cjs").startPartitionRelay(amqpsPort);
+      try {
+        await edit({
+          "Endpoint AMQPS": `amqps://127.0.0.1:${partitionRelay.port}/%2F`,
+        });
+        await page
+          .getByRole("button", { name: "Conectar", exact: true })
+          .click();
+        await awaitSession(s => s.state === "ready");
+        await page
+          .getByRole("button", { name: "Listar vhosts", exact: true })
+          .click();
+        await page.getByText(/Lista completa recebida:/).waitFor();
+        partitionRelay.partition();
+        await selectVhost(page, "equipe/pedidos");
+        await awaitSession(s => s.amqps.error === "AMQP_REMOTE_UNCONFIRMED");
+        assert.equal((await sessionState()).https.phase, "available");
+        assert.equal(partitionRelay.attemptCount(), 1);
+        assert.equal((await oneConnection())[0].vhost, "/");
+        await page
+          .getByRole("button", { name: "Desconectar", exact: true })
+          .click();
+        await awaitSession(s => s.state === "closed" && !s.stopping);
+      } finally {
+        await partitionRelay.cleanup();
+      }
+      await noConnections();
+      checks.push("real-unconfirmed-close-does-not-open-replacement");
       await edit({
         "Endpoint AMQPS": `amqps://127.0.0.1:${amqpsPort}/%2F`,
         "Endpoint HTTPS": `https://127.0.0.1:${httpsPort}`,
@@ -1092,24 +1225,42 @@ async function runVersion({ version, digest }) {
   return report;
 }
 async function run() {
-  if (managementGateA)
-    managementAdapter =
-      await require("./management-gate.cjs").prepareManagementGate();
   try {
+    if (managementGateA || vhostGate)
+      managementAdapter =
+        await require("./management-gate.cjs").prepareManagementGate();
+    if (vhostGate)
+      amqpsAdapter = await require("./management-gate.cjs").prepareGateAdapter(
+        "src/main/connections/amqpsConnection.ts",
+      );
+    if (revisedVhostGate)
+      switchAdapter = await require("./management-gate.cjs").prepareGateAdapter(
+        "src/main/sessions/vhostSwitch.ts",
+      );
     await runMatrix();
   } finally {
-    await managementAdapter?.cleanup();
+    try {
+      await switchAdapter?.cleanup();
+    } finally {
+      try {
+        await amqpsAdapter?.cleanup();
+      } finally {
+        await managementAdapter?.cleanup();
+      }
+    }
   }
 }
 async function runMatrix() {
   const reports = [];
   for (const version of versions) reports.push(await runVersion(version));
   await writeFile(
-    managementGateA
-      ? "out/management-gate-A-4b1-results.json"
-      : managementGate
-        ? "out/management-gate-4b1-results.json"
-        : "out/rabbitmq-real-4b1-results.json",
+    vhostGate
+      ? `out/${reportPrefix}-results.json`
+      : managementGateA
+        ? "out/management-gate-A-4b1-results.json"
+        : managementGate
+          ? "out/management-gate-4b1-results.json"
+          : "out/rabbitmq-real-4b2-results.json",
     JSON.stringify(
       {
         platform: process.platform,

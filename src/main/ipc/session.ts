@@ -10,10 +10,12 @@ import { isTrustedPage } from "../security/desktopPolicy";
 import { ProfileFailure } from "../profiles/errors";
 import { parseSessionRequest } from "../sessions/validation";
 import type { SessionService } from "../sessions/sessionService";
+import type { ManagementService } from "../management/service";
 export function registerSessionIpc(
   getWindow: () => BrowserWindow | null,
   entry: string,
   service: SessionService,
+  management?: Pick<ManagementService, "authorizeVhost">,
 ) {
   const tracked = new Map<number, () => void>();
   function track(window: BrowserWindow) {
@@ -89,12 +91,21 @@ export function registerSessionIpc(
         if (!request) throw new ProfileFailure("VALIDATION");
         track(window);
         const owner = window.webContents.id;
+        const authorize = () => {
+          if (!isTrustedSender(event, getWindow(), entry))
+            throw new ProfileFailure("FORBIDDEN");
+          if (request.command !== "selectSessionVhost" || !management)
+            throw new ProfileFailure("UNAVAILABLE");
+          management.authorizeVhost(owner, request.input);
+        };
         const value =
           request.command === "connectSession"
             ? service.connect(owner, request.input)
             : request.command === "disconnectSession"
               ? await service.disconnect(owner, request.input)
-              : service.getState(owner);
+              : request.command === "selectSessionVhost"
+                ? await service.selectVhost(owner, request.input, authorize)
+                : service.getState(owner);
         if (!isTrustedSender(event, getWindow(), entry))
           throw new ProfileFailure("FORBIDDEN");
         return { ok: true, requestId, value };

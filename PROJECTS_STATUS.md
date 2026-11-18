@@ -1,17 +1,17 @@
 # Bunnies — histórico vivo do projeto
 
-Atualizado em: 2026-10-31.
+Atualizado em: 2026-11-18.
 
 ## Estado atual
 
 - Branch: `chore/modernization-app`.
-- Última entrega aprovada: **4B.1 — contexto administrativo de leitura**, com ADR-0009 A e testes reais.
-- Aprovação atual: “Autorizado”, em 2026-10-31, aceitou conclusão e commit
-  `feat(management): add bounded broker information and vhost reads`.
-- Último commit: commit desta entrega 4B.1 (pai `aba792d`; identificador em `git log -1`).
-- Task atual: registrar o aceite e a entrega aprovada da 4B.1 neste commit.
-- Próxima ação: aguardar instrução para preparar a etapa seguinte; sem push,
-  preparação/execução automática da 4B.2 ou nova implementação autorizados.
+- Última entrega aprovada: **4B.2 — seleção temporária de vhost com
+  confirmação de fechamento**.
+- Aprovação atual: “Aprovado”, em 2026-11-18, aceitou a conclusão e o commit
+  `feat(connections): switch vhosts after confirmed close`.
+- Último commit: entrega 4B.2 que contém este registro, com pai `4a35424`.
+- Task atual: registrar a conclusão aprovada da 4B.2.
+- Próxima ação: aguardar solicitação para preparar o contrato da Etapa 5.
 
 ## Tarefas concluídas
 
@@ -29,7 +29,8 @@ Atualizado em: 2026-10-31.
 | 4A.2A | CA por perfil, JSON v2/backup v1 e teste explícito HTTPS | Concluída/aprovada; 966b4a2 |
 | 4A.2B | Teste AMQPS/vhost, cancelamento e verificação real 4.4.0/4.3.6 | Concluída/aprovada; ea116de |
 | 4A.2C | Sessão única, estados independentes, recuperação limitada e ADR-0008 A | Concluída/aprovada; aba792d |
-| 4B.1 | Versões informadas, vhosts visíveis limitados, cancelamento e ADR-0009 A | Concluída/aprovada; commit deste registro |
+| 4B.1 | Versões informadas, vhosts visíveis limitados, cancelamento e ADR-0009 A | Concluída/aprovada em `4a35424` |
+| 4B.2 | Seleção temporária de vhost com fechamento confirmado e bloqueio em estado remoto incerto | Concluída/aprovada no commit deste registro |
 
 ## Entrega DOC.1 aprovada
 
@@ -42,8 +43,7 @@ Atualizado em: 2026-10-31.
 
 ## Pendências e decisões
 
-- 4A.2C concluída e registrada em aba792d, com working tree limpo na retomada.
-  4B.1/ADR-0009 A concluídas/aprovadas; registro nesta entrega, sem autorizar 4B.2.
+- 4A.2C, 4B.1 e 4B.2 concluídas e aprovadas. A Etapa 5 exige contrato próprio.
 - Mudança da barra de título macOS foi registrada pelo proprietário em 9401448;
   preservar e revalidar no próximo pacote. Não integra o pacote/testes da 4A.2A.
 - Atualizar este arquivo a cada Task/fase/alteração, mantendo histórico de decisões,
@@ -92,6 +92,144 @@ Guia/Ajuda sincronizados e artefato final revisado; conclusão/commit aprovados.
 [Evidências finais](docs/07-testing/sessions-4a2c.md).
 
 ## Histórico de atividades
+
+### 2026-11-18 — T-4B2-ACEITE-E-REGISTRO
+
+- “Aprovado” aceitou a conclusão da 4B.2 e seu commit
+  `feat(connections): switch vhosts after confirmed close`.
+- Retomada em `4a35424`, branch `chore/modernization-app`, com index vazio.
+  Conferidos os 46 arquivos, o ASAR apresentado e as evidências da matriz.
+  O escopo desta tarefa é registrar a entrega aprovada e seu aceite.
+- Resultados aceitos: 274 testes, seis Node, gate revisado de 12, package,
+  sete smokes e 64 verificações reais. A verificação deste registro é
+  documental. Os testes funcionais referem-se à execução anterior.
+- `npm run docs:check` e `git diff --check` passaram. Verificados 376
+  links locais em 45 arquivos Markdown e o hash do ASAR final.
+- A Etapa 5 continua sujeita a contrato próprio.
+
+### 2026-11-17 — T-4B2-PRONTA-PARA-REVISAO
+
+- Check passou com 274 testes em 37 arquivos e seis Node. Package e sete
+  smokes no ASAR final macOS arm64 passaram. Gate revisado de 12 checks e
+  matriz no pacote de 64 checks reais aprovados em 4.4.0 e 4.3.6.
+- A primeira tentativa da matriz final atingiu prazo na retomada de foco e
+  polling em 4.3.6. Outra tentativa registrou sessão pausada antes da abertura
+  em 4.4.0. Após ajustar a ordem de restauração e foco no harness, a matriz
+  completa passou no mesmo ASAR. Cada tentativa limpou seus recursos.
+- Ponte com 26 métodos, catálogo limitado e expiração no main, troca
+  explícita em memória. Fechamento ou abertura anterior incertos bloqueiam
+  a substituição. O perfil salvo volta a valer na próxima ativação.
+- Guia/Ajuda sincronizados, capturas revisadas, ASAR
+  `7b3600ede554e34851ef9b3ff6982542eabbb522281abcff9d3e1526d28b21e6`
+  conferido e zero container/rede do harness remanescentes. Limitações de
+  outros alvos/HA/assistivas/provider/releases mantidas.
+- Pronta para aceite de conclusão e commit
+  `feat(connections): switch vhosts after confirmed close`.
+
+### 2026-11-17 — T-4B2-GATE-REVISTO
+
+- `--vhost-gate-revised` passou seis grupos em cada versão, doze no total.
+  A regra compartilhada bloqueou substituição após close sem confirmação e
+  abertura anterior incerta. O adapter preservou nomes exatos por opção
+  estruturada em fechamento confirmado. Começou a integração da 4B.2.
+
+### 2026-11-17 — T-4B2-INTEGRACAO-E-PRIMEIRO-PACOTE
+
+- Integrados catálogo, revisão e geração, comando específico, controle AMQPS,
+  painel e guia canônico. Primeiro check passou 272 testes/37 arquivos e seis
+  testes Node. Package macOS arm64 e sete smokes passaram.
+- Primeira matriz passou 64 checks reais, 32 por versão, com limpeza. Confirmou
+  troca do nome literal, perfil byte a byte, reativação e nenhuma abertura da
+  substituta após fechamento incerto. ASAR desta rodada
+  `7ce926e722b676fa49856f0dc64ca4f1bee828b464c146c18cf50a096531019e`.
+- Revisão posicionou aviso antes das ações e o vinculou às descrições dos
+  botões. Repetição de package e regressões no ASAR revisado em execução.
+- Corrigidas as instruções de ativação do guia para indicar a seleção
+  temporária. Acrescentadas negativas de recusa AMQP e revisão concorrente
+  à suíte. Check passou 274 testes/37 arquivos e seis testes Node.
+- Package final macOS arm64 e sete smokes sequenciais passaram. Capturas do
+  painel em tema escuro e claro com zoom 200% revisadas. A matriz real final
+  segue em execução no ASAR `7b3600ede554e34851ef9b3ff6982542eabbb522281abcff9d3e1526d28b21e6`.
+- Na primeira matriz do ASAR final, 4.4.0 passou os 32 checks. Na 4.3.6
+  passaram as primeiras 20 verificações, incluindo troca bem-sucedida. A
+  regressão da retomada do HTTPS após minimizar/restaurar atingiu o prazo.
+  Recursos temporários removidos. O harness torna foco e retomada observações
+  distintas e registra estado sanitizado no prazo. Repetição no mesmo ASAR.
+
+### 2026-11-17 — T-4B2-REVISAO-AUTORIZADA
+
+- “Sim” aceitou interromper a transição quando o broker não confirma o
+  fechamento e iniciar a substituta apenas após confirmação. O recorte
+  inclui abertura anterior com resultado remoto incerto, conforme evidências.
+- Retomada em `4a35424`, com documentos e harness da rodada anterior e index
+  vazio. Docker Engine 29.8.0 respondeu. Revisar o contrato, provar a nova
+  regra nas duas versões e continuar a 4B.2 condicionada a esse resultado.
+
+### 2026-11-17 — T-4B2-GATE-REPROVADO
+
+- Novo modo isolado `--vhost-gate` no harness real. A primeira medição via
+  Management API mostrou o vhost anterior ainda listado após encerramento local.
+  Consulta direta ao registro do container na segunda rodada confirmou duas
+  conexões simultâneas em 4.4.0 e 4.3.6, cada uma sem canais.
+- Resultado final do gate: quatro grupos passaram e um falhou por versão,
+  saída 1 e limpeza completa. Nomes exatos, fechamento confirmado e recusa AMQP
+  para um vhost visível ao usuário monitoring passaram. A falha é a transição
+  após fechamento não confirmado, com registros de `/` e `equipe/pedidos`.
+- Recomendação pendente: exigir fechamento confirmado para abrir a substituta e
+  interromper a troca quando o estado remoto estiver incerto. A decisão exige
+  aceite porque altera a semântica do contrato. Implementação de produto, guia e
+  empacotamento aguardam gate revisado. [Evidências](docs/07-testing/vhost-transition-4b2.md).
+- Verificações independentes: `npm run check` passou com 266 testes em 36
+  arquivos e seis testes Node do patch. O gate A da 4B.1 passou novamente com
+  12 verificações por versão. `git diff --check` passou e 369 links em 45
+  arquivos Markdown foram conferidos. Nenhum package ou smoke novo.
+
+### 2026-11-17 — T-4B2-AUTORIZACAO-E-INICIO
+
+- “Autoriz” respondeu diretamente à solicitação de aceite do contrato
+  4B.2/B2-D01–08/B2-01–10. Escopo inclui gate, implementação condicionada ao
+  resultado, documentação e verificações locais previstas.
+- Retomada em `4a35424`, com os cinco documentos da proposta e index vazio.
+  Docker Engine 29.8.0 aarch64 respondeu em macOS arm64. Node 24.22.1 e
+  npm 11.19.1 disponíveis. Nenhum resultado funcional novo até este ponto.
+- Primeira tarefa: estender o harness isolado para o gate nas duas versões.
+  A entrega da 4B.1 segue como último aceite de conclusão.
+
+### 2026-11-17 — T-4B2-PLANEJAMENTO-INICIO
+
+- Pedido: “Continue de onde parou”, após a conclusão/registro da 4B.1.
+- Retomada: AGENTS/PROJECTS, avaliação tecnológica, roadmap, estado, progresso,
+  requisitos, arquitetura, módulos e implementação vigente consultados.
+- Git: branch `chore/modernization-app`, HEAD `4a35424`, igual ao remoto configurado,
+  index e working tree inicialmente limpos. Nenhuma alteração do usuário detectada.
+- Escopo autorizado inferido somente como preparação/apresentação do próximo
+  contrato, conforme governança e precedente das etapas. Implementação 4B.2,
+  brokers, package/smokes, dependências, commit e push continuam não autorizados.
+- Direção em análise: seleção explícita de nome vindo de snapshot limitado
+  da 4B.1, transição somente em memória e fail-closed da conexão AMQPS, sem editar
+  perfil, aceitar URL arbitrária ou confundir visibilidade HTTPS com permissão AMQP.
+- Testes: nenhuma execução funcional nova; apenas inspeção de documentação,
+  código e Git. Próximo bloco: registrar contrato Proposed e sincronizar estado.
+
+### 2026-11-17 — T-4B2-CONTRATO-PRONTO-PARA-ACEITE
+
+- Contrato Proposed no roadmap com 13 campos, B2-D01–08 e B2-01–10. Recorte:
+  catálogo efêmero (um snapshot/200 nomes/cinco minutos) no main, seleção exata
+  e um método novo (25 → 26), sem URL/opções arbitrárias do renderer.
+- Transição proposta: generation antes do I/O; cancelar/fechar/destruir AMQPS
+  antigo antes de abrir o novo; contexto temporário sem gravar perfil. Falha fica
+  degradada no alvo, sem rollback silencioso; HTTPS/visibilidade não comprovam AMQP.
+- Gate inicial proposto nas duas versões prova nomes especiais, permissão negada,
+  zero/uma conexão, zero canais, lifecycle/tokens antigos e retorno ao vhost salvo
+  em nova ativação, antes de UI/guia como recurso disponível.
+- Sincronizados: AGENTS, PROJECTS e roadmap/current-stage/progress. Produto,
+  guia/Ajuda, manifesto/lock, assets, patch e implementação preservados.
+- Testes funcionais/broker/build/package/smokes: não executados, fora do escopo da
+  preparação. `npm run docs:check` e `git diff --check` passaram; 44 arquivos
+  Markdown/364 links locais conferidos, sem alvo ausente. Diff restrito aos cinco
+  documentos de planejamento/estado previstos; branch/HEAD preservados, index vazio.
+- Próxima ação: apresentar o contrato e solicitar aceite explícito. Sem código,
+  dependência, Etapa 5, commit ou push antes da autorização correspondente.
 
 ### 2026-10-28 — T-4A1-ACEITE
 

@@ -62,3 +62,16 @@ ADR-0009; o app não modifica brokers para contorná-la.
 Aceite de 2026-10-31: conclusão e commit feat(management): add bounded broker
 information and vhost reads aprovados, mantendo escopo/limitações apresentados.
 M06 permanece parcial; este registro integra o commit da entrega. Sem push/4B.2.
+
+## Seleção temporária de vhost — 4B.2
+
+Listar vhosts emite um identificador opaco vinculado à sessão, janela, revisão
+e geração. O catálogo no main mantém até 200 nomes em memória por cinco
+minutos. O comando específico escolhe apenas o nome exato do catálogo vigente.
+O resultado é temporário e o perfil salvo continua como padrão da próxima
+ativação. A disponibilidade HTTPS continua distinta do acesso AMQP.
+
+A nova conexão depende da confirmação do fechamento anterior. Fechamento
+ou abertura incertos encerram os recursos locais e bloqueiam a substituição
+automática pela transição. A etapa adiciona somente seleção de contexto.
+[Contrato e evidências](../07-testing/vhost-transition-4b2.md).

@@ -166,3 +166,14 @@ Limite do cliente não impede custo de preparar a lista no servidor. 401 pode se
 negação por tag com senha válida; versão informada/visibilidade não comprovam
 permissão AMQP, saúde ou identidade comum dos dois endpoints. Implementação em
 validação, resultados finais nas evidências; sem nova homologação de escala/alvos.
+
+## Sublimites aprovados — 4B.2
+
+| Referência | Recorte da transição |
+| --- | --- |
+| NFR-012/014/016 | Um catálogo em memória, até 200 nomes de 255 bytes UTF-8, validade de cinco minutos, owner/revisão/geração e identificador opaco |
+| NFR-012/013 | Uma transição em voo. Até 1 s para fechamento confirmado, até 15 s para nova abertura e recursos locais descartados quando a confirmação falhar |
+| NFR-017/019 | Novas aberturas automáticas ficam bloqueadas na transição quando o estado remoto anterior for incerto. Novas ativações explícitas retêm o contrato 4A.2C |
+
+A seleção vale na sessão e altera apenas o campo vhost da negociação AMQPS.
+Nenhuma nova rota HTTP é necessária.

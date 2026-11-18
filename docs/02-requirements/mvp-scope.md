@@ -177,3 +177,10 @@ continuam parciais; seleção depende da 4B.2. Check 266 + seis Node, package/se
 smokes e matriz final 60 checks reais aprovados no recorte macOS arm64/nó único.
 Conclusão e commit da 4B.1 aprovados por “Autorizado” em 2026-10-31; demais
 limitações mantidas. Registro nesta entrega, sem autorizar push ou 4B.2.
+
+### Seleção temporária de vhost — 4B.2
+
+O fluxo MVP-A01 inclui escolher um vhost visível e verificar se o broker aceita
+a nova conexão AMQP. A escolha fica na sessão. A troca para quando o broker
+pode reter a conexão anterior. A aceitação da conexão continua distinta das
+permissões de fila, exchange e publicação.

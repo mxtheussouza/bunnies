@@ -298,9 +298,7 @@ export default function Connections() {
               </p>
             )}
             {session.desired && session.profile?.id === profile.id && (
-              <ManagementInfo
-                key={session.sessionId + ":" + session.generation}
-              />
+              <ManagementInfo key={session.sessionId} />
             )}
             <ProfileTests
               key={profile.id + snapshot?.revision}

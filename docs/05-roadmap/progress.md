@@ -906,3 +906,58 @@ arquivos/ASAR por hash antes de sincronizar somente o aceite documental.
 Resultados/limitações mantidos; não houve nova execução funcional nesta Task.
 Registro neste commit de entrega, pai aba792d (identificador em git log -1).
 Sem push ou preparação/execução automática da etapa seguinte.
+
+## 2026-11-17 — Proposta 4B.2 pronta para aceite
+
+O pedido “Continue de onde parou” foi aplicado à preparação documental da etapa
+seguinte. Git inicialmente limpo em `4a35424`; 4B.1/ADR-0009 A e seus resultados
+permanecem preservados. Nenhuma autorização de implementação foi inferida.
+
+O [contrato Proposed](roadmap.md) delimita seleção somente entre nomes de um
+catálogo limitado/efêmero do main, transição AMQPS fail-closed e contexto
+temporário sem editar perfil. Propõe um método específico (25 → 26), generation
+nova antes do I/O, fechamento/destruição antigo antes da abertura nova e falha
+sem rollback implícito. HTTPS/AMQPS e visibilidade/permissão continuam separados.
+
+Gate real inicial nas duas versões deve provar nomes especiais, permissão negada,
+zero/uma conexão, zero canais, tokens/contextos antigos e retorno ao vhost salvo
+após nova ativação. Etapa 5/filas, persistência da seleção, novas consultas,
+dependências/patches e push ficam fora. Nenhum teste funcional/broker/package/smoke
+foi executado; apresentar B2-D01–08/B2-01–10 e aguardar aceite explícito.
+
+## 2026-11-17 — Execução da 4B.2 autorizada
+
+“Autoriz” respondeu à proposta de executar B2-D01–08/B2-01–10. Gate real e
+implementação condicionada ao seu resultado seguem o contrato. Docker Engine
+29.8.0 respondeu em macOS arm64. Conclusão e commit terão aceite próprio.
+
+## 2026-11-17 — Gate inicial 4B.2 reprovado
+
+Quatro grupos passaram e um falhou por versão em 4.4.0/4.3.6 arm64. O broker
+manteve `/` após encerramento local sem confirmação e registrou também
+`equipe/pedidos` após a abertura nova. Limpeza completa. Integração e guia
+aguardam decisão sobre fechamento sem confirmação.
+[Evidências e alternativas](../07-testing/vhost-transition-4b2.md).
+
+## 2026-11-17 — Revisão 4B.2 aplicada após gate
+
+“Sim” aceitou bloquear a substituição quando o broker pode conservar a
+conexão anterior. Gate revisado com seis grupos por versão confirmou a regra.
+Depois foram integrados catálogo, sessão, IPC, painel e guia. Check passou
+272 testes em 37 arquivos e seis testes Node. Verificação de pacote em andamento.
+
+## 2026-11-17 — 4B.2 implementada e verificada
+
+No ASAR final macOS arm64 passaram sete smokes e 64 checks reais, 32 por
+versão. A suíte final passou 274 testes/37 arquivos e seis Node. O gate revisto
+de 12 checks é evidência separada. Guia/Ajuda e temas/zoom revisados. O harness
+restaurou foco nativo de forma explícita na repetição após timeout. Limpeza
+completa. [Evidências](../07-testing/vhost-transition-4b2.md). A entrega
+aguarda aceite de conclusão e commit.
+
+## 2026-11-18 — Conclusão e commit 4B.2 aprovados
+
+“Aprovado” aceitou a entrega apresentada e o commit
+`feat(connections): switch vhosts after confirmed close`. Este registro
+integra a entrega, cujo pai é `4a35424`. As verificações da apresentação e
+suas limitações foram registradas nas [evidências](../07-testing/vhost-transition-4b2.md).

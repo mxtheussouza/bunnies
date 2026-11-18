@@ -4,7 +4,7 @@ const { tmpdir } = require("node:os");
 const path = require("node:path");
 const { createServer } = require("node:https");
 const webpack = require("webpack");
-async function prepareManagementGate() {
+async function prepareGateAdapter(entry) {
   const root = await mkdtemp(path.join(tmpdir(), "bunnies-management-build-"));
   try {
     await new Promise((resolve, reject) => {
@@ -12,7 +12,7 @@ async function prepareManagementGate() {
         mode: "development",
         target: "node",
         devtool: false,
-        entry: path.resolve("src/main/management/httpsRead.ts"),
+        entry: path.resolve(entry),
         output: {
           path: root,
           filename: "adapter.cjs",
@@ -219,4 +219,9 @@ async function runManagementGate({
     assert.equal((await api("consumers")).length, 0);
   });
 }
-module.exports = { prepareManagementGate, runManagementGate };
+module.exports = {
+  prepareGateAdapter,
+  prepareManagementGate: () =>
+    prepareGateAdapter("src/main/management/httpsRead.ts"),
+  runManagementGate,
+};

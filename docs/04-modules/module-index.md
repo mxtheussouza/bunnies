@@ -23,6 +23,10 @@ recurso e capacidades, evitando imports entre componentes de telas.
 
 M07 fornece dados a M02, sem importar componentes do dashboard. M03/M04/M05 devem
 usar identidades compartilhadas de recursos e casos de uso, sem ciclos de telas.
+
+Na 4B.2, M06 fornece o catálogo temporário de vhosts visíveis e M01 controla a
+troca AMQPS com confirmação de fechamento. O contexto resultante fica disponível
+à sessão, que continua sem operações de fila, exchange ou mensagem.
 A stack está aprovada; nomenclatura e estrutura física serão detalhadas em contrato
 de implementação antes das mudanças.
 

@@ -1,20 +1,20 @@
 # Estado atual do projeto
 
-Atualizado em: 2026-10-31. Ler [PROJECTS_STATUS.md](../../PROJECTS_STATUS.md) antes
+Atualizado em: 2026-11-18. Ler [PROJECTS_STATUS.md](../../PROJECTS_STATUS.md) antes
 de cada Task; atualizá-lo em cada bloco/fase/alteração.
 
 | Campo | Estado |
 | --- | --- |
-| Etapa atual | 4B.1 — contexto administrativo de leitura / ADR-0009 A |
-| Status | Concluída/aprovada por “Autorizado”; entrega registrada neste commit |
-| Última etapa concluída | 4B.1 — contexto administrativo de leitura, incluindo ADR-0009 A |
-| Último commit | feat(management): add bounded broker information and vhost reads — commit deste registro, pai aba792d; identificador em git log -1 |
-| Decisões aprovadas | ADRs 0001–0009 (0008/0009 alternativas A), MVP/requisitos/design, contratos C-01–07/4B.1 e respectivos limites |
-| Decisões pendentes | Próxima etapa depende de contrato/autorização próprios; nenhuma implementação adicional aprovada |
-| Tarefas concluídas | 4B.1 implementada, gate A 24, check 266 + seis Node, package/seis smokes e matriz final 60 checks reais passaram |
-| Tarefas pendentes | Próximas fases e homologações fora do recorte, sujeitas a contratos/aceites próprios |
+| Etapa atual | 4B.2 — seleção de vhost e transição de contexto |
+| Status | Concluída e aprovada em 2026-11-18 |
+| Última etapa concluída | 4B.2 — seleção temporária de vhost com confirmação de fechamento |
+| Último commit | `feat(connections): switch vhosts after confirmed close`, entrega que contém este registro |
+| Decisões aprovadas | ADRs 0001–0009, MVP/requisitos/design, contratos anteriores e conclusão da 4B.2 com fechamento confirmado |
+| Decisões pendentes | Contrato da Etapa 5 quando solicitado |
+| Tarefas concluídas | 4B.2 implementada. Check 274 + seis Node, gate 12, package/sete smokes e matriz 64 passaram |
+| Tarefas pendentes | Aguardar solicitação da próxima etapa |
 | Problemas conhecidos | Paginação HTTP de vhosts retorna 500 na matriz; GET individual exige admin e normaliza dot-segments; limitações anteriores mantidas |
-| Próxima ação autorizada | Aguardar instrução para preparar a etapa seguinte; sem push ou 4B.2 automáticos |
+| Próxima ação | Aguardar solicitação para preparar o contrato da Etapa 5 |
 
 “Autorizado” aceitou o [contrato 4A.2C](roadmap.md). O gate inicial reprovou e
 interrompeu trabalho dependente; o proprietário então autorizou explicitamente
@@ -107,3 +107,49 @@ ASAR conferem com a revisão apresentada; sincronização do aceite documental s
 alteração de código/guia ou repetição funcional. Limitações/resultados mantidos.
 Este registro integra o commit de entrega (pai aba792d; hash em git log -1).
 Sem push, nova implementação ou preparação automática da 4B.2.
+
+## 2026-11-17 — Preparação 4B.2
+
+“Continue de onde parou” iniciou apenas a preparação/apresentação do
+[contrato 4B.2 Proposed](roadmap.md). Base `4a35424`, branch correta, Git
+inicialmente limpo e entrega 4B.1 preservada.
+
+Proposta: seleção explícita a partir de catálogo efêmero emitido no main pela
+lista limitada da 4B.1; um novo método (26 total); troca AMQPS fail-closed,
+somente em memória, com generation nova e sem editar o perfil. O contexto antigo
+é fechado/destruído antes do novo; recusa não produz rollback silencioso.
+Visibilidade HTTPS continua distinta de permissão AMQP.
+
+B2-D01–08/B2-01–10, gate real pré-UI nas versões fixadas, arquivos, limites e
+exclusões estão no roadmap. Nenhum código, guia de funcionalidade, broker,
+dependência, build, teste funcional, commit ou push foi autorizado/executado.
+Próxima ação: apresentar e aguardar aceite específico.
+
+## 2026-11-17 — Gate inicial 4B.2 reprovado
+
+Após o aceite “Autoriz”, o gate isolado confirmou quatro grupos e reprovou um
+em cada RabbitMQ 4.4.0/4.3.6 arm64. Com o fechamento sem confirmação, o registro
+do broker mostrou `/` e `equipe/pedidos` simultaneamente mesmo após o cliente
+destruir seu socket antigo. Limpeza completa. A integração aguarda revisão
+do contrato. [Evidências e alternativas](../07-testing/vhost-transition-4b2.md).
+
+## 2026-11-17 — Revisão 4B.2 aceita e gate aprovado
+
+“Sim” aceitou exigir confirmação do fechamento. Seis checks por versão
+passaram no gate revisado. A integração inclui catálogo em memória, novo
+método específico, estado e seleção temporária. O check passou com 272
+testes e seis testes Node do patch. Verificações do pacote em execução.
+
+## 2026-11-17 — 4B.2 pronta para revisão
+
+Check final 274 + seis Node, package/sete smokes e 64 checks reais passaram
+depois de ajustar a restauração de foco do harness no mesmo ASAR. Guia/Ajuda,
+visual e artefato conferidos.
+[Evidências](../07-testing/vhost-transition-4b2.md). Aguardar aceite da
+conclusão e do commit `feat(connections): switch vhosts after confirmed close`.
+
+## 2026-11-18 — Conclusão 4B.2 aprovada
+
+“Aprovado” aceitou a conclusão e o commit apresentado. As evidências e as
+limitações da etapa acompanham este registro. O próximo contrato depende de
+solicitação própria. [Evidências](../07-testing/vhost-transition-4b2.md).

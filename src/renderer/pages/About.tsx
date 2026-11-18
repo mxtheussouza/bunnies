@@ -18,8 +18,9 @@ export default function About() {
         Aplicativo desktop para administração e observabilidade de brokers. Você
         pode organizar perfis locais, testar autenticação HTTPS/AMQPS, manter
         uma conexão AMQPS com verificação HTTPS periódica, consultar versões e
-        vhosts visíveis por HTTPS e acessar a Ajuda. Operações de filas,
-        exchanges e mensagens ainda não estão disponíveis.
+        vhosts visíveis por HTTPS, trocar temporariamente o vhost da sessão e
+        acessar a Ajuda. Operações de filas, exchanges e mensagens ainda não
+        estão disponíveis.
       </p>
       <dl className="about-details">
         <div>

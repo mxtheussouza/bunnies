@@ -4,6 +4,7 @@ import type {
   ProfileResult,
 } from "./profiles";
 import { profileErrorMessages } from "./profiles";
+import { boundedManagementText, closedObject } from "./management";
 export const SESSION_CHANNEL = "bunnies:session";
 export const SESSION_EVENT = "bunnies:session-state";
 export type SessionPhase =
@@ -30,12 +31,19 @@ export type SessionSnapshot = {
     name: string;
     environment: ProfileEnvironment;
     vhost: string;
+    savedVhost?: string;
   } | null;
   https: EndpointState;
   amqps: EndpointState;
   flow: "unknown" | "blocked" | "unblocked";
   closeConfirmed?: boolean;
   reason?: ProfileErrorCode;
+  switching?: {
+    from: string;
+    to: string;
+    startedAt: string;
+    phase: "closing" | "opening";
+  };
 };
 export type ConnectSessionInput = {
   profileId: string;
@@ -43,16 +51,25 @@ export type ConnectSessionInput = {
   operationId: string;
 };
 export type SessionRef = { sessionId: string; generation: number };
+export type SelectSessionVhostInput = SessionRef & {
+  operationId: string;
+  selectionId: string;
+  vhost: string;
+};
 export type SessionRequest =
   | { command: "getSessionState" }
   | { command: "connectSession"; input: ConnectSessionInput }
-  | { command: "disconnectSession"; input: SessionRef };
+  | { command: "disconnectSession"; input: SessionRef }
+  | { command: "selectSessionVhost"; input: SelectSessionVhostInput };
 export interface SessionApi {
   getSessionState(): Promise<ProfileResult<SessionSnapshot>>;
   connectSession(
     input: ConnectSessionInput,
   ): Promise<ProfileResult<SessionSnapshot>>;
   disconnectSession(input: SessionRef): Promise<ProfileResult<SessionSnapshot>>;
+  selectSessionVhost(
+    input: SelectSessionVhostInput,
+  ): Promise<ProfileResult<SessionSnapshot>>;
   onSessionState(listener: (state: SessionSnapshot) => void): () => void;
 }
 export const emptySession = (): SessionSnapshot => ({
@@ -131,6 +148,7 @@ export function isSessionSnapshot(value: unknown): value is SessionSnapshot {
       "flow",
       "closeConfirmed",
       "reason",
+      "switching",
     ])
   )
     return false;
@@ -161,8 +179,23 @@ export function isSessionSnapshot(value: unknown): value is SessionSnapshot {
     !error(v.reason)
   )
     return false;
+  if (v.switching !== undefined) {
+    const s = v.switching;
+    if (
+      !closedObject(s, ["from", "to", "startedAt", "phase"]) ||
+      !boundedManagementText(s.from, 255) ||
+      !boundedManagementText(s.to, 255) ||
+      s.from === s.to ||
+      typeof s.startedAt !== "string" ||
+      !date(s.startedAt) ||
+      (s.phase !== "closing" && s.phase !== "opening") ||
+      v.desired !== true
+    )
+      return false;
+  }
   if (v.profile === null) return v.sessionId === null;
-  if (!object(v.profile, ["id", "name", "environment", "vhost"])) return false;
+  if (!object(v.profile, ["id", "name", "environment", "vhost", "savedVhost"]))
+    return false;
   const p = v.profile as Record<string, unknown>;
   return (
     typeof p.id === "string" &&
@@ -173,6 +206,9 @@ export function isSessionSnapshot(value: unknown): value is SessionSnapshot {
       String(p.environment),
     ) &&
     typeof p.vhost === "string" &&
-    new TextEncoder().encode(p.vhost).length <= 255
+    (p.vhost === "" || boundedManagementText(p.vhost, 255)) &&
+    (p.savedVhost === undefined || boundedManagementText(p.savedVhost, 255)) &&
+    (v.switching === undefined ||
+      (v.switching as Record<string, unknown>).to === p.vhost)
   );
 }

@@ -122,3 +122,10 @@ continuam parciais; seleção depende da 4B.2. Check 266 + seis Node, package/se
 smokes e matriz final 60 checks reais aprovados no recorte macOS arm64/nó único.
 Conclusão e commit da 4B.1 aprovados por “Autorizado” em 2026-10-31; demais
 limitações mantidas. Registro nesta entrega, sem autorizar push ou 4B.2.
+
+### Cobertura incremental 4B.2
+
+FR-004, FR-019, FR-025, FR-027 e FR-030 recebem seleção explícita de vhost e
+transição com geração nova. A lista HTTPS indica visibilidade e a abertura
+AMQP indica admissão da conexão naquele vhost. FR-020 continua dependente
+dos contratos de recursos e das respectivas permissões/capacidades.

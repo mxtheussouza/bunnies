@@ -47,6 +47,10 @@ function fixture() {
     getState: vi.fn(() => emptySession()),
     connect: vi.fn(() => emptySession()),
     disconnect: vi.fn(async () => emptySession()),
+    selectVhost: vi.fn(async (_owner, _input, authorize: () => void) => {
+      authorize();
+      return emptySession();
+    }),
     stopOwner: vi.fn(async () => undefined),
     setVisible: vi.fn(),
     setSuspended: vi.fn(),
@@ -55,6 +59,7 @@ function fixture() {
     () => window as unknown as BrowserWindow,
     APP_URL,
     service as unknown as SessionService,
+    { authorizeVhost: vi.fn() },
   );
   const event = {
     sender: contents,
@@ -79,6 +84,36 @@ function fixture() {
 }
 beforeEach(() => vi.clearAllMocks());
 describe("session IPC authority, shape and events", () => {
+  it("rejects a selection with an arbitrary endpoint or an invalid name, and passes only the owner's command", async () => {
+    const f = fixture();
+    try {
+      const command = "selectSessionVhost";
+      const input = {
+        sessionId: randomUUID(),
+        operationId: randomUUID(),
+        selectionId: randomUUID(),
+        generation: 1,
+        vhost: "..",
+      };
+      for (const value of [
+        { ...input, url: "amqps://elsewhere.invalid/" },
+        { ...input, vhost: "invalid\u0000" },
+        { ...input, selectionId: "forged" },
+      ])
+        expect(await f.call({ command, input: value })).toMatchObject({
+          error: { code: "VALIDATION" },
+        });
+      expect(f.service.selectVhost).not.toHaveBeenCalled();
+      expect(await f.call({ command, input })).toMatchObject({ ok: true });
+      expect(f.service.selectVhost).toHaveBeenCalledWith(
+        42,
+        input,
+        expect.any(Function),
+      );
+    } finally {
+      f.dispose();
+    }
+  });
   it("denies foreign windows/frames and fields before side effects", async () => {
     const f = fixture();
     for (const event of [

@@ -64,12 +64,13 @@ if (squirrelStartup) {
         activity,
       );
       const brokerSession = new SessionService(profiles, activity);
+      const management = new ManagementService(brokerSession, profiles);
       const disposeSessions = registerSessionIpc(
         getAppWindow,
         entry,
         brokerSession,
+        management,
       );
-      const management = new ManagementService(brokerSession, profiles);
       const disposeManagement = registerManagementIpc(
         getAppWindow,
         entry,

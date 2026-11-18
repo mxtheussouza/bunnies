@@ -61,6 +61,7 @@ describe("preload API", () => {
         "onSessionState",
         "getBrokerInfo",
         "listSessionVhosts",
+        "selectSessionVhost",
         "cancelManagementRead",
         "openLink",
         "quit",

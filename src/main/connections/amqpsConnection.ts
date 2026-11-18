@@ -8,6 +8,7 @@ import {
   AMQPS_HEARTBEAT,
 } from "../../shared/connections";
 import { parseAmqpsEndpoint } from "../../shared/amqpsEndpoint";
+import { boundedManagementText } from "../../shared/management";
 import type { ProfileErrorCode } from "../../shared/profiles";
 import { ProfileFailure } from "../profiles/errors";
 import type { StoredTrust } from "../security/profileCa";
@@ -58,9 +59,13 @@ export function openAmqpsConnection(
   input: AmqpsInput,
   signal: AbortSignal,
   onEvent: (e: AmqpsEvent) => void = () => undefined,
+  options?: { vhost?: string; onHandshakeStart?: () => void },
 ): Promise<AmqpsConnection> {
   const endpoint = parseAmqpsEndpoint(input.amqpsUrl);
   if (!endpoint) return Promise.reject(new ProfileFailure("AMQP_ENDPOINT"));
+  const vhost = options?.vhost ?? endpoint.vhost;
+  if (!boundedManagementText(vhost, 255))
+    return Promise.reject(new ProfileFailure("AMQP_ENDPOINT"));
   if (
     [input.username, input.password].some(
       v => v.includes("\0") || Buffer.from(v).toString("utf8") !== v,
@@ -109,7 +114,7 @@ export function openAmqpsConnection(
       if (opened && !done) onEvent({ kind: "flow", blocked: false });
     };
     const handle: AmqpsConnection = {
-      vhost: endpoint.vhost,
+      vhost,
       flow: "unknown",
       destroy: () => fail(new ProfileFailure("AMQP_CANCELLED")),
       close() {
@@ -147,6 +152,7 @@ export function openAmqpsConnection(
     const startTls = () => {
       if (done) return;
       try {
+        options?.onHandshakeStart?.();
         connect(
           {
             protocol: "amqps",
@@ -154,7 +160,7 @@ export function openAmqpsConnection(
             port: endpoint.port,
             username: input.username,
             password: input.password,
-            vhost: encodeURIComponent(endpoint.vhost),
+            vhost: encodeURIComponent(vhost),
             heartbeat: AMQPS_HEARTBEAT,
             frameMax: AMQPS_FRAME_MAX,
             channelMax: 1,

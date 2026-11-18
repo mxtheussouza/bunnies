@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1440" height="940" viewBox="0 0 1440 940" role="img" aria-labelledby="title desc">
+<title id="title">Bunnies — proposta de visão geral com estado parcial</title><desc id="desc">Proposta estática da Etapa 3A. Dados sintéticos; não é uma aplicação funcional. Identidade existente preservada.</desc>
+<style>text{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}.mono{font-family:ui-monospace,"SFMono-Regular",Consolas,monospace}</style>
+<defs><image id="mark" width="60" height="60" href="data:image/png;base64,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"/>
+</defs>
+<rect data-kind="shape" x="0" y="0" width="1440" height="900" rx="0" fill="#101418" stroke="none" stroke-width="1" />
+<rect data-kind="shape" x="0" y="0" width="1440" height="32" rx="0" fill="#222B35" stroke="none" stroke-width="1" />
+<text data-kind="text" x="720.0" y="21" font-size="12" fill="#ACB8C7" font-weight="500" text-anchor="middle" class="" >Bunnies</text>
+<text data-kind="text" x="1358" y="21" font-size="14" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >—</text>
+<text data-kind="text" x="1388" y="21" font-size="14" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >□</text>
+<text data-kind="text" x="1418" y="21" font-size="16" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >×</text>
+<rect data-kind="shape" x="0" y="32" width="224" height="868" rx="0" fill="#13191F" stroke="none" stroke-width="1" />
+<path d="M224 32L224 900" fill="none" stroke="#35414F" stroke-width="1"/>
+<use href="#mark" transform="translate(24 60) scale(0.5333333333333333)"/>
+<text data-kind="text" x="68" y="83" font-size="21" fill="#F0F4F8" font-weight="650" text-anchor="start" class="" >Bunnies</text>
+<text data-kind="text" x="24" y="124" font-size="12" fill="#ACB8C7" font-weight="600" text-anchor="start" class="" >RABBITMQ DESKTOP</text>
+<rect data-kind="shape" x="12" y="158" width="200" height="44" rx="8" fill="#3B281E" stroke="none" stroke-width="1" />
+<rect data-kind="shape" x="12" y="166" width="3" height="28" rx="1" fill="#FFAE78" stroke="none" stroke-width="1" />
+<g transform="translate(28 170) scale(0.8333333333333334)"><path d="M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z" fill="none" stroke="#FFAE78" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="60" y="186" font-size="14" fill="#FFAE78" font-weight="600" text-anchor="start" class="" >Visão geral</text>
+<g transform="translate(28 218) scale(0.8333333333333334)"><path d="M4 4h16v4H4z M4 10h16v4H4z M4 16h16v4H4z" fill="none" stroke="#ACB8C7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="60" y="234" font-size="14" fill="#ACB8C7" font-weight="450" text-anchor="start" class="" >Filas</text>
+<g transform="translate(28 266) scale(0.8333333333333334)"><path d="M9 9h6v6H9z M12 3v6 M12 15v6 M3 12h6 M15 12h6 M10 3h4 M10 21h4 M3 10v4 M21 10v4" fill="none" stroke="#ACB8C7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="60" y="282" font-size="14" fill="#ACB8C7" font-weight="450" text-anchor="start" class="" >Exchanges</text>
+<g transform="translate(28 314) scale(0.8333333333333334)"><path d="M3 4l18 8-18 8 4-8-4-8z M7 12h14" fill="none" stroke="#ACB8C7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="60" y="330" font-size="14" fill="#ACB8C7" font-weight="450" text-anchor="start" class="" >Publicar</text>
+<g transform="translate(28 362) scale(0.8333333333333334)"><path d="M7 3v5 M17 3v5 M5 8h14v4a7 7 0 0 1-14 0V8z M12 19v3" fill="none" stroke="#ACB8C7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="60" y="378" font-size="14" fill="#ACB8C7" font-weight="450" text-anchor="start" class="" >Conexões</text>
+<path d="M24 760H200" fill="none" stroke="#35414F" stroke-width="1"/>
+<g transform="translate(26 794) scale(0.75)"><path d="M12 3v3 M12 18v3 M3 12h3 M18 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2 M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8" fill="none" stroke="#ACB8C7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="56" y="808" font-size="13" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Tema: Sistema</text>
+<g transform="translate(178 792) scale(0.75)"><path d="M7 9l5 5 5-5" fill="none" stroke="#ACB8C7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g transform="translate(26 838) scale(0.75)"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M12 10v7 M12 7v1" fill="none" stroke="#ACB8C7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="56" y="852" font-size="13" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Sobre o Bunnies</text>
+<rect data-kind="shape" x="224" y="32" width="1216" height="72" rx="0" fill="#191F26" stroke="none" stroke-width="1" />
+<path d="M224 104H1440" fill="none" stroke="#35414F" stroke-width="1"/>
+<rect data-kind="shape" x="248" y="53" width="112" height="28" rx="6" fill="#3B2022" stroke="none" stroke-width="1" />
+<g transform="translate(256 59) scale(0.6666666666666666)"><path d="M12 3l10 18H2L12 3z M12 9v5 M12 17v1" fill="none" stroke="#FFB4AA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="312.0" y="72" font-size="12" fill="#FFB4AA" font-weight="600" text-anchor="middle" class="" >PRODUÇÃO</text>
+<text data-kind="text" x="380" y="52" font-size="12" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Conexão</text>
+<text data-kind="text" x="380" y="77" font-size="14" fill="#F0F4F8" font-weight="600" text-anchor="start" class="" >Payments</text>
+<g transform="translate(494 61) scale(0.75)"><path d="M7 9l5 5 5-5" fill="none" stroke="#ACB8C7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="528" y="52" font-size="12" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Vhost</text>
+<text data-kind="text" x="528" y="77" font-size="14" fill="#F0F4F8" font-weight="400" text-anchor="start" class="mono" >/</text>
+<g transform="translate(600 61) scale(0.75)"><path d="M7 9l5 5 5-5" fill="none" stroke="#ACB8C7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<rect data-kind="shape" x="1052" y="54" width="174" height="28" rx="6" fill="#153327" stroke="none" stroke-width="1" />
+<g transform="translate(1060 60) scale(0.6666666666666666)"><path d="M5 12l4 4L19 6" fill="none" stroke="#80DCAC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="1147.0" y="73" font-size="12" fill="#80DCAC" font-weight="600" text-anchor="middle" class="" >HTTPS disponível</text>
+<rect data-kind="shape" x="1238" y="54" width="174" height="28" rx="6" fill="#3B2022" stroke="none" stroke-width="1" />
+<g transform="translate(1246 60) scale(0.6666666666666666)"><path d="M12 3l10 18H2L12 3z M12 9v5 M12 17v1" fill="none" stroke="#FFB4AA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="1333.0" y="73" font-size="12" fill="#FFB4AA" font-weight="600" text-anchor="middle" class="" >AMQPS indisponível</text>
+<path d="M224 872H1440" fill="none" stroke="#35414F" stroke-width="1"/>
+<text data-kind="text" x="248" y="890" font-size="12" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Snapshot: 14:32:08 · escopo: vhost /</text>
+<text data-kind="text" x="256" y="158" font-size="28" fill="#F0F4F8" font-weight="650" text-anchor="start" class="" >Visão geral</text>
+<text data-kind="text" x="256" y="186" font-size="14" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Snapshot do vhost / · origem: Management API · 14:32:08</text>
+<rect data-kind="shape" x="1236" y="136" width="172" height="36" rx="8" fill="#191F26" stroke="#77889C" stroke-width="1" />
+<g transform="translate(1248 144) scale(0.8333333333333334)"><path d="M20 9a8 8 0 1 0 0 7 M20 3v6h-6" fill="none" stroke="#F0F4F8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="1330.0" y="159" font-size="13" fill="#F0F4F8" font-weight="600" text-anchor="middle" class="" >Atualizar</text>
+<rect data-kind="shape" x="256" y="214" width="1152" height="64" rx="8" fill="#362B18" stroke="none" stroke-width="1" />
+<g transform="translate(276 235) scale(0.8333333333333334)"><path d="M12 3l10 18H2L12 3z M12 9v5 M12 17v1" fill="none" stroke="#FFD08A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="310" y="240" font-size="14" fill="#FFD08A" font-weight="600" text-anchor="start" class="" >Mensageria indisponível</text>
+<text data-kind="text" x="310" y="262" font-size="13" fill="#FFD08A" font-weight="400" text-anchor="start" class="" >Consultas HTTPS continuam disponíveis. A publicação está bloqueada.</text>
+<rect data-kind="shape" x="1258" y="228" width="130" height="36" rx="8" fill="#191F26" stroke="#77889C" stroke-width="1" />
+<text data-kind="text" x="1323.0" y="251" font-size="13" fill="#F0F4F8" font-weight="600" text-anchor="middle" class="" >Ver conexão</text>
+<rect data-kind="shape" x="256" y="306" width="276" height="122" rx="8" fill="#191F26" stroke="#35414F" stroke-width="1" />
+<text data-kind="text" x="280" y="337" font-size="13" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Filas</text>
+<text data-kind="text" x="280" y="378" font-size="32" fill="#F0F4F8" font-weight="650" text-anchor="start" class="" >248</text>
+<text data-kind="text" x="280" y="406" font-size="12" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Última leitura deste vhost</text>
+<rect data-kind="shape" x="548" y="306" width="276" height="122" rx="8" fill="#191F26" stroke="#35414F" stroke-width="1" />
+<text data-kind="text" x="572" y="337" font-size="13" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Mensagens prontas</text>
+<text data-kind="text" x="572" y="378" font-size="32" fill="#F0F4F8" font-weight="650" text-anchor="start" class="" >1.332</text>
+<text data-kind="text" x="572" y="406" font-size="12" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Última leitura deste vhost</text>
+<rect data-kind="shape" x="840" y="306" width="276" height="122" rx="8" fill="#191F26" stroke="#35414F" stroke-width="1" />
+<text data-kind="text" x="864" y="337" font-size="13" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Unacked</text>
+<text data-kind="text" x="864" y="378" font-size="32" fill="#F0F4F8" font-weight="650" text-anchor="start" class="" >54</text>
+<text data-kind="text" x="864" y="406" font-size="12" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Última leitura deste vhost</text>
+<rect data-kind="shape" x="1132" y="306" width="276" height="122" rx="8" fill="#191F26" stroke="#35414F" stroke-width="1" />
+<text data-kind="text" x="1156" y="337" font-size="13" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Consumidores</text>
+<text data-kind="text" x="1156" y="378" font-size="32" fill="#F0F4F8" font-weight="650" text-anchor="start" class="" >84</text>
+<text data-kind="text" x="1156" y="406" font-size="12" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Última leitura deste vhost</text>
+<rect data-kind="shape" x="256" y="456" width="728" height="356" rx="8" fill="#191F26" stroke="#35414F" stroke-width="1" />
+<text data-kind="text" x="280" y="493" font-size="18" fill="#F0F4F8" font-weight="600" text-anchor="start" class="" >Filas com maior backlog</text>
+<text data-kind="text" x="280" y="518" font-size="12" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Ordenadas por prontas · snapshot atual</text>
+<rect data-kind="shape" x="257" y="537" width="726" height="38" rx="0" fill="#222B35" stroke="none" stroke-width="1" />
+<text data-kind="text" x="280" y="561" font-size="12" fill="#ACB8C7" font-weight="600" text-anchor="start" class="" >Fila</text>
+<text data-kind="text" x="790" y="561" font-size="12" fill="#ACB8C7" font-weight="600" text-anchor="end" class="" >Prontas</text>
+<text data-kind="text" x="960" y="561" font-size="12" fill="#ACB8C7" font-weight="600" text-anchor="end" class="" >Unacked</text>
+<path d="M280 620H960" fill="none" stroke="#35414F" stroke-width="1"/>
+<text data-kind="text" x="280" y="603" font-size="13" fill="#9CC5FF" font-weight="400" text-anchor="start" class="mono" text-decoration="underline">payments.incoming</text>
+<text data-kind="text" x="790" y="603" font-size="14" fill="#F0F4F8" font-weight="400" text-anchor="end" class="mono" >740</text>
+<text data-kind="text" x="960" y="603" font-size="14" fill="#F0F4F8" font-weight="400" text-anchor="end" class="mono" >12</text>
+<path d="M280 665H960" fill="none" stroke="#35414F" stroke-width="1"/>
+<text data-kind="text" x="280" y="648" font-size="13" fill="#9CC5FF" font-weight="400" text-anchor="start" class="mono" text-decoration="underline">notifications.email</text>
+<text data-kind="text" x="790" y="648" font-size="14" fill="#F0F4F8" font-weight="400" text-anchor="end" class="mono" >320</text>
+<text data-kind="text" x="960" y="648" font-size="14" fill="#F0F4F8" font-weight="400" text-anchor="end" class="mono" >16</text>
+<path d="M280 710H960" fill="none" stroke="#35414F" stroke-width="1"/>
+<text data-kind="text" x="280" y="693" font-size="13" fill="#9CC5FF" font-weight="400" text-anchor="start" class="mono" text-decoration="underline">audit.log</text>
+<text data-kind="text" x="790" y="693" font-size="14" fill="#F0F4F8" font-weight="400" text-anchor="end" class="mono" >160</text>
+<text data-kind="text" x="960" y="693" font-size="14" fill="#F0F4F8" font-weight="400" text-anchor="end" class="mono" >8</text>
+<path d="M280 755H960" fill="none" stroke="#35414F" stroke-width="1"/>
+<text data-kind="text" x="280" y="738" font-size="13" fill="#9CC5FF" font-weight="400" text-anchor="start" class="mono" text-decoration="underline">orders.fulfillment</text>
+<text data-kind="text" x="790" y="738" font-size="14" fill="#F0F4F8" font-weight="400" text-anchor="end" class="mono" >64</text>
+<text data-kind="text" x="960" y="738" font-size="14" fill="#F0F4F8" font-weight="400" text-anchor="end" class="mono" >12</text>
+<text data-kind="text" x="280" y="789" font-size="13" fill="#FFAE78" font-weight="600" text-anchor="start" class="" >Ver todas as filas →</text>
+<rect data-kind="shape" x="1008" y="456" width="400" height="356" rx="8" fill="#191F26" stroke="#35414F" stroke-width="1" />
+<text data-kind="text" x="1032" y="493" font-size="18" fill="#F0F4F8" font-weight="600" text-anchor="start" class="" >Conectividade</text>
+<rect data-kind="shape" x="1032" y="516" width="352" height="28" rx="6" fill="#153327" stroke="none" stroke-width="1" />
+<g transform="translate(1040 522) scale(0.6666666666666666)"><path d="M5 12l4 4L19 6" fill="none" stroke="#80DCAC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="1216.0" y="535" font-size="12" fill="#80DCAC" font-weight="600" text-anchor="middle" class="" >HTTPS disponível</text>
+<text data-kind="text" x="1032" y="568" font-size="12" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Autenticado · cadeia e hostname válidos</text>
+<rect data-kind="shape" x="1032" y="594" width="352" height="28" rx="6" fill="#3B2022" stroke="none" stroke-width="1" />
+<g transform="translate(1040 600) scale(0.6666666666666666)"><path d="M12 3l10 18H2L12 3z M12 9v5 M12 17v1" fill="none" stroke="#FFB4AA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text data-kind="text" x="1216.0" y="613" font-size="12" fill="#FFB4AA" font-weight="600" text-anchor="middle" class="" >AMQPS indisponível</text>
+<text data-kind="text" x="1032" y="646" font-size="12" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Conexão recusada. Tentativas encerradas.</text>
+<rect data-kind="shape" x="1032" y="676" width="352" height="36" rx="8" fill="#191F26" stroke="#77889C" stroke-width="1" />
+<text data-kind="text" x="1208.0" y="699" font-size="13" fill="#F0F4F8" font-weight="600" text-anchor="middle" class="" >Tentar AMQPS novamente</text>
+<text data-kind="text" x="1032" y="751" font-size="12" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Atualização automática a cada 5 s.</text>
+<text data-kind="text" x="1032" y="777" font-size="12" fill="#ACB8C7" font-weight="400" text-anchor="start" class="" >Sem histórico persistente nesta visão.</text>
+<rect data-kind="shape" x="0" y="900" width="1440" height="40" rx="0" fill="#E9EDF3" stroke="none" stroke-width="1" />
+<text data-kind="text" x="24" y="925" font-size="12" fill="#334155" font-weight="500" text-anchor="start" class="" >PROPOSTA 3A  ·  Estado parcial não bloqueia consultas · tema escuro  ·  Dados sintéticos; sem conexão real.</text>
+</svg>

@@ -1,0 +1,179 @@
+# Requisitos não funcionais
+
+Data: 2026-10-28. Status: **Approved como requisitos e metas de validação**.
+O proprietário aprovou os requisitos/limites na conclusão da Etapa 1B. Os valores
+não são capacidades garantidas pelo RabbitMQ ou resultados medidos. O proprietário
+informou inicialmente “Nada definido” para ambientes e autenticação e depois aceitou
+a matriz de referência; ainda não há compatibilidade homologada.
+
+## Matriz de referência
+
+| ID | Alvo candidato | Limite da proposta |
+| --- | --- | --- |
+| NFR-001 | Windows 11 x64; Ubuntu 24.04 LTS x64; macOS 14 arm64 e x64 | Quatro combinações de build/smoke; não implica outras distribuições, Windows ARM ou Linux ARM |
+| NFR-002 | RabbitMQ 4.4.0 e 4.3.6 como patches iniciais de teste | Revalidar patches suportados antes de implementar; não declarar toda série homologada |
+| NFR-003 | Management por HTTPS e mensageria por AMQPS; usuário/senha | TLS obrigatório neste recorte; CA customizada; mTLS, OAuth e proxy corporativo configurável posteriores |
+| NFR-004 | Aplicação exclusivamente local/desktop | Nenhum servidor próprio hospedado, telemetria ou execução de conteúdo remoto |
+
+A seleção de macOS 14 é um piso proposto de produto, acima do mínimo informado pelo
+Electron 44+; não significa que todos os sistemas mais novos tenham sido testados.
+O ciclo de suporte RabbitMQ e a matriz tecnológica estão na
+[avaliação](../03-architecture/technology-evaluation.md). Versões adicionais exigem
+teste e atualização explícita da matriz; fora dela, informar suporte não homologado.
+
+## Segurança, privacidade e confiabilidade
+
+| ID | Requisito verificável | Evidência futura |
+| --- | --- | --- |
+| NFR-005 | Segredos não persistidos em claro; modo em memória quando proteção do SO não estiver comprovadamente disponível | T-02, T-09; inspeção de arquivos e falhas do key provider |
+| NFR-006 | Renderer sem Node, contexto isolado, sandbox ativo, ponte mínima e navegação/requisições restritas | T-01, T-10; configuração efetiva no artefato |
+| NFR-007 | TLS verifica cadeia e hostname; sem flags/API de bypass ou downgrade | T-04, T-12; CA inválida, hostname divergente e expiração |
+| NFR-008 | Logs estruturados não contêm segredos, cabeçalhos de autenticação ou payloads; retenção limitada | T-09; entradas com valores sentinela não sensíveis |
+| NFR-009 | Escritas não são repetidas automaticamente após erro ambíguo; cancelamento não é rollback | T-05, T-07 |
+| NFR-010 | Exclusão, purge e remoção de binding exigem confirmação contextual no núcleo e revalidação após o diálogo | T-06, T-10 |
+| NFR-011 | Configuração versionada, escrita atômica e validação; corrupção não sobrescreve o arquivo original silenciosamente | T-02; falhas de disco/permissão/formato |
+| NFR-012 | Recursos, sockets, handlers e listeners têm ciclo de vida controlado; descarte de sessão impede retorno obsoleto | T-01, T-05, T-08 |
+
+## Limites operacionais candidatos
+
+Este é o ponto de referência para os valores abaixo. Uma mudança exige atualizar
+requisitos, testes e contrato afetados. Verificar bytes durante leitura/serialização
+e antes do parsing controlado pela aplicação. O custo inicial de structured clone
+do Electron/contextBridge pode preceder o handler; o limite de IPC não é garantia
+contra toda alocação de memória causada por renderer comprometido.
+
+| ID | Parâmetro | Valor inicial proposto |
+| --- | --- | --- |
+| NFR-013 | Timeout total de leitura HTTP / handshake AMQP / comando de escrita / espera de confirm | 10 s / 15 s / 30 s / 10 s; deadline após envio pode gerar resultado incerto |
+| NFR-014 | Página de recursos / máximo solicitado pelo cliente | 100 / 200 itens; endpoints sem paginação recebem tratamento próprio, sem inventar paginação no servidor |
+| NFR-015 | Resposta HTTP descomprimida / payload publicado UTF-8 | 10 MiB / 1 MiB; resposta/payload acima do limite gera erro explícito |
+| NFR-016 | Headers de mensagem / corpo IPC serializado | Até 64 headers e 64 KiB agregados / 2 MiB; limitar também profundidade de dados a 16 níveis |
+| NFR-017 | Leituras HTTP simultâneas / publicações em voo | Máximo 4 por sessão / uma por sessão no MVP |
+| NFR-018 | Polling | 5 s após conclusão; mínimo 5 s, sem sobreposição; pausar em background/desconexão; atualização manual disponível |
+| NFR-019 | Reconexão | Até cinco tentativas: 1, 2, 4, 8 e 16 s com jitter de até 20%; depois, ação manual; não repetir 401/403 ou erro TLS |
+| NFR-020 | Perfis / tamanho do arquivo de configuração | Até 50 / 2 MiB, incluindo ciphertext; validar antes da persistência |
+| NFR-021 | Logs locais | Até três arquivos de 5 MiB; rotação no núcleo; timestamps e IDs, sem dados sensíveis |
+
+Os limites do broker e suas políticas continuam valendo e podem ser mais restritivos.
+Leituras de grandes conjuntos sem paginação suportada devem informar o limite, em
+vez de baixar tudo e alegar que a paginação visual resolveu o custo de rede.
+
+## Interface e desempenho
+
+| ID | Meta candidata | Como verificar |
+| --- | --- | --- |
+| NFR-022 | Teclado, ordem de foco, nomes acessíveis e foco visível nos fluxos do MVP; produção distinguida além da cor | Componentes e revisão manual com tecnologias assistivas por SO |
+| NFR-023 | Contraste mínimo 4,5:1 em texto comum e 3:1 em texto grande/componentes aplicáveis; zoom 200% sem perda de ações essenciais | Medição e inspeção dos temas; referência WCAG 2.2 AA, sem alegação de certificação |
+| NFR-024 | Janela a partir de 1024 × 700; em tamanhos menores, rolagem e acesso aos controles, sem truncar ações críticas | E2E em dimensões/zoom e teste manual |
+| NFR-025 | p95 de resposta visual a interação local até 100 ms com rede lenta; tabela de 100 linhas utilizável | Pelo menos 20 interações por cenário no equipamento de referência, medindo evento→feedback |
+| NFR-026 | Inicialização até interface utilizável em até 5 s no p95 | 20 inicializações de release por alvo; registrar hardware/cache/OS; não incluir conexão ao broker |
+
+NFR-025/026 são metas a validar antes de assumidas como compromisso de release.
+Equipamento de referência proposto: ao menos quatro núcleos, 8 GiB de RAM e SSD;
+registrar CPU/OS reais ao medir. Memória será medida no processo principal e filhos,
+com método/compartilhamento documentados por SO; não há orçamento ou ganho percentual
+comprovado. Se metas forem inviáveis, propor revisão antes de mudar o critério.
+[Referência de acessibilidade](https://www.w3.org/TR/WCAG22/).
+
+## Qualidade e distribuição
+
+| ID | Requisito | Evidência futura |
+| --- | --- | --- |
+| NFR-027 | Compilação separa Node, preload e DOM; tipagem estrita e imports respeitam fronteiras | Typecheck e revisão de dependências |
+| NFR-028 | Instalação reproduzível pelo lockfile e package manager fixado; CI sem testes destrutivos em ambiente externo | Jobs e relatórios por commit |
+| NFR-029 | Smoke de pacote por SO/CPU, incluindo recursos, sandbox, CSP, credenciais e fechamento/reabertura | T-12; testes não equivalem a assinatura/notarização |
+| NFR-030 | Alterações incrementais, documentação sincronizada, aprovação e Conventional Commits | Contrato, revisão e histórico |
+
+Não há SLA de broker, alta disponibilidade de cluster ou entrega exatamente uma vez
+prometidos pelo aplicativo. A [estratégia de testes](../07-testing/test-strategy.md)
+e o [modelo de segurança](../08-security/security-model.md) definem verificações
+planejadas. Nenhuma métrica de desempenho ou teste funcional foi executado na 1B.
+
+## Sublimites aceitos para 4A.2A
+
+A resposta “Autorizo” ao contrato 4A.2A aprovou os limites específicos abaixo;
+eles não ampliam os tetos gerais anteriores e não constituem homologação de broker.
+
+| ID | Parâmetro específico | Limite aceito |
+| --- | --- | --- |
+| NFR-031 | CA pública por perfil / seleção temporária | Bundle PEM até 256 KiB/16 certificados CA; uma seleção por janela; validade de dez minutos; material público copiado no main, sem chave privada/trust global |
+| NFR-032 | Probe whoami HTTPS | Headers até 16 KiB/corpo até 64 KiB, UTF-8/JSON profundidade até 16, somente identity; TLS mínimo 1.2, cadeia/validade/hostname obrigatórios, sem redirect/retry/proxy herdado |
+| NFR-033 | Execução do teste / contexto | Uma operação em voo por janela, deadline total 10 s (NFR-013); cancelamento/invalidação e resultado datado sem ativar sessão |
+
+Schema v2/backup v1 implementam NFR-011; arquivo principal e backup individual
+continuam limitados a 2 MiB, sem segredo em texto puro no arquivo. Regressão e limites efetivamente
+executados: [4A.2A](../07-testing/https-4a2a.md).
+
+## Sublimites aceitos para 4A.2B
+
+“Autorizo”, em 2026-10-29, aceitou os parâmetros do contrato de teste AMQPS.
+Não altera schema v2, limites HTTPS, transporte de trabalho ou gates de provider.
+
+| ID | Parâmetro específico | Limite aceito |
+| --- | --- | --- |
+| NFR-034 | Probe AMQPS / encerramento | Deadline total 15 s incluindo snapshot/DNS/TCP/TLS/abertura/close/revalidação; close até 1 s dentro do restante, com diagnóstico e destruição se não confirmado |
+| NFR-035 | Vhost e negociação | Nome não vazio até 255 bytes UTF-8, sem C0/DEL; caminho bruto de um segmento, decode estrito uma vez; ausente usa /, barra final isolada rejeitada; heartbeat 10 s, frameMax 128 KiB, channelMax 1; sem canais |
+| NFR-036 | Concorrência / recursos / autoridade | Uma operação HTTPS ou AMQPS por janela; 18 métodos específicos, cancelamento por modalidade/owner/id, descarte de resultado antigo e recursos fechados; sem retry/recovery ou sessão |
+
+TLS/CA segue 4A.2A. O campo AMQPS anterior continua editável/legível mesmo quando
+fora do recorte novo, sem reset ou migração automática. [Evidências](../07-testing/amqps-4a2b.md).
+
+## Refinamentos aceitos para 4A.2C — implementados/verificados localmente
+
+“Autorizado” em 2026-10-30 aceitou o contrato/C-01–07 e os refinamentos abaixo.
+São a fonte de parâmetros do incremento, sem homologação. O gate inicial reprovou;
+a autorização posterior da ADR-0008 A permitiu correção/gate aprovado e retomada.
+Ver [evidências](../07-testing/sessions-4a2c.md).
+
+| Referência | Refinamento aceito | Limite |
+| --- | --- | --- |
+| NFR-012/017/036, FR-004/030 | Sessão/autoridade | Uma sessão lógica do aplicativo, pertencente à janela principal; probes excluídos enquanto sessão vive; quatro métodos novos implementados, total 22 |
+| NFR-013/018/019 | Verificação/recuperação | whoami 5 s após concluir, sem sobreposição; prazos HTTP/AMQP 10/15 s. Até cinco retries por endpoint/ativação após 1/2/4/8/16 s com jitter uniforme ±20%; sucesso não repõe cota; tentativa iniciada consome cota mesmo se interrompida; erro TLS/auth/permissão/protocolo terminal não gera retry |
+| NFR-012/018 | Background/lifecycle | Pausar novos polls/retries e abortar trabalho pendente em background; AMQP estabelecido mantém heartbeat 10 s. Suspensão invalida/fecha recursos; retomada sem rajada/reset de cota. Desconexão invalida generation antes de close de até 1 s; depois destruição, sem falsa confirmação |
+
+Estado HTTPS é resultado datado de autenticação, não saúde contínua. AMQP
+estabelecido/fluxo inicialmente desconhecido não prova permissão para publicar.
+Sem fila, canal, publicação ou replay de escrita. ADR-0008 A está Accepted, sem
+alterar estes limites. Resultados reais e limitações ficam nas evidências.
+
+## 4B.1 — contrato autorizado; gate reprovado
+
+“Autorizado” aceitou os sublimits do contrato 4B.1: leitura total 10 s, headers
+16 KiB, corpo 256 KiB, profundidade 16 e uma consulta administrativa simultânea
+por janela (até duas HTTPS com whoami). Página solicitada fixa de 100 e sem
+fallback de lista completa. Esses limites não estão implementados no produto.
+
+O gate real reprovou nas duas versões, interrompendo dependentes. [ADR-0009
+Proposed](../03-architecture/adr/0009-management-vhost-read-contract.md) recomenda
+substituir paginação por lista completa limitada a 200/256 KiB, com indicação
+explícita de custo/limite; ainda exige aprovação. Não reinterpretar NFR-014/015
+como autorização automática para aplicar essa alternativa. [Evidências](../07-testing/management-4b1.md).
+
+## Sublimites vigentes — 4B.1 com ADR-0009 A aceita
+
+A resposta “Autorizado” aceitou A e a retomada condicional. O gate revisado passou
+12 verificações por versão 4.4.0/4.3.6; substitui os parâmetros de paginação/GET
+individual do contrato inicial, mantendo os registros históricos acima.
+
+| Referência | Recorte aprovado |
+| --- | --- |
+| NFR-013/015/016 | Prazo total administrativo 10 s desde aceitação; headers 16 KiB, corpo 256 KiB contado durante leitura antes do parsing, profundidade JSON 16; identity apenas |
+| NFR-014 | Lista completa até 200 nomes de 255 bytes UTF-8; acima do limite, recusa integral explícita, sem truncar/paginar visualmente ou fazer fallback |
+| NFR-017/018/019 | Uma leitura administrativa em voo por janela, até duas HTTPS com whoami; ação manual, sem retry/polling próprio, sem alterar cotas da sessão |
+| NFR-012/016 | Owner/sessionId/generation/operationId/revisão conferidos; invalidação/cancelamento em navegação e lifecycle; ponte 25 métodos, sem GET individual ou seleção de vhost |
+
+Limite do cliente não impede custo de preparar a lista no servidor. 401 pode ser
+negação por tag com senha válida; versão informada/visibilidade não comprovam
+permissão AMQP, saúde ou identidade comum dos dois endpoints. Implementação em
+validação, resultados finais nas evidências; sem nova homologação de escala/alvos.
+
+## Sublimites aprovados — 4B.2
+
+| Referência | Recorte da transição |
+| --- | --- |
+| NFR-012/014/016 | Um catálogo em memória, até 200 nomes de 255 bytes UTF-8, validade de cinco minutos, owner/revisão/geração e identificador opaco |
+| NFR-012/013 | Uma transição em voo. Até 1 s para fechamento confirmado, até 15 s para nova abertura e recursos locais descartados quando a confirmação falhar |
+| NFR-017/019 | Novas aberturas automáticas ficam bloqueadas na transição quando o estado remoto anterior for incerto. Novas ativações explícitas retêm o contrato 4A.2C |
+
+A seleção vale na sessão e altera apenas o campo vhost da negociação AMQPS.
+Nenhuma nova rota HTTP é necessária.

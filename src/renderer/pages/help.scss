@@ -1,0 +1,75 @@
+.help-guide {
+  max-width: 960px;
+  overflow-wrap: anywhere;
+}
+.help-index,
+.help-section {
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.help-index > p,
+.help-section > p,
+.help-section > ol,
+.help-section > ul,
+.help-section > dl {
+  margin-top: 16px;
+}
+.help-index ol,
+.help-section ol,
+.help-section ul {
+  padding-left: 24px;
+}
+.help-index li + li,
+.help-section li + li {
+  margin-top: 12px;
+}
+.help-topic {
+  display: inline-block;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--bn-info);
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.help-section h2 {
+  scroll-margin-top: 16px;
+}
+.help-section h2:focus {
+  outline-offset: 4px;
+}
+.help-fields {
+  margin-bottom: 24px;
+}
+.help-fields > div {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(0, 3fr);
+  gap: 12px 24px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--bn-separator);
+}
+.help-fields dt {
+  font-weight: 600;
+}
+.help-fields dd {
+  margin: 0;
+  min-width: 0;
+}
+.help-example {
+  margin-top: 8px;
+  color: var(--bn-muted);
+}
+.help-example code {
+  white-space: normal;
+}
+@media (max-width: 760px) {
+  .help-index,
+  .help-section {
+    padding: 16px;
+  }
+  .help-fields > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

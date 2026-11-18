@@ -84,3 +84,6 @@ jspm_packages/
 
 # Electron-Forge
 out/
+
+# TypeScript output
+dist/

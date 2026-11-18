@@ -1,0 +1,492 @@
+{
+  "status": "Accepted color pairs only; no application accessibility certification",
+  "method": "WCAG relative luminance, sRGB, no alpha; comparisons use unrounded values",
+  "pairs": [
+    {
+      "theme": "light",
+      "foreground": "text",
+      "background": "canvas",
+      "hexForeground": "#17212B",
+      "hexBackground": "#F6F7F9",
+      "ratio": 15.200110647158896,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "text",
+      "background": "surface",
+      "hexForeground": "#17212B",
+      "hexBackground": "#FFFFFF",
+      "ratio": 16.293495425950333,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "text",
+      "background": "alternate",
+      "hexForeground": "#17212B",
+      "hexBackground": "#EEF1F5",
+      "ratio": 14.381773236104552,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "text",
+      "background": "sidebar",
+      "hexForeground": "#17212B",
+      "hexBackground": "#FFFFFF",
+      "ratio": 16.293495425950333,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "muted",
+      "background": "canvas",
+      "hexForeground": "#526172",
+      "hexBackground": "#F6F7F9",
+      "ratio": 5.915758724834798,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "muted",
+      "background": "surface",
+      "hexForeground": "#526172",
+      "hexBackground": "#FFFFFF",
+      "ratio": 6.341295136699404,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "muted",
+      "background": "alternate",
+      "hexForeground": "#526172",
+      "hexBackground": "#EEF1F5",
+      "ratio": 5.597268498567377,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "muted",
+      "background": "sidebar",
+      "hexForeground": "#526172",
+      "hexBackground": "#FFFFFF",
+      "ratio": 6.341295136699404,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "onAccent",
+      "background": "accent",
+      "hexForeground": "#FFFFFF",
+      "hexBackground": "#B94700",
+      "ratio": 5.297474860368554,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "onAccent",
+      "background": "accentHover",
+      "hexForeground": "#FFFFFF",
+      "hexBackground": "#983A00",
+      "ratio": 7.1421224594574815,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "accentText",
+      "background": "accentSoft",
+      "hexForeground": "#9A3900",
+      "hexBackground": "#FFF0E5",
+      "ratio": 6.368987498895022,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "info",
+      "background": "surface",
+      "hexForeground": "#1D4ED8",
+      "hexBackground": "#FFFFFF",
+      "ratio": 6.701618401398807,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "success",
+      "background": "successSoft",
+      "hexForeground": "#166534",
+      "hexBackground": "#ECFDF3",
+      "ratio": 6.7605180086442935,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "warning",
+      "background": "warningSoft",
+      "hexForeground": "#92400E",
+      "hexBackground": "#FFFAEB",
+      "ratio": 6.794924886715099,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "danger",
+      "background": "dangerSoft",
+      "hexForeground": "#B42318",
+      "hexBackground": "#FEF3F2",
+      "ratio": 6.04726982551666,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "info",
+      "background": "infoSoft",
+      "hexForeground": "#1D4ED8",
+      "hexBackground": "#EFF6FF",
+      "ratio": 6.157973971775642,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "border",
+      "background": "canvas",
+      "hexForeground": "#738294",
+      "hexBackground": "#F6F7F9",
+      "ratio": 3.662072221159586,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "border",
+      "background": "surface",
+      "hexForeground": "#738294",
+      "hexBackground": "#FFFFFF",
+      "ratio": 3.9254949105331827,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "border",
+      "background": "alternate",
+      "hexForeground": "#738294",
+      "hexBackground": "#EEF1F5",
+      "ratio": 3.464915057628154,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "focus",
+      "background": "canvas",
+      "hexForeground": "#1D4ED8",
+      "hexBackground": "#F6F7F9",
+      "ratio": 6.251902280836502,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "focus",
+      "background": "surface",
+      "hexForeground": "#1D4ED8",
+      "hexBackground": "#FFFFFF",
+      "ratio": 6.701618401398807,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "focus",
+      "background": "alternate",
+      "hexForeground": "#1D4ED8",
+      "hexBackground": "#EEF1F5",
+      "ratio": 5.915314893716345,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "focus",
+      "background": "sidebar",
+      "hexForeground": "#1D4ED8",
+      "hexBackground": "#FFFFFF",
+      "ratio": 6.701618401398807,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "text",
+      "background": "canvas",
+      "hexForeground": "#F0F4F8",
+      "hexBackground": "#101418",
+      "ratio": 16.736598966619137,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "text",
+      "background": "surface",
+      "hexForeground": "#F0F4F8",
+      "hexBackground": "#191F26",
+      "ratio": 15.01661915386338,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "text",
+      "background": "alternate",
+      "hexForeground": "#F0F4F8",
+      "hexBackground": "#222B35",
+      "ratio": 12.970040148543951,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "text",
+      "background": "sidebar",
+      "hexForeground": "#F0F4F8",
+      "hexBackground": "#13191F",
+      "ratio": 16.01377840190578,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "muted",
+      "background": "canvas",
+      "hexForeground": "#ACB8C7",
+      "hexBackground": "#101418",
+      "ratio": 9.191562430008092,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "muted",
+      "background": "surface",
+      "hexForeground": "#ACB8C7",
+      "hexBackground": "#191F26",
+      "ratio": 8.246967780950087,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "muted",
+      "background": "alternate",
+      "hexForeground": "#ACB8C7",
+      "hexBackground": "#222B35",
+      "ratio": 7.123008323424926,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "muted",
+      "background": "sidebar",
+      "hexForeground": "#ACB8C7",
+      "hexBackground": "#13191F",
+      "ratio": 8.794597051348568,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "onAccent",
+      "background": "accent",
+      "hexForeground": "#17212B",
+      "hexBackground": "#FF944D",
+      "ratio": 7.444673578491025,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "onAccent",
+      "background": "accentHover",
+      "hexForeground": "#17212B",
+      "hexBackground": "#FFAE78",
+      "ratio": 8.982863131124091,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "accentText",
+      "background": "accentSoft",
+      "hexForeground": "#FFAE78",
+      "hexBackground": "#3B281E",
+      "ratio": 7.676327862357995,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "info",
+      "background": "surface",
+      "hexForeground": "#9CC5FF",
+      "hexBackground": "#191F26",
+      "ratio": 9.36056472194197,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "success",
+      "background": "successSoft",
+      "hexForeground": "#80DCAC",
+      "hexBackground": "#153327",
+      "ratio": 8.308282371103159,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "warning",
+      "background": "warningSoft",
+      "hexForeground": "#FFD08A",
+      "hexBackground": "#362B18",
+      "ratio": 9.660465018786253,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "danger",
+      "background": "dangerSoft",
+      "hexForeground": "#FFB4AA",
+      "hexBackground": "#3B2022",
+      "ratio": 8.731558341853617,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "info",
+      "background": "infoSoft",
+      "hexForeground": "#9CC5FF",
+      "hexBackground": "#192D48",
+      "ratio": 7.842388648515204,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "border",
+      "background": "canvas",
+      "hexForeground": "#77889C",
+      "hexBackground": "#101418",
+      "ratio": 5.096621472878296,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "border",
+      "background": "surface",
+      "hexForeground": "#77889C",
+      "hexBackground": "#191F26",
+      "ratio": 4.572854005898177,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "border",
+      "background": "alternate",
+      "hexForeground": "#77889C",
+      "hexBackground": "#222B35",
+      "ratio": 3.949630701972652,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "focus",
+      "background": "canvas",
+      "hexForeground": "#82B6FF",
+      "hexBackground": "#101418",
+      "ratio": 8.882664627815887,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "focus",
+      "background": "surface",
+      "hexForeground": "#82B6FF",
+      "hexBackground": "#191F26",
+      "ratio": 7.969814659085997,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "focus",
+      "background": "alternate",
+      "hexForeground": "#82B6FF",
+      "hexBackground": "#222B35",
+      "ratio": 6.883627735754717,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "focus",
+      "background": "sidebar",
+      "hexForeground": "#82B6FF",
+      "hexBackground": "#13191F",
+      "ratio": 8.49903993350117,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "onDanger",
+      "background": "danger",
+      "hexForeground": "#FFFFFF",
+      "hexBackground": "#B42318",
+      "ratio": 6.57428861557707,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "onDanger",
+      "background": "danger",
+      "hexForeground": "#17212B",
+      "hexBackground": "#FFB4AA",
+      "ratio": 9.590630096044013,
+      "minimum": 4.5,
+      "pass": true
+    }
+  ],
+  "rejectedExample": {
+    "foreground": "#FFFFFF",
+    "background": "#FF6600",
+    "ratio": 2.936016453947765,
+    "reason": "Not used for body text or primary button label on brand orange"
+  }
+}

@@ -1,0 +1,6 @@
+--- a/lib/connection.js
++++ b/lib/connection.js
+@@ -217,2 +217,2 @@
+-      self.acceptLoop();
++      setImmediate(() => self.acceptLoop());
+       openCallback(null, ok);

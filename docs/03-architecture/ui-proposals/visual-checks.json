@@ -1,0 +1,46 @@
+{
+  "status": "Accepted design; static mockups and layout checks only",
+  "renderer": "Electron 45.1.0 on macOS arm64",
+  "results": [
+    {
+      "file": "01-connections.svg",
+      "width": 1440,
+      "height": 940,
+      "title": "Bunnies — proposta de conexões, tema escuro",
+      "outside": [],
+      "textNodes": 54
+    },
+    {
+      "file": "02-overview.svg",
+      "width": 1440,
+      "height": 940,
+      "title": "Bunnies — proposta de visão geral com estado parcial",
+      "outside": [],
+      "textNodes": 66
+    },
+    {
+      "file": "03-queues.svg",
+      "width": 1440,
+      "height": 940,
+      "title": "Bunnies — proposta de filas em produção, tema claro",
+      "outside": [],
+      "textNodes": 99
+    },
+    {
+      "file": "04-confirmation.svg",
+      "width": 1024,
+      "height": 740,
+      "title": "Bunnies — conteúdo proposto de confirmação nativa",
+      "outside": [],
+      "textNodes": 29
+    },
+    {
+      "file": "05-design-system.svg",
+      "width": 1440,
+      "height": 1140,
+      "title": "Bunnies — proposta de identidade, temas e componentes",
+      "outside": [],
+      "textNodes": 61
+    }
+  ]
+}

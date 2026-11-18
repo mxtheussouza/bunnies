@@ -2,16 +2,19 @@ import React from "react";
 
 export const useVersions = () => {
   const [versions, setVersions] = React.useState<Record<string, string>>({});
-
   React.useEffect(() => {
-    // Apply versions
-    const app = document.getElementById("app");
-    const versions = JSON.parse(app.getAttribute("data-versions"));
-
-    setVersions(versions);
+    let active = true;
+    void window.bunnies
+      .getInfo()
+      .then(result => {
+        if (active && result.ok) setVersions({ bunnies: result.value.version });
+      })
+      .catch(() => {
+        /* Metadata absence must not prevent rendering. */
+      });
+    return () => {
+      active = false;
+    };
   }, []);
-
-  return {
-    versions,
-  };
+  return { versions };
 };

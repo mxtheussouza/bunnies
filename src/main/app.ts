@@ -1,48 +1,137 @@
-import { app, BrowserWindow } from "electron";
-import { createAppWindow } from "./appWindow";
+import { app, dialog, Menu, protocol, safeStorage, session } from "electron";
+import squirrelStartup from "electron-squirrel-startup";
+import { resolve } from "node:path";
+import { createAppWindow, getAppWindow, rendererEntry } from "./appWindow";
+import { registerDesktopIpc } from "./ipc/desktop";
+import { ConnectionTestService } from "./connections/connectionTestService";
+import { ConnectionActivity } from "./connections/activity";
+import { ManagementService } from "./management/service";
+import { registerManagementIpc } from "./ipc/management";
+import { SessionService } from "./sessions/sessionService";
+import { registerSessionIpc } from "./ipc/session";
+import { registerConnectionsIpc } from "./ipc/connections";
+import { registerProfilesIpc } from "./ipc/profiles";
+import { ProfileRepository } from "./profiles/repository";
+import { ProfileService } from "./profiles/service";
+import { SecretProtection } from "./security/secretProtection";
+import { APP_SCHEME } from "./security/desktopPolicy";
+import { createResourceHandler } from "./security/resources";
+import { restrictSession } from "./security/session";
 
-/** Handle creating/removing shortcuts on Windows when installing/uninstalling. */
-if (require("electron-squirrel-startup")) {
+if (squirrelStartup) {
   app.quit();
+} else {
+  app.enableSandbox();
+  protocol.registerSchemesAsPrivileged([
+    {
+      scheme: APP_SCHEME,
+      privileges: {
+        standard: true,
+        secure: true,
+        supportFetchAPI: true,
+        corsEnabled: true,
+      },
+    },
+  ]);
+  app
+    .whenReady()
+    .then(() => {
+      const entry = rendererEntry();
+      restrictSession(session.defaultSession, app.isPackaged, entry);
+      if (app.isPackaged) {
+        protocol.handle(
+          APP_SCHEME,
+          createResourceHandler(resolve(__dirname, "../renderer")),
+        );
+      }
+      const dispose = registerDesktopIpc(getAppWindow, entry);
+      // No platform has completed provider/reopen/rotation/release gates yet.
+      // This adapter fails closed without probing or prompting the user keychain.
+      const profiles = new ProfileService(
+        new ProfileRepository(app.getPath("userData")),
+        new SecretProtection(safeStorage),
+      );
+      const disposeProfiles = registerProfilesIpc(
+        getAppWindow,
+        entry,
+        profiles,
+      );
+      const activity = new ConnectionActivity();
+      const connectionTests = new ConnectionTestService(
+        profiles,
+        undefined,
+        undefined,
+        activity,
+      );
+      const brokerSession = new SessionService(profiles, activity);
+      const management = new ManagementService(brokerSession, profiles);
+      const disposeSessions = registerSessionIpc(
+        getAppWindow,
+        entry,
+        brokerSession,
+        management,
+      );
+      const disposeManagement = registerManagementIpc(
+        getAppWindow,
+        entry,
+        management,
+      );
+      let quitting = false;
+      app.on("before-quit", event => {
+        if (quitting) return;
+        event.preventDefault();
+        quitting = true;
+        management.dispose();
+        void brokerSession.dispose().finally(() => app.quit());
+      });
+      const disposeConnections = registerConnectionsIpc(
+        getAppWindow,
+        entry,
+        profiles,
+        connectionTests,
+      );
+      app.once("will-quit", () => {
+        disposeManagement();
+        management.dispose();
+        disposeSessions();
+        dispose();
+        disposeProfiles();
+        disposeConnections();
+        connectionTests.dispose();
+        profiles.dispose();
+      });
+      Menu.setApplicationMenu(
+        Menu.buildFromTemplate([
+          ...(process.platform === "darwin"
+            ? [{ role: "appMenu" as const }]
+            : []),
+          { label: "File", submenu: [{ role: "close" }, { role: "quit" }] },
+          { role: "editMenu" },
+          {
+            label: "View",
+            submenu: [
+              { role: "reload" },
+              { role: "forceReload" },
+              ...(!app.isPackaged ? [{ role: "toggleDevTools" as const }] : []),
+              { role: "resetZoom" },
+              { role: "zoomIn" },
+              { role: "zoomOut" },
+              { role: "togglefullscreen" },
+            ],
+          },
+          ...(process.platform === "darwin"
+            ? [{ role: "windowMenu" as const }]
+            : []),
+        ]),
+      );
+      createAppWindow();
+      app.on("activate", () => createAppWindow());
+    })
+    .catch(() => {
+      dialog.showErrorBox("Bunnies", "Não foi possível iniciar o aplicativo.");
+      app.quit();
+    });
+  app.on("window-all-closed", () => {
+    if (process.platform !== "darwin") app.quit();
+  });
 }
-
-/**
- * This method will be called when Electron has finished
- * initialization and is ready to create browser windows.
- * Some APIs can only be used after this event occurs.
- */
-app.on("ready", createAppWindow);
-
-/**
- * Emitted when the application is activated. Various actions can
- * trigger this event, such as launching the application for the first time,
- * attempting to re-launch the application when it's already running,
- * or clicking on the application's dock or taskbar icon.
- */
-app.on("activate", () => {
-  /**
-   * On OS X it's common to re-create a window in the app when the
-   * dock icon is clicked and there are no other windows open.
-   */
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createAppWindow();
-  }
-});
-
-/**
- * Emitted when all windows have been closed.
- */
-app.on("window-all-closed", () => {
-  /**
-   * On OS X it is common for applications and their menu bar
-   * to stay active until the user quits explicitly with Cmd + Q
-   */
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
-});
-
-/**
- * In this file you can include the rest of your app's specific main process code.
- * You can also put them in separate files and import them here.
- */

@@ -1,6 +1,6 @@
 import React from "react";
 import classNames from "classnames";
-import context from "../titlebarContextApi";
+import { runDesktop } from "@src/common/desktop";
 
 import ControlButton from "./ControlButton";
 
@@ -16,31 +16,35 @@ const minimizePath = "M 0,5 10,5 10,6 0,6 Z";
 
 const WindowControls: React.FC<Props> = props => {
   return (
-    <section
+    <div
+      aria-label="Controles da janela"
       className={classNames(
         "window-titlebar-controls",
-        `type-${props.platform}`,
+        `type-${props.platform === "darwin" ? "mac" : "windows"}`,
       )}
     >
       <ControlButton
         name="minimize"
-        onClick={() => context.minimize()}
+        label="Minimizar"
+        onClick={() => runDesktop(() => window.bunnies.minimize())}
         path={minimizePath}
-        title={props.tooltips ? "Minimize" : null}
+        title={props.tooltips ? "Minimizar" : undefined}
       />
       <ControlButton
         name="maximize"
-        onClick={() => context.toggle_maximize()}
+        label="Maximizar ou restaurar"
+        onClick={() => runDesktop(() => window.bunnies.toggleMaximize())}
         path={maximizePath}
-        title={props.tooltips ? "Maximize" : null}
+        title={props.tooltips ? "Maximizar ou restaurar" : undefined}
       />
       <ControlButton
         name="close"
-        onClick={() => context.exit()}
+        label="Fechar janela"
+        onClick={() => runDesktop(() => window.bunnies.close())}
         path={closePath}
-        title={props.tooltips ? "Close" : null}
+        title={props.tooltips ? "Fechar janela" : undefined}
       />
-    </section>
+    </div>
   );
 };
 

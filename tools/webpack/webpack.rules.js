@@ -1,19 +1,10 @@
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const styleLoader =
+  process.env.NODE_ENV === "development"
+    ? "style-loader"
+    : MiniCssExtractPlugin.loader;
+
 module.exports = [
-  {
-    // Add support for native node modules
-    test: /native_modules\/.+\.node$/,
-    use: "node-loader",
-  },
-  {
-    test: /\.(m?js|node)$/,
-    parser: { amd: false },
-    use: {
-      loader: "@vercel/webpack-asset-relocator-loader",
-      options: {
-        outputAssetBase: "native_modules",
-      },
-    },
-  },
   {
     // Typescript loader
     test: /\.tsx?$/,
@@ -28,13 +19,13 @@ module.exports = [
   {
     // CSS Loader
     test: /\.css$/,
-    use: [{ loader: "style-loader" }, { loader: "css-loader" }],
+    use: [{ loader: styleLoader }, { loader: "css-loader" }],
   },
   {
     // SCSS (SASS) Loader
     test: /\.s[ac]ss$/i,
     use: [
-      { loader: "style-loader" },
+      { loader: styleLoader },
       { loader: "css-loader" },
       { loader: "sass-loader" },
     ],
@@ -43,7 +34,7 @@ module.exports = [
     // Less loader
     test: /\.less$/,
     use: [
-      { loader: "style-loader" },
+      { loader: styleLoader },
       { loader: "css-loader" },
       { loader: "less-loader" },
     ],

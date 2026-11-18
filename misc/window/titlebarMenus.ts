@@ -1,140 +1,103 @@
+import { runDesktop } from "@src/common/desktop";
+
 export type TitlebarMenuItem = {
   name: string;
-  action?: string;
+  action?: () => void;
   shortcut?: string;
-  value?: string | number;
+  developmentOnly?: boolean;
   items?: TitlebarMenuItem[];
 };
 
 export type TitlebarMenu = {
   name: string;
+  action?: () => void;
   items: TitlebarMenuItem[];
 };
 
 const titlebarMenus: TitlebarMenu[] = [
   {
-    name: "File",
+    name: "Arquivo",
     items: [
       {
-        name: "Exit",
-        action: "exit",
+        name: "Sair",
+        action: () => runDesktop(() => window.bunnies.quit()),
       },
     ],
   },
   {
-    name: "Edit",
-    items: [
-      {
-        name: "Undo",
-        action: "undo",
-        shortcut: "Ctrl+Z",
-      },
-      {
-        name: "Redo",
-        action: "redo",
-        shortcut: "Ctrl+Y",
-      },
-      {
-        name: "__",
-      },
-      {
-        name: "Cut",
-        action: "cut",
-        shortcut: "Ctrl+X",
-      },
-      {
-        name: "Copy",
-        action: "copy",
-        shortcut: "Ctrl+C",
-      },
-      {
-        name: "Paste",
-        action: "paste",
-        shortcut: "Ctrl+V",
-      },
-      {
-        name: "Delete",
-        action: "delete",
-      },
-      {
-        name: "__",
-      },
-      {
-        name: "Select All",
-        action: "select_all",
-        shortcut: "Ctrl+A",
-      },
-    ],
+    name: "Editar",
+    action: () => runDesktop(() => window.bunnies.showEditMenu()),
+    items: [],
   },
   {
-    name: "View",
+    name: "Visualizar",
     items: [
       {
-        name: "Reload",
-        action: "reload",
+        name: "Recarregar",
+        action: () => runDesktop(() => window.bunnies.view("reload")),
         shortcut: "Ctrl+R",
       },
       {
-        name: "Force Reload",
-        action: "force_reload",
+        name: "Forçar recarga",
+        action: () => runDesktop(() => window.bunnies.view("forceReload")),
         shortcut: "Ctrl+Shift+R",
       },
       {
-        name: "Toogle Developer Tools",
-        action: "toggle_devtools",
+        name: "Ferramentas de desenvolvimento",
+        developmentOnly: true,
+        action: () => runDesktop(() => window.bunnies.view("toggleDevTools")),
         shortcut: "Ctrl+Shift+I",
       },
       {
         name: "__",
       },
       {
-        name: "Actual Size",
-        action: "actual_size",
+        name: "Tamanho real",
+        action: () => runDesktop(() => window.bunnies.view("resetZoom")),
         shortcut: "Ctrl+0",
       },
       {
-        name: "Zoom In",
-        action: "zoom_in",
+        name: "Aumentar zoom",
+        action: () => runDesktop(() => window.bunnies.view("zoomIn")),
         shortcut: "Ctrl++",
       },
       {
-        name: "Zoom Out",
-        action: "zoom_out",
+        name: "Diminuir zoom",
+        action: () => runDesktop(() => window.bunnies.view("zoomOut")),
         shortcut: "Ctrl+-",
       },
       {
         name: "__",
       },
       {
-        name: "Toggle Fullscreen",
-        action: "toggle_fullscreen",
+        name: "Alternar tela cheia",
+        action: () => runDesktop(() => window.bunnies.view("toggleFullscreen")),
         shortcut: "F11",
       },
     ],
   },
   {
-    name: "Window",
+    name: "Janela",
     items: [
       {
-        name: "Minimize",
-        action: "minimize",
+        name: "Minimizar",
+        action: () => runDesktop(() => window.bunnies.minimize()),
         shortcut: "Ctrl+M",
       },
       {
-        name: "Close",
-        action: "exit",
+        name: "Fechar janela",
+        action: () => runDesktop(() => window.bunnies.close()),
         shortcut: "Ctrl+W",
       },
     ],
   },
   {
-    name: "Author",
+    name: "Autor",
     items: [
       {
         name: "Matheus Souza",
-        action: "open_url",
-        value: "https://github.com/matheusdearaujo",
-        shortcut: "@matheusdearaujo",
+        action: () => runDesktop(() => window.bunnies.openLink("author")),
+        shortcut: "@mxtheussouza",
       },
     ],
   },

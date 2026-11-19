@@ -961,3 +961,77 @@ aguarda aceite de conclusão e commit.
 `feat(connections): switch vhosts after confirmed close`. Este registro
 integra a entrega, cujo pai é `4a35424`. As verificações da apresentação e
 suas limitações foram registradas nas [evidências](../07-testing/vhost-transition-4b2.md).
+
+## 2026-11-18 — Contrato 5A proposto
+
+“Continue” iniciou a preparação após a integração da 4B.2 à `main` em
+`2f1f6cc`. A árvore coincide com a do commit aprovado `43113eb`.
+O [contrato Proposed](roadmap.md#contrato-proposto--5a-listagem-e-detalhe-de-filas)
+descreve a primeira entrega de filas: listagem paginada por vhost, busca por
+nome, filtro de tipo na página e detalhe de metadados/consumidores. A
+autorização, dois novos métodos específicos (26 → 28), limites e gate nas
+duas versões fixadas estão descritos em 5A-D01–07/5A-01–10.
+
+Preparação documental, com revisão de código e fontes oficiais. A
+implementação começa após aceite, pelo gate isolado. Criação fica para 5B.
+Exclusão e limpeza de mensagens prontas ficam para 5C.
+
+## 2026-11-18 — Execução da 5A aprovada
+
+“Aprovo” aceitou 5A-D01–07 e 5A-01–10. O primeiro bloco é validar o
+adapter em recursos isolados nas duas versões fixadas. IPC, interface e
+guia seguem após resultado do gate. Conclusão e commit têm aceite próprio.
+
+## 2026-11-18 — Gate 5A reprovado
+
+Paginação, busca e detalhe passaram nos vhosts testados fora da colisão.
+RabbitMQ 4.4.0 e 4.3.6 serviram a lista global para o vhost de nome exato
+`detailed`, inclusive codificado. O adapter rejeitou a lista fora do
+contexto. A repetição diagnóstica terminou com 12 verificações aprovadas
+e uma reprovada por versão, com limpeza completa. A proposta de impedir
+essa listagem antes do I/O aguarda aceite. A integração IPC/UI continua
+condicionada ao gate. [Evidências](../07-testing/queues-5a.md).
+
+## 2026-11-19 — Revisão da 5A aprovada
+
+“Aprovo” aceitou bloquear a listagem no vhost de nome exato `detailed`
+antes do I/O e apresentar o motivo em Filas. A integração depende da
+repetição do gate nas versões fixadas. A conclusão e o commit têm aceite próprio.
+
+O gate revisado passou 28 verificações (14 por versão), com limpeza.
+Começou a integração de IPC, interface e guia.
+
+## 2026-11-19 — 5A empacotada, verificação parcial
+
+A tela Filas e o IPC de leitura foram empacotados. Gate revisado repetido
+com 28 verificações aprovadas. Check final 283 testes e seis Node. Smokes
+de perfis, HTTPS e AMQPS passaram. Permanecem o smoke base, Sessão,
+Management, transição de vhost, Filas, revisão de capturas e matriz real
+do pacote após desbloquear a sessão gráfica do macOS.
+[Resultados](../07-testing/queues-5a.md).
+
+## 2026-11-19 — 5A pronta para revisão
+
+Após retomar a sessão gráfica, passaram os oito smokes no pacote de
+macOS arm64. O check após os ajustes no harness passou 283 testes e seis
+Node. A matriz no mesmo ASAR passou 35 verificações por versão de
+RabbitMQ 4.4.0 e 4.3.6 e removeu os recursos próprios. Guia/Ajuda
+sincronizados e quatro capturas nativas de Filas a 200% revisadas.
+Conclusão e commit aguardam aceite. [Evidências](../07-testing/queues-5a.md).
+
+## 2026-11-19 — Conclusão da 5A aprovada
+
+“Aprovo a conclusao da 5A” aceitou a entrega de leitura após o gate
+revisado, o pacote e a matriz real. Os 42 arquivos apresentados e o
+SHA-256 do ASAR foram conferidos. O aceite mantém os limites de
+validação em macOS arm64 e RabbitMQ de nó único. Builds e smokes no
+Windows e no Linux permanecem pendentes. O commit da 5A aguarda
+autorização. [Evidências](../07-testing/queues-5a.md).
+
+## 2026-11-19 — Commit da 5A autorizado
+
+“Autorizado, pode prosseguir” aceitou o registro local da entrega aprovada.
+A conferência cobriu os 42 caminhos, os documentos de aceite, a base
+`2f1f6cc` e o SHA-256 do ASAR. O registro documental acompanha
+`feat(queues): add scoped queue reads`. O próximo contrato depende de
+solicitação própria.

@@ -71,7 +71,7 @@ describe("offline application shell", () => {
     ).toBeTruthy();
     expect(screen.getByText("HTTPS sem sessão")).toBeTruthy();
     expect(screen.getByText("AMQPS sem sessão")).toBeTruthy();
-    for (const name of ["Visão geral", "Filas", "Exchanges", "Publicar"])
+    for (const name of ["Visão geral", "Exchanges", "Publicar"])
       expect(
         screen.getByRole("button", { name }).getAttribute("aria-disabled"),
       ).toBe("true");
@@ -79,22 +79,19 @@ describe("offline application shell", () => {
     expect(screen.queryByRole("table")).toBeNull();
     expect(screen.queryByRole("button", { name: "Testar conexão" })).toBeNull();
   });
-  it("keeps unavailable destinations in context without changing the URL", async () => {
+  it("opens the local queue page with no data until a session is available", async () => {
     renderApp();
     const url = location.href;
     const user = userEvent.setup();
     const queues = screen.getByRole("button", { name: "Filas" });
     queues.focus();
     await user.keyboard("{Enter}");
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
-      "Conexões",
-    );
-    expect(queues.getAttribute("aria-describedby")).toBe("sidebar-unavailable");
-    expect(
-      document.getElementById("sidebar-unavailable")?.textContent,
-    ).toContain(
-      "Gerenciamento de filas, exchanges e mensagens ainda indisponível.",
-    );
+    const heading = screen.getByRole("heading", { level: 1 });
+    expect(heading.textContent).toBe("Filas");
+    expect(document.activeElement).toBe(heading);
+    expect(queues.getAttribute("aria-current")).toBe("page");
+    expect(screen.getByText("Conecte uma sessão em Conexões.")).toBeTruthy();
+    expect(screen.queryByRole("table")).toBeNull();
     expect(location.href).toBe(url);
   });
   it("navigates locally to About, presents real metadata and returns focus to the heading", async () => {
@@ -142,7 +139,7 @@ describe("offline application shell", () => {
     ).toBeTruthy();
     expect(
       screen
-        .getByRole("button", { name: "Filas" })
+        .getByRole("button", { name: "Exchanges" })
         .getAttribute("aria-disabled"),
     ).toBe("true");
     expect(getInfo).not.toHaveBeenCalled();

@@ -4,7 +4,7 @@ import { useThemeContext } from "@src/common/hooks";
 import type { ThemePreference } from "@src/providers/ThemeMode";
 import Icon from "../components/Icon";
 
-export type LocalPage = "connections" | "about" | "help";
+export type LocalPage = "connections" | "queues" | "about" | "help";
 type Props = {
   page: LocalPage;
   onNavigate(page: LocalPage): void;
@@ -14,10 +14,10 @@ type Props = {
 };
 const destinations = [
   { label: "Visão geral", icon: "overview" },
-  { label: "Filas", icon: "queues" },
+  { label: "Filas", icon: "queues", destination: "queues" },
   { label: "Exchanges", icon: "exchanges" },
   { label: "Publicar", icon: "publish" },
-  { label: "Conexões", icon: "connection" },
+  { label: "Conexões", icon: "connection", destination: "connections" },
 ] as const;
 
 export default function NavigationSidebar({
@@ -38,21 +38,23 @@ export default function NavigationSidebar({
       </div>
       <p className="sidebar-eyebrow sidebar-label">RABBITMQ GUI</p>
       <nav aria-label="Navegação principal">
-        {destinations.map(({ label, icon }) => {
-          const unavailable = icon !== "connection";
+        {destinations.map(item => {
+          const { label, icon } = item;
+          const destination =
+            "destination" in item ? item.destination : undefined;
+          const unavailable = !destination;
+          const selected = destination === page;
           return (
             <button
               key={icon}
               type="button"
-              className={`nav-button ${!unavailable && page === "connections" ? "nav-button--active" : ""}`}
+              className={`nav-button ${selected ? "nav-button--active" : ""}`}
               aria-label={label}
-              aria-current={
-                !unavailable && page === "connections" ? "page" : undefined
-              }
+              aria-current={selected ? "page" : undefined}
               aria-disabled={unavailable || undefined}
               aria-describedby={unavailable ? `${id}-unavailable` : undefined}
               onClick={() => {
-                if (!unavailable) onNavigate("connections");
+                if (destination) onNavigate(destination);
               }}
             >
               <Icon name={icon} />
@@ -67,7 +69,7 @@ export default function NavigationSidebar({
         })}
       </nav>
       <p id={`${id}-unavailable`} className="navigation-reason">
-        Gerenciamento de filas, exchanges e mensagens ainda indisponível.
+        Visão geral, exchanges e publicação ainda indisponíveis.
       </p>
       <div className="sidebar-preferences">
         <div className="theme-picker">

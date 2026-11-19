@@ -1,17 +1,28 @@
 import type {
   ManagementInput,
-  ManagementSnapshot,
+  ManagementReadSnapshot,
 } from "../../shared/management";
 import { MANAGEMENT_TIMEOUT_MS } from "../../shared/management";
 import type { SessionService } from "../sessions/sessionService";
 import type { ProfileService } from "../profiles/service";
 import { ProfileFailure } from "../profiles/errors";
-import { readManagement, ManagementFailure } from "./httpsRead";
+import {
+  readManagement,
+  ManagementFailure,
+  type ManagementQuery,
+} from "./httpsRead";
 import type { SelectSessionVhostInput } from "../../shared/session";
+import { queueRouteError, type QueueQuery } from "./queueRead";
 import { VhostCatalog } from "./vhostCatalog";
+type Read =
+  | "broker"
+  | "vhosts"
+  | Omit<Extract<QueueQuery, { kind: "queuePage" }>, "vhost">
+  | Omit<Extract<QueueQuery, { kind: "queueDetail" }>, "vhost">;
 type Active = {
   owner: number;
   input: ManagementInput;
+  requireAmqps: boolean;
   controller: AbortController;
 };
 export class ManagementService {
@@ -41,7 +52,7 @@ export class ManagementService {
     if (this.disposed || this.active !== a)
       throw new ManagementFailure("CONFLICT");
     try {
-      return this.sessions.managementContext(a.owner, a.input);
+      return this.sessions.managementContext(a.owner, a.input, a.requireAmqps);
     } catch (error) {
       throw new ManagementFailure(
         error instanceof ProfileFailure && error.code === "CONFLICT"
@@ -53,11 +64,16 @@ export class ManagementService {
   async execute(
     owner: number,
     input: ManagementInput,
-    kind: "broker" | "vhosts",
-  ): Promise<ManagementSnapshot> {
+    request: Read,
+  ): Promise<ManagementReadSnapshot> {
     if (this.disposed) throw new ManagementFailure("UNAVAILABLE");
     if (this.active) throw new ManagementFailure("BUSY");
-    const a: Active = { owner, input, controller: new AbortController() };
+    const a: Active = {
+      owner,
+      input,
+      requireAmqps: typeof request === "object",
+      controller: new AbortController(),
+    };
     this.active = a;
     const { signal } = a.controller;
     const timer = setTimeout(
@@ -69,30 +85,43 @@ export class ManagementService {
       abort = () => reject(signal.reason);
       signal.addEventListener("abort", abort, { once: true });
     });
-    const work = async (): Promise<ManagementSnapshot> => {
+    const work = async (): Promise<ManagementReadSnapshot> => {
       const context = this.context(a);
+      const query: ManagementQuery =
+        request === "broker"
+          ? { kind: request }
+          : request === "vhosts"
+            ? { kind: request, vhost: context.vhost }
+            : { ...request, vhost: context.vhost };
+      if (query.kind === "queuePage" || query.kind === "queueDetail") {
+        const routeError = queueRouteError(query);
+        if (routeError) throw new ManagementFailure(routeError);
+      }
       const profile = await this.profiles.connectionSnapshot(
         context.profileId,
         context.revision,
       );
       signal.throwIfAborted();
       this.context(a);
-      const data = await this.read(
-        profile,
-        kind === "broker" ? { kind } : { kind, vhost: context.vhost },
-        signal,
-      );
+      const data = await this.read(profile, query, signal);
       signal.throwIfAborted();
       this.context(a);
       await this.profiles.assertRevision(context.revision);
       signal.throwIfAborted();
       this.context(a);
       const header = {
-        ...input,
+        sessionId: input.sessionId,
+        generation: input.generation,
+        operationId: input.operationId,
         source: "https-management" as const,
         checkedAt: new Date().toISOString(),
       };
-      if (data.kind === "broker") return { ...header, ...data };
+      if (data.kind !== query.kind) throw new ManagementFailure("RESPONSE");
+      if (data.kind === "queuePage" || data.kind === "queueDetail") {
+        if (data.vhost !== context.vhost)
+          throw new ManagementFailure("RESPONSE");
+      }
+      if (data.kind !== "vhosts") return { ...header, ...data };
       const selectionId = this.catalog.replace(
         {
           owner,

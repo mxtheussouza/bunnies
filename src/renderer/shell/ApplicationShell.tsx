@@ -3,6 +3,7 @@ import NavigationSidebar, { type LocalPage } from "./NavigationSidebar";
 import SessionContextBar from "./SessionContextBar";
 import IconButton from "../components/IconButton";
 import Connections from "../pages/Connections";
+import Queues from "../pages/Queues";
 import Help from "../pages/Help";
 import About from "../pages/About";
 import "./shell.scss";
@@ -27,7 +28,7 @@ function Shell({ feedback }: { feedback?: React.ReactNode }) {
           "input, textarea, select, [contenteditable]:not([contenteditable='false'])",
         );
       if (
-        document.querySelector(".profile-dialog[open]") ||
+        document.querySelector(".profile-dialog[open], .queue-detail[open]") ||
         event.repeat ||
         editing ||
         event.altKey ||
@@ -115,20 +116,26 @@ function Shell({ feedback }: { feedback?: React.ReactNode }) {
               <h1 tabIndex={-1} ref={heading}>
                 {page === "connections"
                   ? "Conexões"
-                  : page === "help"
-                    ? "Ajuda"
-                    : "Sobre o Bunnies"}
+                  : page === "queues"
+                    ? "Filas"
+                    : page === "help"
+                      ? "Ajuda"
+                      : "Sobre o Bunnies"}
               </h1>
-              <p>
-                {page === "connections"
-                  ? "Um contexto claro para cada ambiente."
-                  : page === "help"
-                    ? "Orientações para cada função, disponíveis offline."
-                    : "Uma experiência desktop para trabalhar com RabbitMQ."}
-              </p>
+              {page !== "queues" && (
+                <p>
+                  {page === "connections"
+                    ? "Um contexto claro para cada ambiente."
+                    : page === "help"
+                      ? "Orientações para cada função, disponíveis offline."
+                      : "Uma experiência desktop para trabalhar com RabbitMQ."}
+                </p>
+              )}
             </div>
             {page === "connections" ? (
               <Connections />
+            ) : page === "queues" ? (
+              <Queues />
             ) : page === "help" ? (
               <Help />
             ) : (

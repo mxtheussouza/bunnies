@@ -278,7 +278,7 @@ async function smoke() {
         .count(),
       1,
     );
-    for (const name of ["Visão geral", "Filas", "Exchanges", "Publicar"]) {
+    for (const name of ["Visão geral", "Exchanges", "Publicar"]) {
       const button = page.getByRole("button", { name, exact: true });
       assert.equal(await button.getAttribute("aria-disabled"), "true");
       await button.focus();

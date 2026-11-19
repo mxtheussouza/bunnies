@@ -97,3 +97,37 @@ describe("management IPC exact frame authority", () => {
     f.dispose();
   });
 });
+
+it("validates queue bounds and rejects renderer-supplied vhost, URL and identity", async () => {
+  const f = fixture();
+  for (const extra of [
+    { page: 0 },
+    { page: 1.5 },
+    { page: 2_147_483_648 },
+    { page: 1, search: "á".repeat(128) },
+    { page: 1, search: "\ud800" },
+    { page: 1, search: "" },
+    { page: 1, vhost: "/" },
+    { page: 1, url: "https://invalid.example" },
+  ]) {
+    expect(
+      (
+        await f.call({
+          command: "listSessionQueues",
+          input: { ...f.input, ...extra },
+        })
+      ).error?.code,
+    ).toBe("VALIDATION");
+  }
+  expect(f.service.execute).not.toHaveBeenCalled();
+  const input = { ...f.input, page: 2, search: "[literal]" };
+  expect(
+    (await f.call({ command: "listSessionQueues", input })).error?.code,
+  ).toBe("RESPONSE");
+  expect(f.service.execute).toHaveBeenCalledWith(42, input, {
+    kind: "queuePage",
+    page: 2,
+    search: "[literal]",
+  });
+  f.dispose();
+});

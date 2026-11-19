@@ -1,20 +1,20 @@
 # Estado atual do projeto
 
-Atualizado em: 2026-11-18. Ler [PROJECTS_STATUS.md](../../PROJECTS_STATUS.md) antes
+Atualizado em: 2026-11-19. Ler [PROJECTS_STATUS.md](../../PROJECTS_STATUS.md) antes
 de cada Task; atualizá-lo em cada bloco/fase/alteração.
 
 | Campo | Estado |
 | --- | --- |
-| Etapa atual | 4B.2 — seleção de vhost e transição de contexto |
-| Status | Concluída e aprovada em 2026-11-18 |
-| Última etapa concluída | 4B.2 — seleção temporária de vhost com confirmação de fechamento |
-| Último commit | `feat(connections): switch vhosts after confirmed close`, entrega que contém este registro |
-| Decisões aprovadas | ADRs 0001–0009, MVP/requisitos/design, contratos anteriores e conclusão da 4B.2 com fechamento confirmado |
-| Decisões pendentes | Contrato da Etapa 5 quando solicitado |
-| Tarefas concluídas | 4B.2 implementada. Check 274 + seis Node, gate 12, package/sete smokes e matriz 64 passaram |
-| Tarefas pendentes | Aguardar solicitação da próxima etapa |
-| Problemas conhecidos | Paginação HTTP de vhosts retorna 500 na matriz; GET individual exige admin e normaliza dot-segments; limitações anteriores mantidas |
-| Próxima ação | Aguardar solicitação para preparar o contrato da Etapa 5 |
+| Etapa atual | 5A — listagem e detalhe de filas |
+| Status | Concluída, aprovada e registrada |
+| Última etapa concluída | 5A — listagem e detalhe de filas |
+| Última entrega registrada | `feat(queues): add scoped queue reads` em `main`, com pai `2f1f6cc` |
+| Decisões aprovadas | ADRs 0001–0009, MVP/requisitos/design, contratos anteriores e conclusão da 5A com a revisão de `detailed` |
+| Decisões pendentes | Contratos próprios de 5B e 5C |
+| Tarefas concluídas | Adapter, IPC/UI/guia, 28 checks no gate, check (283 + seis Node), package, oito smokes, quatro capturas revisadas e 70 checks na matriz empacotada |
+| Tarefas pendentes | Preparação da 5B após solicitação |
+| Problemas conhecidos | Vhost `detailed` colide com rota global de filas. Paginação HTTP de vhosts retorna 500 na matriz e GET individual exige admin |
+| Próxima ação | Aguardar solicitação para preparar o contrato 5B |
 
 “Autorizado” aceitou o [contrato 4A.2C](roadmap.md). O gate inicial reprovou e
 interrompeu trabalho dependente; o proprietário então autorizou explicitamente
@@ -153,3 +153,18 @@ conclusão e do commit `feat(connections): switch vhosts after confirmed close`.
 “Aprovado” aceitou a conclusão e o commit apresentado. As evidências e as
 limitações da etapa acompanham este registro. O próximo contrato depende de
 solicitação própria. [Evidências](../07-testing/vhost-transition-4b2.md).
+
+## 2026-11-18 — Proposta da 5A
+
+“Continue” iniciou a preparação da próxima entrega em `main`, HEAD `2f1f6cc`,
+com a 4B.2 integrada e a árvore inicialmente limpa. O contrato propõe
+listar, pesquisar e detalhar filas por HTTPS no vhost da sessão, com dois
+métodos específicos e gate real antes da integração. Criação e ações
+destrutivas terão contratos próprios. A execução da 5A aguarda aceite.
+
+## 2026-11-18 — Gate 5A reprovado
+
+A execução autorizada encontrou a colisão de `detailed` nas duas versões.
+Passaram 12 verificações e falhou uma por versão, com limpeza integral.
+A integração depende do aceite da revisão e da repetição do gate.
+[Evidências](../07-testing/queues-5a.md).

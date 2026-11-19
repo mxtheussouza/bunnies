@@ -1,9 +1,12 @@
 # Roadmap e contratos de execução
 
-Atualizado em: 2026-11-18. Etapas 0–3B, 4A.1, DOC.1, 4A.2A/B/C e 4B.1/4B.2
+Atualizado em: 2026-11-19. Etapas 0–3B, 4A.1, DOC.1, 4A.2A/B/C e 4B.1/4B.2
 concluídas e aprovadas. Nove ADRs e D3A-01–08 aceitos. O gate 4B.2 inicial
 falhou nas duas versões e o gate revisto passou após o aceite do fechamento
 confirmado. “Aprovado” aceitou a conclusão e o commit da 4B.2.
+A revisão da 5A foi aceita por “Aprovo”. O gate revisado, os smokes e a
+matriz do pacote passaram, e o proprietário aprovou a conclusão e o
+registro local da 5A.
 
 ## Sequência proposta
 
@@ -21,7 +24,7 @@ confirmado. “Aprovado” aceitou a conclusão e o commit da 4B.2.
 | 4A.2 | Testes HTTPS/AMQPS, CA customizada e ciclo de sessão | A/B/C concluídas/aprovadas; última entrega aba792d |
 | 4B.1 | Contexto administrativo: versão, vhosts visíveis e leitura do vhost atual | Concluída/aprovada; commit `4a35424` |
 | 4B.2 | Seleção de vhost e transição de contexto | Concluída e aprovada em 2026-11-18 |
-| 5 | Filas e proteção das operações destrutivas | Proposta |
+| 5 | Filas e proteção das operações destrutivas | 5A concluída, aprovada e registrada. 5B e 5C aguardam contratos próprios |
 | 6 | Exchanges e bindings | Proposta |
 | 7 | Publicação AMQP, confirmações e falhas de rede | Proposta |
 | 8 | Dashboard e monitoramento básico | Proposta |
@@ -1618,3 +1621,220 @@ aguarda aceite da conclusão e do commit
 “Aprovado” aceitou a entrega, suas evidências e o commit
 `feat(connections): switch vhosts after confirmed close`. A Etapa 5 segue
 sujeita a solicitação e contrato próprios.
+
+## Contrato proposto — 5A: listagem e detalhe de filas
+
+Data: 2026-11-18. Status: **execução aprovada por “Aprovo”**, incluindo a
+validação isolada e os demais itens do contrato. O pedido “Continue” iniciou a
+preparação. Base observada: `main` em `2f1f6cc`, com a mesma árvore da
+entrega 4B.2 em `43113eb`.
+
+| Campo | Proposta para aprovação |
+| --- | --- |
+| Identificador e nome | 5A — Listagem e detalhe de filas |
+| Objetivo | Abrir Filas para consultar, pesquisar e inspecionar metadados de filas no vhost ativo |
+| Justificativa | Verificar rotas, paginação e permissões nas versões de referência antes de introduzir escritas |
+| Escopo | Lista paginada, busca literal por nome no vhost, filtro de tipo na página, detalhe com propriedades, argumentos básicos, contagens e consumidores, por dois GETs da Management API |
+| Tarefas | Provar o contrato do adapter na matriz real; integrar autorização, IPC e UI; atualizar guia e documentos; verificar o executável |
+| Módulos afetados | M03, com reuso de sessão M01 e transporte M06; navegação, Ajuda e testes transversais |
+| Arquivos previstos | Ver a seção de estrutura e verificação abaixo |
+| Dependências | Entrega 4B.2 integrada, ADR-0008 e ADR-0009 vigentes, perfis e CA existentes, imagens fixadas no harness. Usar versões e dependências instaladas |
+| Branch | Base atual na branch existente `main`; criar outra branch depende de autorização específica |
+| Riscos | Paginação/projeção divergentes por versão, normalização de segmentos, contagens ausentes, enumeração cara no broker, nomes iguais em vhosts diferentes, permissões HTTPS e AMQPS distintas e respostas tardias |
+| Critérios de aceitação | 5A-01–10 abaixo; FR-007/008, MVP-Q01, FR-025–030 e limites NFR-012–018 aplicáveis |
+| Verificação | Gate real do adapter, unidade/IPC/componentes, check, package, regressões de smoke e matriz real no mesmo pacote |
+| Resultado esperado | Tela Filas utilizável em leitura, com escopo, origem, horário, paginação real e diagnóstico explícito |
+| Impacto documental | Histórico e estado atualizados; requisitos/limites, arquitetura, segurança, M03 e evidências alinhados ao resultado; guia canônico, Markdown e Ajuda sincronizados após implementação |
+
+### Sequência proposta da Etapa 5
+
+| Subetapa | Entrega |
+| --- | --- |
+| 5A | Leitura de filas conforme este contrato, cobrindo FR-007/008 e MVP-Q01 no recorte validado |
+| 5B | Declaração classic/quorum e validação de argumentos/conflitos, com contrato para FR-009 e MVP-Q02 |
+| 5C | Exclusão condicional e limpeza de mensagens prontas com confirmações nativas no main, com contrato para FR-010/011 e MVP-Q03 |
+
+### Decisões propostas
+
+1. **5A-D01 — Contexto da consulta.** Derivar o vhost exato da sessão no main,
+   inclusive quando temporário. Exigir janela em foreground, sessão desejada,
+   HTTPS disponível e AMQPS estabelecido para esse contexto. Fluxo AMQPS
+   bloqueado pelo broker continua elegível enquanto a conexão estiver aberta.
+   Durante ativação, troca, recuperação do AMQPS ou fechamento, a tela explica
+   por que a leitura está indisponível. O AMQPS fixa o contexto de uso. A
+   resposta HTTPS do próprio endpoint decide se ele permite a leitura e qual
+   recurso está visível. Perfis com endpoints distintos continuam suportados
+   sem afirmar que representam o mesmo broker.
+2. **5A-D02 — Paginação e busca.** Fazer `GET /api/queues/{vhost}` com
+   `pagination=true`, `page_size=100`, `sort=name`, página positiva inteira
+   de até 2.147.483.647 e `use_regex=false`. Com busca, usar `name` como
+   trecho literal de até 255 bytes UTF-8 enviado ao broker, sem regex.
+   Aplicar a busca explicitamente e voltar à página 1. Validar `items`, página,
+   tamanho e contagens do envelope, com itens únicos e do vhost exato.
+   Usar as contagens do broker, inclusive zero páginas para resultado vazio.
+   Se uma página ficar fora de faixa após mudanças, mostrar o estado e
+   permitir voltar à primeira página por ação explícita. Filtro por tipo
+   classic, quorum, stream ou outros/indisponíveis atua só sobre a página
+   carregada, com rótulo “Nesta página”. Sem autoavanço nem fallback global
+   ou não paginado.
+3. **5A-D03 — Nome e rotas.** O detalhe usa
+   `GET /api/queues/{vhost}/{name}` para a linha aberta. O main codifica
+   cada segmento uma vez, preservando `/`, percentuais literais e Unicode
+   sem normalização ou trim. Nome e vhost são não vazios, até 255 bytes
+   UTF-8, sem C0/DEL ou Unicode inválido. Recusar antes do I/O segmentos
+   exatamente `.` ou `..`, com motivo explícito. Uma fila com esse nome pode
+   aparecer na tabela de um vhost suportado, com detalhe indisponível.
+   Validar o vhost de cada item e o par nome/vhost no detalhe. Usar o
+   prefixo HTTPS do perfil e as duas rotas fixas com parâmetros permitidos.
+4. **5A-D04 — Dados apresentados.** Lista com nome, tipo e campos opcionais
+   `messages_ready`, `messages_unacknowledged`, `messages` e `consumers`.
+   Detalhe acrescenta flags de durabilidade, exclusividade e auto-delete,
+   estado quando disponível e argumentos básicos de leitura
+   (`x-queue-type`, `x-message-ttl`, `x-max-length`,
+   `x-dead-letter-exchange`, `x-dead-letter-routing-key`). Exibir até 100
+   consumidores de `consumer_details` no detalhe, com tag e flags suportadas
+   de atividade e confirmação. Indicar explicitamente quando a exibição for
+   parcial por esse recorte. Exibir campos ausentes/indisponíveis como tais,
+   distinguindo zero e lista vazia. Validar tipos, inteiros não negativos
+   seguros e comprimento dos textos. Pedir `columns` com `name`, `vhost`,
+   `type` e as quatro contagens da lista. No detalhe, acrescentar
+   `durable`, `exclusive`, `auto_delete`, `state`, `arguments` e campos
+   `consumer_details.consumer_tag`, `consumer_details.active` e
+   `consumer_details.ack_required`. Projetar DTOs fechados no main e
+   descartar os campos restantes, incluindo cabeçalhos, dados de
+   canal/conexão e argumentos fora do catálogo.
+5. **5A-D05 — Fronteira e limites.** Adicionar os métodos específicos
+   `listSessionQueues` e `getSessionQueue` no canal `bunnies:management`
+   (26 → 28) e reutilizar `cancelManagementRead`. Entradas levam sessão,
+   geração e operação; lista acrescenta página e busca opcional; detalhe,
+   o nome exato. Vhost, URL, credenciais, método e parâmetros restantes são
+   definidos no main. Validar origem, frame, owner e DTOs, inclusive no
+   retorno. Compartilhar a vaga de uma leitura administrativa em voo com
+   as operações 4B.1 (até duas HTTPS com whoami). Reusar TLS e os limites
+   vigentes de 10 s totais, 16 KiB de headers, 256 KiB de corpo antes de
+   parsing, profundidade JSON 16 e encoding identity. Resposta acima do
+   limite gera erro explícito. O limite local de bytes não limita o custo
+   de preparação da resposta no broker. Sem redirecionamento ou proxy
+   herdado.
+6. **5A-D06 — Ciclo de vida e interface.** Leituras por ação manual, como
+   carregar, pesquisar, paginar ou abrir detalhe. Cancelar ao navegar,
+   fechar detalhe, perder elegibilidade, trocar geração/vhost/perfil,
+   suspender, recarregar ou encerrar. Revalidar contexto e revisão antes
+   do envio e do retorno. Descartar resultados tardios e limpar dados ao
+   trocar contexto. No mesmo contexto, snapshot mantido após falha ou
+   pausa recebe indicação de desatualizado. Mostrar origem HTTPS, data,
+   ambiente, conexão e vhost, inclusive indicador de produção e rótulo
+   de vhost temporário. Distinguir carregamento, vazio, filtro sem
+   correspondência na página, dados parciais, cancelamento, permissão
+   negada e demais erros sanitizados com ID de diagnóstico. Garantir
+   teclado, foco de abertura e retorno do detalhe, ambos os temas e
+   zoom 200%. Sem polling de filas, repetição automática ou cache em disco.
+7. **5A-D07 — Gate anterior à UI.** Verificar o mesmo adapter previsto para
+   o produto em RabbitMQ 4.4.0 e 4.3.6 fixados por digest no harness.
+   Demonstrar paginação real com mais de 100 filas e página final,
+   pesquisa literal com resultado e sem resultado, redução entre páginas,
+   metadados e detalhe com consumidor sintético, informações opcionais,
+   nomes e vhosts especiais, permissões e rota sob prefixo HTTPS.
+   Cobrir filas classic, quorum e stream na leitura. Usar permissões
+   distintas e alvos homônimos em vhosts distintos. Provar rejeição dos
+   segmentos reservados sem requisição, isolamento entre vhosts e limites
+   de corpo/cancelamento com fixture controlada. Se a combinação de
+   parâmetros, permissões ou shape divergir do contrato, registrar a
+   evidência e submeter uma revisão antes de integrar os dependentes.
+   O histórico da paginação de vhosts da ADR-0009 motiva este gate. A
+   listagem paginada de filas precisa de evidência própria.
+
+### Critérios de aceitação
+
+1. **5A-01.** Gate demonstra o contrato nas duas versões fixadas, com relatórios
+   e limpeza dos recursos próprios.
+2. **5A-02.** Lista usa somente o vhost da sessão, inclusive temporário, e
+   mantém página, total e pesquisa coerentes. Filtro local anuncia seu escopo.
+3. **5A-03.** Detalhe confirma a identidade exata e usa o formato restrito.
+   Ausência, zero, lista vazia e dados parciais são distinguíveis.
+4. **5A-04.** Nomes suportados sobrevivem à codificação; segmentos reservados,
+   resposta de outro vhost, duplicatas e envelopes inválidos falham de modo
+   explícito. Homônimos em outro contexto não contaminam o snapshot.
+5. **5A-05.** Permissões são exercitadas com usuários isolados. Nenhuma leitura
+   eleva privilégios ou cria canal, consumidor ou topologia pelo aplicativo.
+6. **5A-06.** Navegação, mudança de sessão ou perda de foreground cancela
+   a leitura pendente, preservando os limites de tempo, tamanho e
+   concorrência. IPC e logs contêm somente o recorte de dados permitido
+   e os diagnósticos sanitizados.
+7. **5A-07.** Lista e detalhe funcionam por teclado, com foco visível e
+   indicação de contexto e atualidade em ambos os temas a 200%.
+8. **5A-08.** A 4B.2 conserva a troca de vhost com fechamento confirmado e a
+   aplicação conserva as consultas 4B.1 e as proteções existentes.
+9. **5A-09.** Check, package e oito smokes sequenciais, incluindo Filas,
+   passam. A matriz no mesmo pacote confirma lista/detalhe, troca e
+   invalidação do vhost, negativa de acesso e ausência de escritas do
+   produto, com cleanup completo.
+10. **5A-10.** Guia/Ajuda, evidências e estado refletem o recorte exercitado.
+    A entrega passa por revisão técnica e aceite de conclusão antes de
+    eventual commit.
+
+### Estrutura e verificação
+
+- Ampliar `src/shared/management.ts` e DTOs de fila em `src/shared/`;
+  reusar o transporte/serviço em `src/main/management/`, com projeção/validação
+  de filas no mesmo diretório. Ajustar a autorização específica em
+  `src/main/sessions/sessionService.ts` e ligar comandos nomeados em
+  `src/main/ipc/management.ts` e `src/preload/`. Preservar a autoridade
+  das operações de vhost e versão.
+- Integrar o destino Filas em `src/renderer/shell/` e a tela em
+  `src/renderer/pages/Queues.tsx`, reaproveitando contexto, componentes e tokens.
+  Usar a fonte canônica em `docs/10-user-guide/guide.json` para Guia/Ajuda e
+  gerar seu Markdown. Criar documentação M03 e evidências 5A em
+  `docs/04-modules/` e `docs/07-testing/`.
+- Estender `tools/testing/rabbitmq-real.cjs` com gate específico, fixture e
+  matriz no pacote. Somente o harness pode provisionar filas, dados e
+  consumidores efêmeros em seus brokers isolados. Verificar o código de
+  produção com teste de transporte/TLS e lifecycle, fronteira IPC/preload
+  e componentes. Executar check, package e os smokes base, perfis, HTTPS,
+  AMQPS, sessão, Management, transição de vhost
+  (`node tools/testing/management.cjs --vhost-transition`) e Filas.
+  Conferir ASAR, acessibilidade visual/foco e documentação. Registrar
+  plataforma real, limitações e resultados por execução.
+
+### Fronteira da proposta
+
+O produto desta subetapa faz apenas leituras. Criação, exclusão e purge ficam
+para 5B/5C. Bindings ficam na Etapa 6. Inspeção ou consumo de mensagens,
+polling de métricas, outras operações administrativas, alterações de
+dependência, patch, ADR, schema, release, commit e push ficam fora deste
+aceite. A preparação desta proposta é documental.
+
+A consulta de referência descreve paginação de filas e filtro literal,
+detalhe por nome e permissões por vhost. A leitura dos handlers upstream
+orienta as hipóteses de envelope e projeção. O comportamento do adapter
+com as duas imagens e os limites propostos ainda precisa ser medido.
+[Referência HTTP de filas](https://www.rabbitmq.com/docs/http-api-reference#get-apiqueuesvhost),
+[paginação](https://www.rabbitmq.com/docs/http-api-reference#pagination-parameters),
+[permissões](https://www.rabbitmq.com/docs/management#access-and-permissions),
+[handler da listagem em 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_wm_queues.erl),
+[handler do detalhe em 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_wm_queue.erl).
+
+### Gate 5A reprovado e revisão proposta
+
+Em ambas as versões, 12 verificações passaram e uma falhou. A listagem
+para o vhost chamado exatamente `detailed` resolve para a rota global
+de filas do RabbitMQ, inclusive com uma letra percent-encoded. O adapter
+rejeitou as linhas de outros vhosts. [Evidências](../07-testing/queues-5a.md).
+
+**Revisão aprovada por “Aprovo” em 2026-11-19.** Acrescentar a 5A-D02/D03
+e 5A-04 a indisponibilidade da listagem para o vhost de nome exato
+`detailed`. Recusar no main antes da requisição e explicar o motivo na
+tela Filas. A sessão e a seleção do vhost seguem o contrato 4B.2.
+Manter detalhe por linha no fluxo da listagem e o escopo de um vhost
+por consulta. O gate revisado deve provar zero requisições para essa
+listagem e repetir os demais casos nas duas versões. Após aprovação
+da revisão, retomar a integração somente com o gate revisado aprovado.
+
+O gate revisado passou 14 verificações em cada versão. A integração de
+IPC/UI e Guia/Ajuda foi empacotada em macOS arm64. Check, oito smokes e
+70 verificações reais no pacote passaram. As capturas nos dois temas
+a 200% foram revisadas. Ver [evidências](../07-testing/queues-5a.md).
+
+Em 2026-11-19, “Aprovo a conclusao da 5A” aceitou a entrega verificada.
+A resposta “Autorizado, pode prosseguir” aprovou em seguida o commit
+`feat(queues): add scoped queue reads`.

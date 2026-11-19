@@ -1,17 +1,17 @@
 # Bunnies — histórico vivo do projeto
 
-Atualizado em: 2026-11-18.
+Atualizado em: 2026-11-19.
 
 ## Estado atual
 
-- Branch: `chore/modernization-app`.
-- Última entrega aprovada: **4B.2 — seleção temporária de vhost com
-  confirmação de fechamento**.
-- Aprovação atual: “Aprovado”, em 2026-11-18, aceitou a conclusão e o commit
-  `feat(connections): switch vhosts after confirmed close`.
-- Último commit: entrega 4B.2 que contém este registro, com pai `4a35424`.
-- Task atual: registrar a conclusão aprovada da 4B.2.
-- Próxima ação: aguardar solicitação para preparar o contrato da Etapa 5.
+- Branch: `main`.
+- Última entrega aprovada: **5A — listagem e detalhe de filas no vhost ativo**.
+- Aprovação atual: “Aprovo a conclusao da 5A” aceitou a conclusão.
+  “Autorizado, pode prosseguir” aceitou o registro local da entrega.
+- Última entrega registrada: `feat(queues): add scoped queue reads` em
+  `main`, com pai `2f1f6cc`. O registro inclui este histórico.
+- Task atual: **5A — concluída, aprovada e registrada**.
+- Próxima ação: aguardar solicitação para preparar o contrato 5B.
 
 ## Tarefas concluídas
 
@@ -30,7 +30,8 @@ Atualizado em: 2026-11-18.
 | 4A.2B | Teste AMQPS/vhost, cancelamento e verificação real 4.4.0/4.3.6 | Concluída/aprovada; ea116de |
 | 4A.2C | Sessão única, estados independentes, recuperação limitada e ADR-0008 A | Concluída/aprovada; aba792d |
 | 4B.1 | Versões informadas, vhosts visíveis limitados, cancelamento e ADR-0009 A | Concluída/aprovada em `4a35424` |
-| 4B.2 | Seleção temporária de vhost com fechamento confirmado e bloqueio em estado remoto incerto | Concluída/aprovada no commit deste registro |
+| 4B.2 | Seleção temporária de vhost com fechamento confirmado e bloqueio em estado remoto incerto | Concluída/aprovada em `43113eb`, integrada à `main` em `2f1f6cc` |
+| 5A | Listagem paginada, busca literal e detalhe de filas no vhost ativo | Concluída, aprovada e registrada em 2026-11-19 |
 
 ## Entrega DOC.1 aprovada
 
@@ -43,7 +44,10 @@ Atualizado em: 2026-11-18.
 
 ## Pendências e decisões
 
-- 4A.2C, 4B.1 e 4B.2 concluídas e aprovadas. A Etapa 5 exige contrato próprio.
+- 4A.2C, 4B.1 e 4B.2 concluídas e aprovadas. O gate da 5A identificou
+  colisão da rota para o vhost `detailed`. Criação (5B), exclusão e
+  limpeza de mensagens prontas (5C)
+  terão contratos próprios.
 - Mudança da barra de título macOS foi registrada pelo proprietário em 9401448;
   preservar e revalidar no próximo pacote. Não integra o pacote/testes da 4A.2A.
 - Atualizar este arquivo a cada Task/fase/alteração, mantendo histórico de decisões,
@@ -92,6 +96,176 @@ Guia/Ajuda sincronizados e artefato final revisado; conclusão/commit aprovados.
 [Evidências finais](docs/07-testing/sessions-4a2c.md).
 
 ## Histórico de atividades
+
+### 2026-11-19 — Registro autorizado da 5A
+
+- “Autorizado, pode prosseguir” aceitou o commit local
+  `feat(queues): add scoped queue reads` após o aceite da conclusão.
+  Retomada em `main`, base `2f1f6cc` e index vazio.
+- Conferidos 42 caminhos e o SHA-256 do ASAR apresentado. Os sete
+  documentos de aceite são as únicas diferenças do snapshot revisado.
+  A atualização deste registro integra a mesma entrega.
+- `npm run docs:check` e `git diff --check` passaram. As verificações
+  funcionais e o pacote são os da apresentação anterior. Builds e smokes
+  no Windows e no Linux permanecem pendentes.
+- Próxima ação: aguardar solicitação de preparação do contrato 5B.
+
+### 2026-11-19 — Conclusão da 5A aprovada
+
+- “Aprovo a conclusao da 5A” aceitou a conclusão no recorte apresentado.
+  Conferidos os 42 arquivos e o SHA-256 do ASAR contra o registro
+  de revisão, com base `2f1f6cc` em `main` e index vazio.
+- O aceite mantém o recorte de validação em macOS arm64, RabbitMQ
+  4.4.0/4.3.6 de nó único e a pendência de builds e smokes no Windows
+  e Linux. O registro deste aceite é documental. A autorização do commit
+  `feat(queues): add scoped queue reads` permanece pendente.
+- `npm run docs:check` e `git diff --check` passaram. A sincronização
+  alterou apenas os sete documentos de aceite. Próxima ação: obter
+  autorização para o registro do commit.
+
+### 2026-11-19 — 5A verificada e pronta para revisão
+
+- O mesmo ASAR macOS arm64 passou os oito smokes e a matriz real de
+  70 verificações, 35 por versão em RabbitMQ 4.4.0 e 4.3.6. A matriz
+  confirmou duas páginas reais, busca literal, homônimos no vhost
+  temporário, invalidação de geração, recusa em `detailed`, acesso
+  negado para usuário sem tag e ausência de escrita nas filas de fixture.
+- Limpeza completa nas duas versões; zero containers ou redes do
+  harness restantes. Revisadas quatro capturas nativas de lista e detalhe
+  nos temas claro e escuro a 200%, com foco e rolagem local da tabela.
+- `npm run check` passou novamente com 283 testes em 38 arquivos e seis
+  testes Node após os ajustes no harness. ASAR conferido por SHA-256.
+  Guia/Ajuda com 16 tópicos e 12 campos. Ver [evidências](docs/07-testing/queues-5a.md).
+- Próxima ação: obter aceite de conclusão e do commit
+  `feat(queues): add scoped queue reads`. Entrega de leitura da 5A
+  validada em macOS arm64 e brokers isolados de nó único.
+
+### 2026-11-19 — Retomada da validação empacotada da 5A
+
+- “Continue a validacao” retomou as verificações pendentes. Sessão gráfica
+  ativa, Docker 29.8.0, branch `main` em `2f1f6cc` e index vazio.
+  SHA-256 do ASAR coincide com o pacote registrado nas evidências.
+- Escopo: smokes sequenciais, revisão visual e matriz isolada no mesmo
+  pacote. A conclusão e o commit continuam sujeitos a aceite próprio.
+
+- Smoke base/Ajuda, Sessão (10 grupos), Management (oito) e troca de
+  vhost (seis) passaram. O primeiro smoke de Filas após o desbloqueio
+  chegou ao encerramento e atingiu o prazo porque o harness não
+  selecionou o perfil ao voltar a Conexões. Corrigida a seleção no
+  cenário. As capturas a 200% passam a usar a API nativa que inclui
+  toda a janela. Repetição de Filas e matriz em andamento.
+
+- O smoke de Filas passou seis grupos com as capturas completas. A
+  primeira matriz chegou a 18 verificações em 4.4.0 e atingiu o prazo
+  no retorno a Conexões por falta de seleção do perfil no harness.
+  O broker e a rede foram limpos. A seleção explícita foi acrescentada
+  também à matriz, que foi reiniciada no mesmo ASAR.
+
+### 2026-11-19 — Validação parcial do pacote da 5A
+
+- Check final passou 283 testes em 38 arquivos e seis testes Node, com
+  typecheck, lint, formatação e guia sincronizado. Gate repetido passou
+  28 verificações reais e limpeza nas duas versões. Conferidos 413 links
+  locais em 47 Markdown, whitespace e escopo em Git.
+- Package final macOS arm64, inspeção do ASAR e smokes de perfis, HTTPS e
+  AMQPS passaram. Os dois testes de transporte foram atualizados após
+  detectarem asserções antigas de que Filas permanecia desabilitada.
+- A primeira execução do smoke base atingiu o prazo em tela cheia;
+  tentativas do smoke de Filas atingiram o prazo na sessão/foco nativo.
+  A sessão gráfica estava bloqueada. Aguardam desbloqueio o smoke base,
+  Sessão, Management, transição de vhost, Filas, capturas e a matriz no
+  pacote. Implementação e guia disponíveis no pacote de desenvolvimento.
+  Conclusão e commit seguem pendentes. [Evidências](docs/07-testing/queues-5a.md).
+
+### 2026-11-19 — Integração da 5A e primeiro pacote
+
+- Tela Filas, duas operações específicas, limites/projeção e autorização
+  adicional de AMQPS integrados. Listagem de `detailed` recusada no main
+  antes de ler credenciais. Guia/Ajuda e M03 sincronizados com a interface.
+- A primeira execução do check com a integração detectou referências de
+  foco em cleanup e uma variável de navegador fora dos globals do lint.
+  Ajustados o alvo de foco e as referências do harness. Na rodada seguinte,
+  check passou 279 testes em 38 arquivos e seis Node.
+- Package macOS arm64 passou após acrescentar a guarda antecipada e seu
+  teste. Check final, gate repetido, smoke e matriz do pacote em execução.
+
+### 2026-11-19 — Gate revisado e retomada da integração
+
+- Primeira rodada revisada: 10 passaram e quatro falharam por versão.
+  Uma edição inseriu um operando indevido no cálculo do tamanho esperado
+  da página. O cálculo original foi restaurado.
+- A repetição de `--queues-gate` passou 14 verificações em cada versão,
+  28 no total. A fixture HTTPS contou zero requisições para a listagem
+  de `detailed` e uma para o nome distinto `Detailed`. O detalhe direto
+  de fixture manteve a identidade exata. Limpeza confirmada por versão.
+- Início da integração IPC, tela Filas e guia. Verificações de pacote pendentes.
+
+### 2026-11-19 — Revisão da 5A aprovada
+
+- “Aprovo” aceitou o recorte para o vhost de nome exato `detailed`.
+  A listagem deve ser recusada no main antes da rede, com diagnóstico na
+  tela. A integração depende do gate revisado nas duas versões fixadas.
+- Retomada em `main`, HEAD `2f1f6cc`, com adapter, harness e documentos
+  do gate original no working tree. Index vazio. Docker Engine 29.8.0
+  e Node 24.22.1 disponíveis. A conclusão e o commit têm aceite próprio.
+
+### 2026-11-18 — Gate 5A reprovado
+
+- Adapter e harness rodaram nas imagens fixadas. A primeira rodada teve
+  11 verificações aprovadas e duas reprovadas por versão. A asserção de
+  presença obrigatória das métricas foi ajustada para a regra de campos
+  opcionais já aprovada e verificada com valores ausentes e zeros.
+- Repetição diagnóstica: 12 passaram e uma falhou em cada versão.
+  `detailed` e `d%65tailed` deram HTTP 200 com cinco filas de cinco
+  vhosts. O detalhe individual funcionou. O adapter recusou a lista
+  global. Limpeza completa e zero recursos Docker do harness.
+- Revisão recomendada: recusar antes do I/O a listagem de filas no vhost
+  de nome exato `detailed`, com motivo explícito. A integração de
+  produto depende da decisão e de gate revisado. Guia/Ajuda descrevem
+  a entrega disponível 4B.2. [Evidências](docs/07-testing/queues-5a.md).
+- `npm run check` passou com 274 testes em 37 arquivos e seis Node
+  após corrigir import do harness. `git diff --check` passou e 402
+  links locais em 46 arquivos Markdown foram conferidos. O check e a
+  revisão documental são independentes do gate reprovado. A 5A ainda
+  aguarda testes no pacote.
+
+### 2026-11-18 — Execução da 5A autorizada
+
+- “Aprovo” respondeu à solicitação explícita de execução do contrato
+  5A-D01–07/5A-01–10. Implementação dependente começa após o gate do
+  adapter. Aprovação de conclusão e commit permanecem etapas próprias.
+- Retomada em `main`, HEAD `2f1f6cc`, com os cinco documentos da proposta
+  no working tree. Docker Engine 29.8.0 arm64 e Node 24.22.1 disponíveis.
+- Início pelo adapter e harness isolado. Nenhuma execução funcional
+  concluída para a 5A neste ponto.
+
+### 2026-11-18 — Preparação da Etapa 5
+
+- “Continue” iniciou a preparação do próximo contrato. AGENTS, PROJECTS,
+  avaliação tecnológica, roadmap, estado, progresso, requisitos e código
+  de sessão, Management e shell consultados.
+- Retomada em `main`, HEAD `2f1f6cc` igual à referência local `origin/main`,
+  com index e working tree inicialmente limpos. A árvore do merge coincide
+  com `43113eb`, o commit aprovado da 4B.2.
+- A preparação cobre a proposta documental da primeira entrega de filas.
+  Verificações funcionais, execução em broker e implementação aguardam o
+  aceite do contrato.
+
+### 2026-11-18 — Contrato 5A pronto para aceite
+
+- 5A-D01–07 e 5A-01–10 cobrem listagem de 100 itens por página, busca
+  literal no vhost ativo, filtro local por tipo, detalhe de metadados e
+  consumidores e dois métodos IPC (26 → 28). Reusar limites e vaga das
+  leituras administrativas vigentes. 5B e 5C são recortes candidatos
+  para contratos próprios.
+- Revisadas as referências oficiais de filas/permissões e os handlers
+  upstream. As diferenças de paginação observadas na 4B.1 justificam
+  começar por gate isolado em 4.4.0 e 4.3.6 após aceite da 5A.
+- `npm run docs:check` e `git diff --check` passaram. Conferidos os alvos
+  de 396 links locais em 45 arquivos Markdown, incluindo as cinco
+  referências à âncora da 5A. A árvore de trabalho contém cinco arquivos
+  de planejamento/estado e o index está vazio. Verificações funcionais,
+  broker, package e smokes ficam para a execução autorizada.
 
 ### 2026-11-18 — T-4B2-ACEITE-E-REGISTRO
 

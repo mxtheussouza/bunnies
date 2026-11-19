@@ -318,3 +318,19 @@ sessão. O renderer transmite referência opaca, nome e IDs de contexto. O desti
 TLS e as credenciais são resolvidos pelo perfil salvo. A troca invalida resultados
 da geração antiga e depende da confirmação de fechamento quando havia conexão
 anterior. A confirmação não pode ser inferida de uma destruição local de socket.
+
+### Leitura de filas 5A
+
+Os dois comandos nomeados de filas preservam a autoridade do main frame e do
+owner. A sessão fornece o vhost, inclusive em seleção temporária. Entradas não
+admitem vhost, URL, credenciais, regex ou parâmetros livres. Segmentos `.` e
+`..` são recusados e a listagem em `detailed` para antes da rede. Cada linha
+valida o vhost recebido e o detalhe confirma também o nome exato. Respostas
+fora do recorte ou contexto são descartadas.
+
+As contagens, flags e argumentos enviados ao renderer usam uma projeção
+permitida. Dados de conexão, canais, argumentos extras e a mensagem bruta do
+endpoint ficam fora da ponte. Erros locais possuem código sanitizado e
+identificador de diagnóstico. A navegação, o ciclo de vida e a troca de
+contexto cancelam a leitura, e o snapshot de Filas existe apenas em memória.
+Ver [M03](../04-modules/03-queue-management.md) e [evidências](../07-testing/queues-5a.md).

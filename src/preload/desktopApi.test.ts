@@ -61,6 +61,8 @@ describe("preload API", () => {
         "onSessionState",
         "getBrokerInfo",
         "listSessionVhosts",
+        "listSessionQueues",
+        "getSessionQueue",
         "selectSessionVhost",
         "cancelManagementRead",
         "openLink",
@@ -182,4 +184,53 @@ it("validates administrative replies and replaces untrusted error messages", asy
   expect(JSON.stringify(await api.getBrokerInfo(input))).not.toContain(
     "SENTINEL",
   );
+});
+
+it("accepts the exact queue projection and rejects extra fields or a mismatched operation", async () => {
+  const call = vi.fn();
+  const management = vi.fn();
+  const api = createDesktopApi(
+    call,
+    call,
+    call,
+    undefined,
+    undefined,
+    management,
+  );
+  const input = {
+    sessionId: "00000000-0000-4000-8000-000000000001",
+    operationId: "00000000-0000-4000-8000-000000000002",
+    generation: 1,
+    name: "fila/",
+  };
+  const { name, ...ref } = input;
+  const value = {
+    ...ref,
+    kind: "queueDetail",
+    vhost: "/",
+    source: "https-management",
+    checkedAt: "2026-11-19T12:00:00.000Z",
+    queue: { name, ready: 0, consumerDetails: { items: [], partial: false } },
+  };
+  const response = { ok: true, requestId: input.operationId, value };
+  management.mockResolvedValueOnce(response);
+  expect((await api.getSessionQueue(input)).ok).toBe(true);
+  expect(management).toHaveBeenCalledWith({
+    command: "getSessionQueue",
+    input,
+  });
+  for (const bad of [
+    { ...value, generation: 2 },
+    { ...value, queue: { name: "different" } },
+    { ...value, queue: { name, arguments: { password: "private-fixture" } } },
+    {
+      ...value,
+      queue: { name, consumerDetails: { items: [], partial: true } },
+    },
+  ]) {
+    management.mockResolvedValueOnce({ ...response, value: bad });
+    const result = await api.getSessionQueue(input);
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(result)).not.toContain("private-fixture");
+  }
 });

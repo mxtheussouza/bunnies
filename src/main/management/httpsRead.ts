@@ -3,6 +3,13 @@ import type { ClientRequest, IncomingMessage } from "node:http";
 import { checkServerIdentity } from "node:tls";
 import { isUtf8 } from "node:buffer";
 import type { HttpsProbeInput } from "../connections/httpsProbe";
+import type { QueueDetail, QueuePage } from "../../shared/queues";
+import {
+  parseQueueBody,
+  queuePath,
+  queueRouteError,
+  type QueueQuery,
+} from "./queueRead";
 import {
   boundedManagementText,
   MAX_MANAGEMENT_BODY,
@@ -18,8 +25,9 @@ export class ManagementFailure extends Error {
     super(code);
   }
 }
-export type ManagementQuery =
-  { kind: "broker" } | { kind: "vhosts"; vhost: string };
+type BrokerQuery = { kind: "broker" } | { kind: "vhosts"; vhost: string };
+export type ManagementQuery = BrokerQuery | QueueQuery;
+type ManagementData = BrokerData | VhostsData | QueuePage | QueueDetail;
 function depthOk(value: unknown) {
   const stack = [{ value, depth: 1 }];
   while (stack.length) {
@@ -34,8 +42,10 @@ function depthOk(value: unknown) {
 export function parseManagementBody(
   value: unknown,
   query: ManagementQuery,
-): BrokerData | VhostsData {
+): ManagementData {
   if (!depthOk(value)) throw new ManagementFailure("RESPONSE");
+  if (query.kind === "queuePage" || query.kind === "queueDetail")
+    return parseQueueBody(value, query);
   if (query.kind === "broker") {
     if (!value || typeof value !== "object" || Array.isArray(value))
       throw new ManagementFailure("RESPONSE");
@@ -96,7 +106,7 @@ export async function readManagement(
   input: HttpsProbeInput,
   query: ManagementQuery,
   signal: AbortSignal,
-): Promise<BrokerData | VhostsData> {
+): Promise<ManagementData> {
   if (
     input.username.includes(":") ||
     [input.username, input.password].some(
@@ -117,7 +127,12 @@ export async function readManagement(
     broker: "/api/overview?columns=rabbitmq_version,management_version",
     vhosts: "/api/vhosts?disable_stats=true&columns=name&sort=name",
   };
-  const path = url.pathname.replace(/\/+$/, "") + routes[query.kind];
+  const isQueue = query.kind === "queuePage" || query.kind === "queueDetail";
+  const routeError = isQueue ? queueRouteError(query) : undefined;
+  if (routeError) throw new ManagementFailure(routeError);
+  const route = isQueue ? queuePath(query) : routes[query.kind];
+  if (!route) throw new ManagementFailure("VALIDATION");
+  const path = url.pathname.replace(/\/+$/, "") + route;
   const agent = new Agent({
     keepAlive: false,
     maxSockets: 1,
@@ -131,10 +146,7 @@ export async function readManagement(
     let pending: ClientRequest | undefined,
       response: IncomingMessage | undefined,
       done = false;
-    const finish = (
-      error?: ManagementFailure,
-      data?: BrokerData | VhostsData,
-    ) => {
+    const finish = (error?: ManagementFailure, data?: ManagementData) => {
       if (done) return;
       done = true;
       clearTimeout(timer);
@@ -214,7 +226,9 @@ export async function readManagement(
           }
           const encoding = incoming.headers["content-encoding"];
           if (
-            (status !== 200 && status !== 401) ||
+            (status !== 200 &&
+              status !== 401 &&
+              !(status === 400 && query.kind === "queuePage")) ||
             !/^application\/json(?:\s*;.*)?$/i.test(
               incoming.headers["content-type"] ?? "",
             ) ||
@@ -251,6 +265,16 @@ export async function readManagement(
                     "Not monitoring user",
                   ].includes(value.reason);
                 finish(new ManagementFailure(denied ? "DENIED" : "AUTH"));
+                return;
+              }
+              if (status === 400) {
+                const outOfRange =
+                  depthOk(value) &&
+                  typeof value?.reason === "string" &&
+                  value.reason.startsWith("Page out of range,");
+                finish(
+                  new ManagementFailure(outOfRange ? "QUEUE_PAGE" : "RESPONSE"),
+                );
                 return;
               }
               finish(undefined, parseManagementBody(value, query));

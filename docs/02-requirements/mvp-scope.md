@@ -184,3 +184,7 @@ O fluxo MVP-A01 inclui escolher um vhost visível e verificar se o broker aceita
 a nova conexão AMQP. A escolha fica na sessão. A troca para quando o broker
 pode reter a conexão anterior. A aceitação da conexão continua distinta das
 permissões de fila, exchange e publicação.
+
+A 5A implementa o recorte de leitura de MVP-Q01. O vhost de nome exato
+`detailed` tem a listagem recusada antes do I/O, conforme revisão aprovada.
+MVP-Q02 e MVP-Q03 aguardam os próprios contratos. Ver [M03](../04-modules/03-queue-management.md).

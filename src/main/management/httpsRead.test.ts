@@ -214,3 +214,43 @@ describe("bounded management reads", () => {
     expect(Date.now() - started).toBeLessThan(12000);
   }, 15000);
 });
+
+it("rejects duplicate or foreign queues and incoherent pagination from the HTTPS endpoint", async () => {
+  const request = { kind: "queuePage" as const, page: 1, vhost: "literal%2F" };
+  const item = { name: "fila", vhost: request.vhost };
+  const envelope = {
+    page: 1,
+    page_size: 100,
+    page_count: 1,
+    filtered_count: 2,
+    total_count: 2,
+    item_count: 2,
+    items: [item, { ...item, name: "outra" }],
+  };
+  let body: unknown = envelope;
+  const input = await server((_req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify(body));
+  });
+  await expect(readManagement(input, request, signal())).resolves.toMatchObject(
+    {
+      vhost: request.vhost,
+      items: [{ name: "fila" }, { name: "outra" }],
+    },
+  );
+  for (const invalid of [
+    { ...envelope, page_size: 200 },
+    { ...envelope, item_count: 1 },
+    { ...envelope, page_count: 2 },
+    { ...envelope, items: [item, item] },
+    { ...envelope, items: [item, { name: "outra", vhost: "literal/" }] },
+    { ...envelope, items: [item, { ...item, name: "outra", consumers: -1 }] },
+  ]) {
+    body = invalid;
+    await expect(
+      readManagement(input, request, signal()),
+    ).rejects.toMatchObject({
+      code: "RESPONSE",
+    });
+  }
+});

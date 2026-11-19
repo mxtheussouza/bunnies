@@ -20,17 +20,18 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 - [Temas, navegação e janela](#temas-e-navegacao)
 - [Menus e teclado](#menus-e-teclado)
 - [Resolver problemas](#resolver-problemas)
+- [Listar, pesquisar e detalhar filas](#consultar-filas)
 - [Funções de broker ainda indisponíveis](#funcoes-de-broker)
 
 <a id="disponibilidade"></a>
 
 ## O que está disponível nesta versão
 
-Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, consultar versões informadas e vhosts visíveis por HTTPS, usar temas e consultar a Ajuda.
+Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, consultar versões informadas e vhosts visíveis por HTTPS, listar e detalhar filas no vhost ativo, usar temas e consultar a Ajuda.
 
 Salvar ou selecionar um perfil não conecta ao broker. Testar HTTPS e Testar AMQPS usam conexões transitórias. Conectar mantém uma conexão AMQPS e verifica a autenticação HTTPS periodicamente. Os dois endereços são independentes: o aplicativo não comprova que apontam ao mesmo broker.
 
-Visão geral, Filas, Exchanges e Publicar permanecem indisponíveis. A sessão atual não abre canais nem publica ou consome mensagens. Senhas protegidas salvas no dispositivo continuam indisponíveis; use senha somente nesta execução.
+Visão geral, Exchanges e Publicar permanecem indisponíveis. A sessão atual não abre canais nem publica ou consome mensagens. Senhas protegidas salvas no dispositivo continuam indisponíveis; use senha somente nesta execução.
 
 <a id="primeiros-passos"></a>
 
@@ -68,7 +69,7 @@ O encerramento aguarda até um segundo pela confirmação AMQP. Se ela não cheg
 3. Para trocar ambiente, encerre com Desconectar, selecione ou edite o perfil desejado e clique em Conectar novamente.
 
 - Os formulários continuam disponíveis durante a sessão; salvar uma alteração encerra a sessão de forma conservadora. Selecionar outro perfil na lista apenas muda a seleção, mantendo o contexto ativo identificado no cabeçalho.
-- A sessão não desbloqueia operações de filas, exchanges ou mensagens nesta versão.
+- Com HTTPS disponível e AMQPS estabelecido, a sessão permite as consultas de Filas no vhost ativo.
 
 <a id="informacoes-administrativas"></a>
 
@@ -99,7 +100,7 @@ Uma recusa HTTP pode decorrer de permissão ou tag mesmo com senha válida. O ap
 5. A troca encerra a conexão AMQPS anterior antes de abrir a nova. Se o estado da conexão anterior ficar incerto, o aplicativo encerra os recursos locais e interrompe a troca. Verifique o broker antes de iniciar outra sessão. O painel mostra o vhost solicitado e informa quando o broker confirma o acesso. Uma recusa mantém o vhost solicitado sem voltar ao anterior.
 6. A abertura pode gerar registros no broker. Confira o ambiente e o nome exato antes da troca. O aplicativo mantém a verificação HTTPS da mesma sessão e invalida as listas anteriores. Clique em Listar vhosts para atualizar os nomes.
 
-- O painel não consulta rotas individuais de vhost. As versões de referência testadas apresentaram falhas de paginação e restrições dessas rotas; este recorte usa uma lista completa com limites explícitos. Filas, exchanges, mensagens e demais operações administrativas continuam indisponíveis.
+- O painel não consulta rotas individuais de vhost. As versões de referência testadas apresentaram falhas de paginação e restrições dessas rotas; este recorte usa uma lista completa com limites explícitos. Use Filas na barra lateral para consultar filas do vhost ativo.
 
 <a id="criar-perfil"></a>
 
@@ -271,6 +272,26 @@ Leia o resultado de cada operação. Um erro não significa que os dados foram s
 | Sem sessão ativa mesmo após teste HTTPS | É esperado. Testar HTTPS consulta apenas a identidade autenticada e encerra a conexão; não ativa sessão, testa AMQPS ou libera páginas de broker. O resultado tem data e não é um indicador contínuo de disponibilidade. |
 | Conflito ou erro ao converter configuração antiga | O original e um backup válido são preservados. Recarregue a lista e procure suporte se persistir. O aplicativo não sobrescreve backup diferente nem reinicia arquivos inválidos automaticamente; não remova arquivos por tentativa. |
 
+<a id="consultar-filas"></a>
+
+## Listar, pesquisar e detalhar filas
+
+Em Filas, a consulta usa HTTPS Management e o vhost exato da sessão, inclusive quando temporário. Confira perfil, ambiente, vhost e horário. É necessário manter a janela ativa, HTTPS disponível e uma conexão AMQPS estabelecida. Bloqueio do fluxo AMQPS pelo broker permite a leitura se a conexão continua aberta.
+
+As páginas têm até 100 filas. A pesquisa encontra um trecho literal do nome no servidor, com até 255 bytes UTF-8. Alterar o campo não consulta o servidor. Tipo (Nesta página) filtra somente as linhas carregadas e mantém os totais informados pelo broker.
+
+As contagens mostram mensagens prontas, sem confirmação, total e consumidores quando disponíveis. Zero é uma contagem informada. Indisponível indica campo ausente. Detalhes mostram flags, argumentos básicos e até 100 consumidores, com aviso quando a exibição é parcial. Os dados refletem a consulta feita naquele horário.
+
+A listagem para o vhost de nome exato detailed fica indisponível porque o RabbitMQ reserva o caminho para uma consulta global. Nomes exatos . e .. também não podem ser usados como segmentos na rota. Uma fila com um desses nomes pode aparecer na lista, com o detalhe indisponível.
+
+A consulta usa a mesma vaga das leituras administrativas. O prazo total é de 10 segundos. Respostas acima de 256 KiB ou com cabeçalhos acima de 16 KiB são recusadas. O limite local de resposta não limita o trabalho do servidor.
+
+Cancelar consulta, sair de Filas, fechar um detalhe pendente, perder elegibilidade ou mudar de sessão cancela a requisição aplicável. No mesmo contexto, a última lista permanece marcada Desatualizado após pausa ou falha. Uma troca de vhost limpa a lista. Se a página cair fora da faixa, use Voltar à primeira página.
+
+1. Em Conexões, ative a sessão e confirme o vhost. Abra Filas na barra lateral.
+2. Clique em Carregar filas. Para pesquisar, preencha Buscar trecho do nome e clique em Buscar filas ou pressione Enter. Use Página anterior ou Próxima página para percorrer a mesma busca.
+3. Ative o nome da fila para abrir o detalhe. Use Fechar detalhe ou Esc para voltar à linha.
+
 <a id="funcoes-de-broker"></a>
 
 ## Funções de broker ainda indisponíveis
@@ -280,7 +301,7 @@ Os itens a seguir descrevem o propósito planejado das funções, não instruç�
 | Campo ou função | Como usar / para que serve | Exemplo fictício |
 | --- | --- | --- |
 | Visão geral e monitoramento | Apresentar informações e métricas do broker com estado e atualidade claros. Ainda não há métricas reais, gráficos ou histórico no aplicativo. | — |
-| Filas | Listar, criar e inspecionar filas e, em operações específicas futuras, excluir ou executar purge com confirmação. Nenhuma dessas operações está disponível agora. | — |
+| Alterações em filas | Criação, exclusão e limpeza de mensagens prontas dependem de entregas posteriores. | — |
 | Exchanges e bindings | Organizar exchanges, relacionamentos de roteamento e routing keys. Ainda não existem formulários ou operações implementados. | — |
 | Publicar mensagens | Preparar payloads e propriedades para publicação com resultado explícito. Publicação, consumo e inspeção de mensagens não estão disponíveis; inspeção/consumo ficam fora do MVP aprovado. | — |
 | Administração avançada e produtividade | Usuários, permissões, policies, operações em lote, favoritos e ferramentas avançadas dependem de planejamento e entregas posteriores. Não estão disponíveis nesta versão. | — |

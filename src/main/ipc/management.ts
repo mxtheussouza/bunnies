@@ -4,7 +4,8 @@ import {
   MANAGEMENT_CHANNEL,
   managementErrors,
   type ManagementResult,
-  type ManagementSnapshot,
+  isQueueSnapshot,
+  type ManagementReadSnapshot,
 } from "../../shared/management";
 import { isTrustedSender } from "./desktop";
 import { parseManagementRequest } from "../management/validation";
@@ -20,7 +21,7 @@ export function registerManagementIpc(
     async (
       event,
       input: unknown,
-    ): Promise<ManagementResult<ManagementSnapshot | undefined>> => {
+    ): Promise<ManagementResult<ManagementReadSnapshot | undefined>> => {
       const requestId = randomUUID();
       try {
         const window = getWindow();
@@ -29,14 +30,35 @@ export function registerManagementIpc(
         const request = parseManagementRequest(input);
         if (!request) throw new ManagementFailure("VALIDATION");
         const owner = window.webContents.id;
-        const value =
-          request.command === "cancelManagementRead"
-            ? service.cancel(owner, request.input)
-            : await service.execute(
-                owner,
-                request.input,
-                request.command === "getBrokerInfo" ? "broker" : "vhosts",
-              );
+        let value: ManagementReadSnapshot | undefined;
+        switch (request.command) {
+          case "cancelManagementRead":
+            service.cancel(owner, request.input);
+            break;
+          case "listSessionQueues":
+            value = await service.execute(owner, request.input, {
+              kind: "queuePage",
+              page: request.input.page,
+              search: request.input.search,
+            });
+            if (!isQueueSnapshot(value) || value.kind !== "queuePage")
+              throw new ManagementFailure("RESPONSE");
+            break;
+          case "getSessionQueue":
+            value = await service.execute(owner, request.input, {
+              kind: "queueDetail",
+              name: request.input.name,
+            });
+            if (!isQueueSnapshot(value) || value.kind !== "queueDetail")
+              throw new ManagementFailure("RESPONSE");
+            break;
+          default:
+            value = await service.execute(
+              owner,
+              request.input,
+              request.command === "getBrokerInfo" ? "broker" : "vhosts",
+            );
+        }
         if (!isTrustedSender(event, getWindow(), entry))
           throw new ManagementFailure("FORBIDDEN");
         return { ok: true, requestId, value };

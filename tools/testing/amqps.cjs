@@ -357,7 +357,7 @@ async function run() {
       ),
       false,
     );
-    for (const name of ["Visão geral", "Filas", "Exchanges", "Publicar"])
+    for (const name of ["Visão geral", "Exchanges", "Publicar"])
       assert.equal(
         await page.getByRole("button", { name, exact: true }).isDisabled(),
         true,

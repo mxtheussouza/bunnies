@@ -137,3 +137,47 @@ describe("manual management operations under session authority", () => {
     f.service.dispose();
   });
 });
+
+it("shares the administrative slot and cancels queue reads when the AMQPS context is lost", async () => {
+  const f = fixture();
+  const i = input();
+  const query = { kind: "queuePage", page: 1, search: "[literal]" } as const;
+  f.session.managementContext.mockReturnValue({
+    profileId: "synthetic",
+    revision: "revision",
+    vhost: "literal%2F",
+  });
+  f.read.mockImplementationOnce(() => new Promise(() => undefined));
+  const p = f.service.execute(1, i, query);
+  await Promise.resolve();
+  expect(f.session.managementContext).toHaveBeenCalledWith(1, i, true);
+  expect(f.read.mock.calls[0][1]).toEqual({ ...query, vhost: "literal%2F" });
+  await expect(f.service.execute(1, input(), "vhosts")).rejects.toMatchObject({
+    code: "BUSY",
+  });
+  f.session.managementContext.mockImplementation(() => {
+    throw new ProfileFailure("UNAVAILABLE");
+  });
+  const failed = expect(p).rejects.toMatchObject({ code: "CONFLICT" });
+  f.notify();
+  await failed;
+  expect(f.read.mock.calls[0][2].aborted).toBe(true);
+  f.service.dispose();
+});
+
+it("rejects the conflicting list route before reading credentials or using the transport", async () => {
+  const f = fixture();
+  f.session.managementContext.mockReturnValue({
+    profileId: "synthetic",
+    revision: "revision",
+    vhost: "detailed",
+  });
+  await expect(
+    f.service.execute(1, input(), { kind: "queuePage", page: 1 }),
+  ).rejects.toMatchObject({
+    code: "QUEUE_LIST_ROUTE",
+  });
+  expect(f.profiles.connectionSnapshot).not.toHaveBeenCalled();
+  expect(f.read).not.toHaveBeenCalled();
+  f.service.dispose();
+});

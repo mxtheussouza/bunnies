@@ -86,6 +86,7 @@ export class SessionService {
   managementContext(
     owner: number,
     ref: { sessionId: string; generation: number },
+    requireAmqps = false,
   ) {
     const c = this.context;
     if (
@@ -100,6 +101,10 @@ export class SessionService {
       c.snapshot.stopping ||
       this.paused ||
       c.snapshot.https.phase !== "available" ||
+      (requireAmqps &&
+        (!c.amqps.handle ||
+          c.snapshot.switching ||
+          !available(c.snapshot.amqps.phase))) ||
       !c.snapshot.profile
     )
       throw new ProfileFailure("UNAVAILABLE");

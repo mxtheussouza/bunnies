@@ -106,13 +106,12 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **4B.2 concluída e aprovada**.
-- Última etapa concluída e aprovada: **4B.2 — seleção temporária de vhost com
-  confirmação de fechamento**.
-- Entrega aprovada: `feat(connections): switch vhosts after confirmed close`
-  (entrega que contém este registro, pai `4a35424`).
+- Etapa atual: **5A — concluída, aprovada e registrada**.
+- Última etapa concluída e aprovada: **5A — listagem e detalhe de filas**.
+- Última entrega registrada: `feat(queues): add scoped queue reads` em
+  `main`, com pai `2f1f6cc`.
 - Mudança da barra macOS em `9401448` preservada.
-- Próxima ação: aguardar solicitação para preparar o contrato da Etapa 5.
+- Próxima ação: aguardar solicitação para preparar o contrato da 5B.
 
 Ao retomar, ler este arquivo, [PROJECTS_STATUS.md](PROJECTS_STATUS.md), a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -506,3 +505,67 @@ Em 2026-11-18, “Aprovado” aceitou a conclusão e autorizou o commit
 `feat(connections): switch vhosts after confirmed close`. Os 46 arquivos e
 o ASAR apresentado foram conferidos antes do registro. O aceite abrange a
 entrega local aprovada. A Etapa 5 exige solicitação e contrato próprios.
+
+## Preparação vigente — 5A
+
+“Continue” iniciou a preparação após o merge `2f1f6cc`, com `main` e árvore
+inicialmente limpa. O [contrato 5A](docs/05-roadmap/roadmap.md#contrato-proposto--5a-listagem-e-detalhe-de-filas)
+está **Proposed**. 5A-D01–07 e 5A-01–10 propõem dois GETs de filas no vhost
+da sessão, uma página de 100, busca literal, detalhe e dois métodos na ponte
+(26 → 28). A autorização de execução deve abranger o gate pré-UI na matriz
+fixada. Criação (5B), exclusão e purge (5C) exigirão contratos próprios.
+A preparação é documental; aguardar o aceite da 5A antes de código,
+broker, package ou smokes.
+
+## Execução aprovada — 5A
+
+“Aprovo” aceitou executar 5A-D01–07 e 5A-01–10. Começar pelo adapter e
+validar as duas versões fixadas em recursos próprios. Integrar IPC/UI e
+guia após o gate. Divergência que exija revisão do contrato interrompe
+trabalho dependente. Conclusão, commit e 5B/5C terão aceites próprios.
+
+## Gate 5A reprovado — decisão pendente
+
+Em 4.4.0 e 4.3.6, 12 verificações passaram e uma falhou por versão.
+O vhost `detailed` colide com a rota global de filas. A revisão
+proposta impede essa listagem antes do I/O. Aguardar aceite da
+revisão e passar gate revisado antes de integrar IPC/UI/guia.
+[Evidências](docs/07-testing/queues-5a.md).
+
+## Revisão aprovada — 5A
+
+“Aprovo”, em 2026-11-19, aceitou recusar no main, antes do I/O, a
+listagem para o vhost de nome exato `detailed` e explicar o motivo
+em Filas. Repetir o gate nas duas versões antes de integrar IPC/UI/guia.
+Conclusão e commit exigem aceite próprio.
+
+## Validação parcial — 5A
+
+Gate revisado passou 28 verificações reais. Filas em leitura, ponte com
+28 métodos e Guia/Ajuda sincronizados. Package, check (283 + seis Node)
+e smokes de perfis/HTTPS/AMQPS passaram em macOS arm64. A sessão gráfica
+bloqueada impede concluir base, Sessão, Management, transição, Filas,
+capturas e matriz no pacote. Consultar PROJECTS e evidências na retomada.
+
+## 5A pronta para revisão
+
+Check passou 283 testes e seis Node, gate revisado 28, package e oito
+smokes. Matriz no mesmo ASAR passou 70 verificações reais em RabbitMQ
+4.4.0 e 4.3.6, com limpeza completa. Capturas dos dois temas a 200%
+revisadas e Guia/Ajuda sincronizados. Conclusão e commit exigem aceite
+próprio. Ver [evidências](docs/07-testing/queues-5a.md).
+
+## Conclusão da 5A aprovada
+
+Em 2026-11-19, “Aprovo a conclusao da 5A” aceitou a conclusão da listagem
+e do detalhe de filas no recorte apresentado. Conferidos os 42 arquivos
+e o ASAR da revisão. O commit `feat(queues): add scoped queue reads`
+aguarda autorização. 5B/5C exigem contratos próprios. Ver
+[evidências](docs/07-testing/queues-5a.md).
+
+## Commit da 5A autorizado
+
+Em 2026-11-19, “Autorizado, pode prosseguir” aceitou o registro local
+`feat(queues): add scoped queue reads`. A entrega, os documentos de
+aceite e o ASAR foram conferidos antes do registro. O próximo contrato
+depende de solicitação própria.

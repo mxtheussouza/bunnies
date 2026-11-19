@@ -507,3 +507,18 @@ invalida a geração antes da troca e altera só o argumento estruturado AMQPS.
 O serviço aguarda a confirmação do fechamento do handle anterior. Estado
 remoto incerto bloqueia o fluxo de troca e sua recuperação automática. O
 polling HTTPS continua independente. A ponte passa a 26 métodos específicos.
+
+## Leitura de filas — 5A
+
+A tela Filas usa o contexto da sessão e duas operações no canal
+`bunnies:management`, elevando a ponte a 28 métodos específicos.
+`ManagementService` aplica a mesma vaga e o mesmo prazo das leituras 4B.1.
+A autorização de filas também exige handle AMQPS estabelecido. O adapter
+`queueRead` codifica segmentos, constrói os parâmetros fixos de paginação e
+projeta os resultados sobre DTOs fechados em `src/shared`.
+
+A listagem tem escopo de um único vhost. A revisão da 5A bloqueia o nome exato
+`detailed` antes da rede, onde há colisão com a rota global do RabbitMQ.
+Os detalhes usam a identidade da linha e exibem até 100 consumidores.
+A tela consulta por ação manual e vincula seu estado à geração da sessão.
+Ver [M03](../04-modules/03-queue-management.md).

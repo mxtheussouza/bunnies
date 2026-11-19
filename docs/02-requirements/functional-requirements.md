@@ -129,3 +129,12 @@ FR-004, FR-019, FR-025, FR-027 e FR-030 recebem seleção explícita de vhost e
 transição com geração nova. A lista HTTPS indica visibilidade e a abertura
 AMQP indica admissão da conexão naquele vhost. FR-020 continua dependente
 dos contratos de recursos e das respectivas permissões/capacidades.
+
+## Entrega 5A
+
+FR-007 e FR-008 têm implementação de leitura no recorte da 5A. A paginação e
+busca literal são executadas pelo broker, e o filtro por tipo atua na página.
+O detalhe mostra metadados e até 100 consumidores. A revisão aprovada torna a
+listagem indisponível no vhost de nome exato `detailed`; as rotas recusam os
+segmentos exatos `.` e `..`. FR-009–011 seguem para os contratos de escrita.
+Ver [M03](../04-modules/03-queue-management.md) e [evidências](../07-testing/queues-5a.md).

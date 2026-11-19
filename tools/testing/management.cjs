@@ -59,7 +59,7 @@ async function selectVhost(page, target) {
   await button.focus();
   await page.keyboard.press("Enter");
 }
-async function run(transitionSmoke) {
+async function run(transitionSmoke, queuesSmoke) {
   const fixture = await createTlsFixture(),
     root = await mkdtemp(path.join(tmpdir(), "bunnies-management-smoke-"));
   const file = path.join(root, "profiles.json"),
@@ -69,7 +69,10 @@ async function run(transitionSmoke) {
     peer,
     server,
     mode = "ok",
-    adminRequests = 0;
+    adminRequests = 0,
+    queueRequests = 0,
+    queueStalls = 0,
+    queueAborts = 0;
   const sockets = new Set(),
     errors = [],
     external = [],
@@ -95,6 +98,17 @@ async function run(transitionSmoke) {
         res.setHeader("Content-Type", "application/json");
         if (req.url === "/api/whoami") {
           res.end('{"name":"synthetic"}');
+          return;
+        }
+        if (queuesSmoke && req.url.startsWith("/api/queues/")) {
+          queueRequests++;
+          if (mode === "stall") {
+            queueStalls++;
+            res.on("close", () => {
+              if (!res.writableEnded) queueAborts++;
+            });
+          }
+          require("./queues.cjs").serveQueues(req, res, mode);
           return;
         }
         adminRequests++;
@@ -179,14 +193,28 @@ async function run(transitionSmoke) {
     const win = await app.browserWindow(page);
     const state = async () =>
       (await page.evaluate(() => window.bunnies.getSessionState())).value;
-    async function focus() {
+    async function requestFocus() {
+      await win.evaluate(w => {
+        if (w.isMinimized()) w.restore();
+        if (!w.isVisible()) w.show();
+      });
       await app.evaluate(({ app }) => app.focus({ steal: true }));
       await win.evaluate(w => {
-        w.restore();
-        w.show();
         w.focus();
+        w.webContents.focus();
       });
-      await until(async () => !(await state()).paused);
+    }
+    async function focus() {
+      let nextAttempt = 0;
+      await until(async () => {
+        if (Date.now() >= nextAttempt) {
+          nextAttempt = Date.now() + 250;
+          await requestFocus();
+        }
+        return (
+          (await win.evaluate(w => w.isFocused())) && !(await state()).paused
+        );
+      });
     }
     await page.getByRole("button", { name: /Administração isolada/ }).click();
     await page
@@ -204,9 +232,70 @@ async function run(transitionSmoke) {
     await dialog.waitFor({ state: "hidden" });
     await focus();
     await page.getByRole("button", { name: "Conectar", exact: true }).click();
-    await until(async () => (await state()).state === "ready");
+    try {
+      await until(async () => {
+        const current = await state();
+        if (current.paused || !(await win.evaluate(w => w.isFocused())))
+          await focus();
+        return current.state === "ready" && !current.paused;
+      });
+    } catch (error) {
+      const current = await state();
+      throw new Error(
+        `Session did not become ready: ${JSON.stringify({
+          state: current.state,
+          paused: current.paused,
+          https: current.https,
+          amqps: current.amqps,
+        })}`,
+        { cause: error },
+      );
+    }
     assert.equal(adminRequests, 0);
     const before = await readFile(file, "utf8");
+    if (queuesSmoke) {
+      checks.push(
+        ...(await require("./queues.cjs").verifyQueueSmoke(page, win, {
+          count: () => queueRequests,
+          started: () => queueStalls,
+          aborted: () => queueAborts,
+          setMode: value => {
+            mode = value;
+          },
+          state,
+          until,
+        })),
+      );
+      const updated = await readFile(file, "utf8");
+      assert.equal(updated, before);
+      assert.ok(!updated.includes(sentinel));
+      assert.deepEqual(errors, []);
+      assert.deepEqual(external, []);
+      assert.equal(peer.attempts, 1);
+      await page.getByRole("button", { name: /Administração isolada/ }).click();
+      await page
+        .getByRole("button", { name: "Desconectar", exact: true })
+        .click();
+      await until(
+        async () => !(await state()).desired && !(await state()).stopping,
+      );
+      checks.push("no-profile-write-credentials-renderer-network-or-reconnect");
+      await writeFile(
+        "out/queues-5a-smoke-results.json",
+        JSON.stringify(
+          {
+            passed: true,
+            platform: process.platform,
+            architecture: process.arch,
+            checks,
+          },
+          null,
+          2,
+        ) + "\n",
+      );
+      console.log(`Queues smoke: ${checks.length} groups passed`);
+      return;
+    }
     checks.push(...(await verifyManagement(page, "4.4.0", names)));
     const region = page.getByRole("region", {
       name: "Informações administrativas",
@@ -541,7 +630,10 @@ async function run(transitionSmoke) {
 }
 module.exports = { verifyManagement, selectVhost };
 if (require.main === module)
-  run(process.argv.includes("--vhost-transition")).catch(error => {
+  run(
+    process.argv.includes("--vhost-transition"),
+    process.argv.includes("--queues"),
+  ).catch(error => {
     console.error(error);
     process.exitCode = 1;
   });

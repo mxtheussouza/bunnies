@@ -1,12 +1,16 @@
 import {
   closedObject,
   isManagementSnapshot,
+  isQueueSnapshot,
+  type ManagementReadSnapshot,
+  type QueueSnapshot,
   managementErrors,
   managementId,
   type ManagementRequest,
   type ManagementResult,
   type ManagementSnapshot,
 } from "../shared/management";
+import type { QueueDetail, QueuePage } from "../shared/queues";
 import type { ConnectionRequest, ConnectionsApi } from "../shared/connections";
 import type { SessionRequest, SessionSnapshot } from "../shared/session";
 import { isSessionSnapshot } from "../shared/session";
@@ -41,9 +45,7 @@ export function createDesktopApi(
 ): DesktopApi {
   async function managementCall(
     request: ManagementRequest,
-  ): Promise<
-    ManagementResult<ManagementSnapshot> | ManagementResult<undefined>
-  > {
+  ): Promise<ManagementResult<ManagementReadSnapshot | undefined>> {
     try {
       const result = await invokeManagement(request);
       if (
@@ -53,18 +55,35 @@ export function createDesktopApi(
         throw new Error();
       if (
         result.ok === true &&
-        closedObject(result, ["ok", "requestId", "value"]) &&
-        (request.command === "cancelManagementRead"
-          ? result.value === undefined
-          : isManagementSnapshot(result.value) &&
-            result.value.sessionId === request.input.sessionId &&
-            result.value.generation === request.input.generation &&
-            result.value.operationId === request.input.operationId &&
-            result.value.kind ===
-              (request.command === "getBrokerInfo" ? "broker" : "vhosts"))
-      )
-        return result as
-          ManagementResult<ManagementSnapshot> | ManagementResult<undefined>;
+        closedObject(result, ["ok", "requestId", "value"])
+      ) {
+        const { input } = request;
+        const value = result.value;
+        if (request.command === "cancelManagementRead" && value === undefined)
+          return { ok: true, requestId: result.requestId, value };
+        if (!isQueueSnapshot(value) && !isManagementSnapshot(value))
+          throw new Error();
+        const matches =
+          request.command === "listSessionQueues"
+            ? value.kind === "queuePage" &&
+              value.page === request.input.page &&
+              (request.input.search !== undefined ||
+                value.totalCount === value.filteredCount)
+            : request.command === "getSessionQueue"
+              ? value.kind === "queueDetail" &&
+                value.queue.name === request.input.name
+              : request.command === "getBrokerInfo"
+                ? value.kind === "broker"
+                : request.command === "listSessionVhosts" &&
+                  value.kind === "vhosts";
+        if (
+          matches &&
+          value.sessionId === input.sessionId &&
+          value.generation === input.generation &&
+          value.operationId === input.operationId
+        )
+          return { ok: true, requestId: result.requestId, value };
+      }
       if (
         result.ok === false &&
         closedObject(result, ["ok", "requestId", "error"]) &&
@@ -155,6 +174,14 @@ export function createDesktopApi(
     listSessionVhosts: input =>
       managementCall({ command: "listSessionVhosts", input }) as Promise<
         ManagementResult<ManagementSnapshot>
+      >,
+    listSessionQueues: input =>
+      managementCall({ command: "listSessionQueues", input }) as Promise<
+        ManagementResult<QueueSnapshot<QueuePage>>
+      >,
+    getSessionQueue: input =>
+      managementCall({ command: "getSessionQueue", input }) as Promise<
+        ManagementResult<QueueSnapshot<QueueDetail>>
       >,
     cancelManagementRead: input =>
       managementCall({ command: "cancelManagementRead", input }) as Promise<

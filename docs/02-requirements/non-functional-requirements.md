@@ -177,3 +177,17 @@ validação, resultados finais nas evidências; sem nova homologação de escala
 
 A seleção vale na sessão e altera apenas o campo vhost da negociação AMQPS.
 Nenhuma nova rota HTTP é necessária.
+
+## Sublimites aprovados — 5A
+
+| Referência | Recorte de leitura de filas |
+| --- | --- |
+| NFR-012/013 | Prazo total de 10 s e invalidação por owner/sessão/geração/revisão e ciclo de vida |
+| NFR-014 | Até 100 filas por página; número de página de 1 a 2.147.483.647; até 100 consumidores por detalhe, com indicação de recorte |
+| NFR-014/016 | Busca literal e identidades de até 255 bytes UTF-8; apenas os campos projetados trafegam pela ponte |
+| NFR-015/016 | Até 256 KiB de corpo com encoding identity, 16 KiB de cabeçalhos e profundidade JSON 16 |
+| NFR-017/018 | Uma leitura administrativa em voo, compartilhada com versão e vhosts. Até duas consultas HTTPS simultâneas com whoami. Atualização de filas por ação manual |
+
+O limite local de resposta protege o cliente. O broker pode preparar uma
+resposta maior antes da interrupção. As medições e cenários de referência
+constam nas [evidências](../07-testing/queues-5a.md).

@@ -71,7 +71,7 @@ describe("offline application shell", () => {
     ).toBeTruthy();
     expect(screen.getByText("HTTPS sem sessão")).toBeTruthy();
     expect(screen.getByText("AMQPS sem sessão")).toBeTruthy();
-    for (const name of ["Visão geral", "Exchanges", "Publicar"])
+    for (const name of ["Visão geral", "Publicar"])
       expect(
         screen.getByRole("button", { name }).getAttribute("aria-disabled"),
       ).toBe("true");
@@ -122,7 +122,7 @@ describe("offline application shell", () => {
     expect(document.activeElement).toBe(screen.getByRole("main"));
     expect(location.href).toBe(url);
   });
-  it("opens Help as a local destination, focuses its heading and keeps broker pages unavailable", async () => {
+  it("opens Help and Exchanges as local destinations with heading focus", async () => {
     renderApp();
     const user = userEvent.setup();
     const url = location.href;
@@ -137,11 +137,16 @@ describe("offline application shell", () => {
     expect(
       screen.getByRole("article", { name: "Guia do usuário — Bunnies" }),
     ).toBeTruthy();
-    expect(
-      screen
-        .getByRole("button", { name: "Exchanges" })
-        .getAttribute("aria-disabled"),
-    ).toBe("true");
+    const exchanges = screen.getByRole("button", { name: "Exchanges" });
+    exchanges.focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
+      "Exchanges",
+    );
+    expect(document.activeElement).toBe(
+      screen.getByRole("heading", { level: 1 }),
+    );
+    expect(screen.getByText("Conecte uma sessão em Conexões.")).toBeTruthy();
     expect(getInfo).not.toHaveBeenCalled();
     await user.keyboard("{Control>}5{/Control}");
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(

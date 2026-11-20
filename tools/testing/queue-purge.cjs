@@ -143,8 +143,7 @@ async function verifyPurgeSmoke({
       name: "Limpar mensagens",
       exact: true,
     });
-    await trigger.focus();
-    await page.keyboard.press("Enter");
+    await trigger.press("Enter");
   };
 
   // Use a known operation ID to cancel the real OS dialog over the same bridge
@@ -190,7 +189,16 @@ async function verifyPurgeSmoke({
 
   await focus();
   await driver.mode("cancel");
-  if (!(await detail.isVisible())) detail = await openDetail(page, name);
+  // The bridged native-dialog test leaves the renderer free to close stale details on blur.
+  await page.keyboard.press("Escape");
+  await detail.waitFor({ state: "hidden" });
+  const reload = page.getByRole("button", {
+    name: "Carregar filas",
+    exact: true,
+  });
+  await reload.click();
+  await until(async () => !(await reload.isDisabled()));
+  detail = await openDetail(page, name);
   await start();
   await result("Limpeza não concluída");
   assert.ok((await detail.textContent()).includes("antes do envio"));

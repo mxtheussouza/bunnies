@@ -8,7 +8,10 @@ import Queues from "./Queues";
 const mock = vi.hoisted(() => ({
   state: {} as ReturnType<typeof emptySession>,
 }));
-vi.mock("../shell/SessionProvider", () => ({ useSession: () => mock }));
+vi.mock("../shell/SessionProvider", async importOriginal => ({
+  ...(await importOriginal<typeof import("../shell/SessionProvider")>()),
+  useSession: () => mock,
+}));
 const list = vi.fn(),
   detail = vi.fn(),
   cancel = vi.fn(),

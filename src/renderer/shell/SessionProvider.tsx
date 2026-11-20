@@ -122,3 +122,15 @@ export default function SessionProvider({
     </Context.Provider>
   );
 }
+export function managementUnavailableReason(
+  state: SessionSnapshot,
+): string | undefined {
+  if (!state.desired || !state.profile)
+    return "Conecte uma sessão em Conexões.";
+  if (state.stopping) return "Aguarde o encerramento da sessão.";
+  if (state.switching) return "Aguarde a troca de vhost.";
+  if (state.paused) return "Volte à janela ativa para consultar.";
+  if (state.https.phase !== "available") return "Aguarde a verificação HTTPS.";
+  if (state.amqps.phase !== "available" && state.amqps.phase !== "blocked")
+    return "Aguarde uma conexão AMQPS estabelecida neste vhost.";
+}

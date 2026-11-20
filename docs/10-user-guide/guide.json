@@ -375,6 +375,21 @@
       ]
     },
     {
+      "id": "consultar-exchanges",
+      "title": "Consultar exchanges e bindings",
+      "paragraphs": [
+        "Exchanges consulta o vhost da sessão ativa pelo endpoint HTTPS Management. A janela precisa estar ativa e a sessão precisa ter HTTPS disponível e AMQPS estabelecido. Consulte os horários da lista, do detalhe e de cada direção para saber quando os dados foram recebidos.",
+        "A lista tem até 100 exchanges por página. A busca encontra um trecho literal do nome no broker e aceita até 255 bytes UTF-8. A exchange padrão tem nome AMQP vazio. O detalhe explica os vínculos implícitos de cada fila com seu próprio nome como routing key. Exchanges com prefixo amq. aparecem como reservadas. O indicador Interna representa a propriedade informada pelo broker.",
+        "Os bindings de entrada são os que têm a exchange selecionada como destino. Os de saída podem apontar para filas ou outras exchanges. Routing key, identidade do binding e argumentos aparecem como dados da última consulta. A lista mostra até 200 vínculos por direção. Se o endpoint ultrapassar esse limite ou o limite de resposta, o aplicativo sinaliza o limite e recusa a lista inteira.",
+        "A consulta pode ser cancelada. Navegar para outra tela, trocar de vhost ou perder o contexto descarta a consulta. Os nomes exatos . e .. e o literal amq.default podem aparecer na lista com detalhe indisponível. Os argumentos são exibidos como JSON de leitura, com indicação quando não foram informados ou quando excedem a precisão segura."
+      ],
+      "steps": [
+        "Abra Exchanges e clique em Carregar exchanges. Para pesquisar, informe Buscar trecho do nome e acione Buscar exchanges ou pressione Enter.",
+        "Abra o detalhe pelo nome da exchange. Para consultar os vínculos, acione Consultar bindings de entrada ou Consultar bindings de saída.",
+        "Use Voltar à lista para retornar à exchange selecionada. Se uma página ficar fora da faixa, use Voltar à primeira página."
+      ]
+    },
+    {
       "id": "funcoes-de-broker",
       "title": "Funções de broker ainda indisponíveis",
       "paragraphs": [
@@ -390,8 +405,8 @@
           "description": "A exclusão de filas permanece pendente de uma forma verificável de aplicar as condições no broker."
         },
         {
-          "name": "Exchanges e bindings",
-          "description": "Organizar exchanges, relacionamentos de roteamento e routing keys. Ainda não existem formulários ou operações implementados."
+          "name": "Alterações em exchanges e bindings",
+          "description": "Criar ou excluir exchanges e criar ou remover bindings depende de entregas próprias. Consulte os vínculos pela tela Exchanges."
         },
         {
           "name": "Publicar mensagens",

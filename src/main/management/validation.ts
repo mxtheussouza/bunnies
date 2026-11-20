@@ -4,11 +4,26 @@ import {
   isQueueDetailInput,
   isQueueDeclarationInput,
   isQueueListInput,
+  isExchangeListInput,
+  isExchangeDetailInput,
+  isExchangeBindingsInput,
   type ManagementRequest,
 } from "../../shared/management";
 export function parseManagementRequest(v: unknown): ManagementRequest | null {
   if (!closedObject(v, ["command", "input"])) return null;
   switch (v.command) {
+    case "listSessionExchanges":
+      return isExchangeListInput(v.input)
+        ? { command: v.command, input: v.input }
+        : null;
+    case "getSessionExchange":
+      return isExchangeDetailInput(v.input)
+        ? { command: v.command, input: v.input }
+        : null;
+    case "listSessionExchangeBindings":
+      return isExchangeBindingsInput(v.input)
+        ? { command: v.command, input: v.input }
+        : null;
     case "listSessionQueues":
       return isQueueListInput(v.input)
         ? { command: v.command, input: v.input }

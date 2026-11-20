@@ -155,3 +155,12 @@ de filas classic/quorum. A confirmação nativa identifica destino e efeito.
 O main revalida a autoridade antes do envio e preserva a incerteza quando
 a escrita pode ter ocorrido. FR-010 continua pendente.
 [M03](../04-modules/03-queue-management.md) · [Evidências](../07-testing/queues-5c1.md)
+
+## Implementação 6A
+
+FR-012 tem listagem paginada, busca literal e detalhe de exchanges no vhost
+ativo, incluindo a identificação da exchange padrão e de reservadas. A
+leitura de FR-014 exibe bindings de entrada e saída com routing key,
+argumentos e identidade retornada pela API. FR-013 e a escrita de FR-014
+permanecem pendentes. [M04](../04-modules/04-exchange-management.md) ·
+[Evidências](../07-testing/exchanges-6a.md).

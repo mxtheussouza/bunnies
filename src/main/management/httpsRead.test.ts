@@ -254,3 +254,144 @@ it("rejects duplicate or foreign queues and incoherent pagination from the HTTPS
     });
   }
 });
+
+describe("scoped exchange reads", () => {
+  const summary = {
+    name: "exchange/%2F",
+    vhost: "detailed",
+    type: "x-plugin",
+    durable: true,
+    auto_delete: false,
+    internal: true,
+  };
+  const detail = {
+    kind: "exchangeDetail",
+    name: summary.name,
+    vhost: summary.vhost,
+  } as const;
+  it("projects exact exchange fields and distinguishes absent, empty and unsafe arguments", () => {
+    expect(parseManagementBody({ ...summary, ignored: "raw" }, detail)).toEqual(
+      {
+        kind: detail.kind,
+        vhost: detail.vhost,
+        exchange: {
+          name: detail.name,
+          type: "x-plugin",
+          durable: true,
+          autoDelete: false,
+          internal: true,
+        },
+      },
+    );
+    expect(
+      parseManagementBody({ ...summary, arguments: {} }, detail),
+    ).toMatchObject({
+      exchange: { argumentsJson: "{}" },
+    });
+    for (const value of [Number.MAX_SAFE_INTEGER + 1, Infinity])
+      expect(
+        parseManagementBody(
+          { ...summary, arguments: { nest: [value] } },
+          detail,
+        ),
+      ).toMatchObject({
+        exchange: { argumentsJson: null },
+      });
+    for (const row of [
+      { ...summary, name: "homonym" },
+      { ...summary, vhost: "/" },
+      { ...summary, arguments: [] },
+      {
+        ...summary,
+        arguments: { deep: JSON.parse("[".repeat(17) + "0" + "]".repeat(17)) },
+      },
+    ])
+      expect(() => parseManagementBody(row, detail)).toThrow("RESPONSE");
+  });
+
+  it("requires a valid exchange page with unique names in the requested vhost", () => {
+    const query = {
+      kind: "exchangePage",
+      vhost: summary.vhost,
+      page: 1,
+    } as const;
+    const envelope = {
+      page: 1,
+      page_size: 100,
+      total_count: 2,
+      filtered_count: 2,
+      page_count: 1,
+      item_count: 2,
+    };
+    for (const body of [
+      [summary],
+      { ...envelope, items: [summary, summary] },
+      {
+        ...envelope,
+        items: [summary, { ...summary, name: "other", vhost: "/" }],
+      },
+      { ...envelope, page: 2, items: [summary, { ...summary, name: "other" }] },
+    ])
+      expect(() => parseManagementBody(body, query)).toThrow("RESPONSE");
+  });
+
+  it("rejects wrong binding destinations and duplicate opaque identities", () => {
+    const query = {
+      ...detail,
+      kind: "exchangeBindings",
+      direction: "incoming",
+    } as const;
+    const row = {
+      source: "upstream",
+      destination: query.name,
+      destination_type: "exchange",
+      routing_key: "\u0000",
+      properties_key: "~opaque",
+      vhost: query.vhost,
+    };
+    expect(parseManagementBody([row], query)).toMatchObject({
+      items: [{ routingKey: "\u0000", propertiesKey: "~opaque" }],
+    });
+    for (const items of [
+      [row, { ...row, arguments: { x: 2 } }],
+      [{ ...row, destination_type: "queue" }],
+      [{ ...row, vhost: "/" }],
+      [{ ...row, properties_key: "x".repeat(1025) }],
+    ])
+      expect(() => parseManagementBody(items, query)).toThrow("RESPONSE");
+  });
+
+  it("rejects alias misuse and dot segments before I/O and never follows exchange redirects", async () => {
+    const requests: string[] = [];
+    const input = await server((req, res) => {
+      requests.push(req.url!);
+      res.writeHead(302, { Location: "https://example.invalid" });
+      res.end();
+    });
+    await expect(
+      readManagement(input, { ...detail, name: "amq.default" }, signal()),
+    ).rejects.toMatchObject({ code: "EXCHANGE_SEGMENT" });
+    await expect(
+      readManagement(input, { ...detail, vhost: ".." }, signal()),
+    ).rejects.toMatchObject({ code: "EXCHANGE_SEGMENT" });
+    await expect(
+      readManagement(
+        input,
+        {
+          ...detail,
+          kind: "exchangeBindings",
+          name: "",
+          direction: "outgoing",
+        },
+        signal(),
+      ),
+    ).rejects.toMatchObject({ code: "EXCHANGE_DEFAULT_BINDINGS" });
+    await expect(readManagement(input, detail, signal())).rejects.toMatchObject(
+      { code: "REDIRECT" },
+    );
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toMatch(
+      /^\/api\/exchanges\/detailed\/exchange%2F%252F\?/,
+    );
+  });
+});

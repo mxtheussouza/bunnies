@@ -131,14 +131,25 @@ async function run() {
       await dialog.waitFor({ state: "hidden" });
     }
     async function focus() {
-      await app.evaluate(({ app }) => app.focus({ steal: true }));
       const win = await app.browserWindow(page);
-      await win.evaluate(w => {
-        w.restore();
-        w.show();
-        w.focus();
+      let nextAttempt = 0;
+      await until(async () => {
+        if (Date.now() >= nextAttempt) {
+          nextAttempt = Date.now() + 250;
+          await win.evaluate(w => {
+            if (w.isMinimized()) w.restore();
+            if (!w.isVisible()) w.show();
+          });
+          await app.evaluate(({ app }) => app.focus({ steal: true }));
+          await win.evaluate(w => {
+            w.focus();
+            w.webContents.focus();
+          });
+        }
+        return (
+          (await win.evaluate(w => w.isFocused())) && !(await state()).paused
+        );
       });
-      await until(async () => !(await state()).paused);
     }
     async function connect(expected = "ready") {
       await focus();
@@ -146,8 +157,7 @@ async function run() {
         name: "Conectar",
         exact: true,
       });
-      await button.focus();
-      await page.keyboard.press("Enter");
+      await button.press("Enter");
       await until(async () => (await state()).state === expected);
     }
     async function disconnect() {

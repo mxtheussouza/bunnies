@@ -214,3 +214,14 @@ Ver [evidências da 5B](../07-testing/queues-5b.md) para resultados e plataforma
 | NFR-017 | Uma vaga administrativa desde a leitura até finalizar o fluxo, com `whoami` independente |
 
 Ver [evidências da 5C.1](../07-testing/queues-5c1.md) para resultados e plataformas.
+
+## Sublimites aprovados — 6A
+
+| Referência | Recorte de leitura de exchanges e bindings |
+| --- | --- |
+| NFR-012/013 | Prazo administrativo de 10 s e invalidação por owner, sessão, revisão, geração e ciclo de vida |
+| NFR-014 | Uma página do broker com até 100 exchanges. Uma resposta de até 200 bindings por direção, recusada integralmente acima do teto |
+| NFR-015/016 | 256 KiB de resposta identity, 16 KiB de cabeçalhos, profundidade JSON 16, nomes e routing key até 255 bytes UTF-8 e identidade opaca do binding até 1 KiB |
+| NFR-017/018 | Uma operação administrativa compartilhada, com `whoami` independente. Atualização por ação manual |
+
+Ver [evidências da 6A](../07-testing/exchanges-6a.md) para resultados e plataformas.

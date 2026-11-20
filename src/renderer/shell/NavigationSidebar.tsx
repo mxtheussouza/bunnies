@@ -4,7 +4,8 @@ import { useThemeContext } from "@src/common/hooks";
 import type { ThemePreference } from "@src/providers/ThemeMode";
 import Icon from "../components/Icon";
 
-export type LocalPage = "connections" | "queues" | "about" | "help";
+export type LocalPage =
+  "connections" | "queues" | "exchanges" | "about" | "help";
 type Props = {
   page: LocalPage;
   onNavigate(page: LocalPage): void;
@@ -15,7 +16,7 @@ type Props = {
 const destinations = [
   { label: "Visão geral", icon: "overview" },
   { label: "Filas", icon: "queues", destination: "queues" },
-  { label: "Exchanges", icon: "exchanges" },
+  { label: "Exchanges", icon: "exchanges", destination: "exchanges" },
   { label: "Publicar", icon: "publish" },
   { label: "Conexões", icon: "connection", destination: "connections" },
 ] as const;
@@ -69,7 +70,7 @@ export default function NavigationSidebar({
         })}
       </nav>
       <p id={`${id}-unavailable`} className="navigation-reason">
-        Visão geral, exchanges e publicação ainda indisponíveis.
+        Visão geral e publicação ainda indisponíveis.
       </p>
       <div className="sidebar-preferences">
         <div className="theme-picker">

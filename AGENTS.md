@@ -106,12 +106,11 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **5C.1 — concluída, aprovada e registrada**.
-- Última etapa concluída e aprovada: **5C.1 — purge com confirmação nativa**.
-- Última entrega registrada: `feat(queues): add confirmed message purge`
-  em `main`, com pai `dd52421`.
+- Etapa atual: **6A — concluída, aprovada e registrada**.
+- Última etapa concluída e aprovada: **6A — leitura de exchanges e bindings**.
+- Última entrega registrada: `feat(exchanges): add scoped exchange and binding reads` em `main`, com pai `013c899`.
 - Mudança da barra macOS em `9401448` preservada.
-- Próxima ação: aguardar solicitação própria para preparar o próximo contrato.
+- Próxima ação: aguardar solicitação para preparar o próximo contrato.
 
 Ao retomar, ler este arquivo, [PROJECTS_STATUS.md](PROJECTS_STATUS.md), a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -650,3 +649,35 @@ testes e seis Node, além de dez smokes no mesmo ASAR. Registra-se o commit loca
 e validação nativa em Windows/Linux permanecem pendentes. Próximos
 contratos exigem solicitação própria.
 [Evidências](docs/07-testing/queues-5c1.md)
+
+## Preparação vigente — 6A
+
+“Continue” iniciou a preparação documental após `013c899`. O
+[contrato 6A](docs/05-roadmap/roadmap.md#contrato-proposto--6a-leitura-de-exchanges-e-bindings)
+está **Proposed**, com 6A-D01–07 e 6A-01–08. Propõe listagem paginada,
+detalhe e bindings por direção no vhost ativo via HTTPS, com gate real do
+adapter em 4.4.0/4.3.6 antes da integração e três novos métodos específicos.
+A implementação, verificações funcionais e mudanças do guia dependem do
+aceite. Escritas de topologia e FR-010 seguem pendentes em escopos próprios.
+
+## Execução aprovada — 6A
+
+“Aprovo” aceitou 6A-D01–07 e 6A-01–08 em 2026-11-20. Validar primeiro
+o adapter nas duas versões fixadas. Prosseguir com IPC, interface, guia
+e verificações do pacote após aprovação do gate. Conclusão, commit e
+escritas de topologia exigem aceites próprios.
+
+## Resultado vigente — 6A pronta para revisão
+
+Gate final 22, check 308 + seis Node, package, 11 smokes e 70 verificações
+no executável macOS arm64 passaram. A ponte tem 35 métodos específicos.
+Guia/Ajuda com 19 tópicos e capturas a 200% conferidas. Windows, Linux,
+escritas de topologia e FR-010 continuam pendentes. A conclusão e o commit
+`feat(exchanges): add scoped exchange and binding reads` aguardam aprovação.
+[Evidências](docs/07-testing/exchanges-6a.md).
+
+## Conclusão 6A aprovada
+
+Em 2026-11-20, “Aprovo” aceitou a conclusão da 6A e o commit local
+`feat(exchanges): add scoped exchange and binding reads`. A validação nativa em
+Windows e Linux segue pendente. As escritas do M04 exigem contrato próprio.

@@ -5,20 +5,24 @@ macOS. O projeto está em modernização incremental. Já permite organizar perf
 locais, configurar CA e testar autenticação HTTPS/AMQPS, usar temas e consultar a Ajuda
 offline. Conectar mantém AMQPS e verifica HTTPS periodicamente. O painel de leitura
 consulta versões informadas, lista até 200 vhosts visíveis em 256 KiB por HTTPS
-e permite trocar temporariamente o vhost da sessão. Operações de filas,
-exchanges e mensagens ainda não estão disponíveis.
+e permite trocar temporariamente o vhost da sessão. Em **Filas**, é possível
+listar e detalhar filas, declarar classic e quorum e limpar mensagens com
+confirmação. Em **Exchanges**, é possível listar, pesquisar e detalhar exchanges
+e consultar bindings de entrada e saída no vhost ativo.
 
 ## Para usar o aplicativo
 
 Leia o **[Guia do usuário](docs/10-user-guide/README.md)**: primeiros passos,
 explicação de cada campo, cadastro/edição/remoção de perfis, senhas em memória,
-CA/testes HTTPS/AMQPS, sessão e reconexão limitada, consultas e troca de vhost, temas, menus, teclado e solução de problemas. O mesmo guia está na aba **Ajuda**,
+CA/testes HTTPS/AMQPS, sessão e reconexão limitada, consultas e troca de vhost,
+filas, exchanges, bindings, temas, menus, teclado e solução de problemas. O mesmo guia está na aba **Ajuda**,
 na barra lateral do aplicativo, e funciona offline.
 
 Esta é uma versão em desenvolvimento, sem instaladores publicados ou atualização
 automática. Testes locais foram feitos em macOS arm64; demais alvos ainda precisam
-de homologação. Salvar ou selecionar um perfil não inicia conexão. Os testes HTTPS/AMQPS são explícitos e não ativam sessão; demais recursos de broker e persistência
-protegida de senhas continuam indisponíveis.
+de homologação. Salvar ou selecionar um perfil não inicia conexão. Os testes
+HTTPS/AMQPS são explícitos e não ativam sessão. Publicação de mensagens e
+persistência protegida de senhas continuam pendentes.
 
 ## Estado e histórico
 

@@ -17,7 +17,10 @@ import {
 } from "../../shared/queues";
 import type { SessionSnapshot } from "../../shared/session";
 import { environmentLabels } from "../../shared/profiles";
-import { useSession } from "../shell/SessionProvider";
+import {
+  managementUnavailableReason,
+  useSession,
+} from "../shell/SessionProvider";
 import Button from "../components/Button";
 import StatusMessage from "../components/StatusMessage";
 import QueueDeclarationForm from "./QueueDeclarationForm";
@@ -40,17 +43,6 @@ const fields = [
   ["total", "Total"],
   ["consumers", "Consumidores"],
 ] as const;
-
-function unavailableReason(state: SessionSnapshot): string | undefined {
-  if (!state.desired || !state.profile)
-    return "Conecte uma sessão em Conexões.";
-  if (state.stopping) return "Aguarde o encerramento da sessão.";
-  if (state.switching) return "Aguarde a troca de vhost.";
-  if (state.paused) return "Volte à janela ativa para consultar.";
-  if (state.https.phase !== "available") return "Aguarde a verificação HTTPS.";
-  if (state.amqps.phase !== "available" && state.amqps.phase !== "blocked")
-    return "Aguarde uma conexão AMQPS estabelecida neste vhost.";
-}
 
 function Time({ checkedAt }: { checkedAt: string }) {
   return (
@@ -158,7 +150,7 @@ function QueueMetadata({ data }: { data: QueueSnapshot<QueueDetail> }) {
 }
 
 function QueueWorkspace({ state }: { state: SessionSnapshot }) {
-  const reason = unavailableReason(state);
+  const reason = managementUnavailableReason(state);
   const profile = state.profile;
   const routeError = queueListRouteConflict(profile?.vhost ?? "")
     ? "QUEUE_LIST_ROUTE"

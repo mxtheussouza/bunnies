@@ -1,5 +1,20 @@
 import type { SessionRef } from "./session";
 import {
+  bindingDirection,
+  bindingIdentity,
+  bindingText,
+  EXCHANGE_PAGE_SIZE,
+  exchangeSegmentUnsupported,
+  MAX_BINDING_ID_BYTES,
+  MAX_EXCHANGE_BINDINGS,
+  type BindingDirection,
+  type ExchangeBinding,
+  type ExchangeBindings,
+  type ExchangeData,
+  type ExchangeDetail,
+  type ExchangePage,
+} from "./exchanges";
+import {
   MAX_QUEUE_CONSUMERS,
   MAX_QUEUE_PAGE,
   MAX_QUEUE_ARGUMENT_INTEGER,
@@ -43,6 +58,14 @@ export const managementErrors = {
     "A listagem no vhost detailed está indisponível porque o RabbitMQ reserva esse caminho para uma consulta global.",
   QUEUE_PAGE:
     "A página de filas solicitada deixou de existir. Volte à primeira página.",
+  EXCHANGE_SEGMENT:
+    "A API de exchanges não permite consultar este segmento de nome com segurança.",
+  EXCHANGE_PAGE:
+    "A página de exchanges solicitada deixou de existir. Volte à primeira página.",
+  EXCHANGE_BINDINGS_LIMIT:
+    "O endpoint retornou mais de 200 bindings nesta direção. A lista não foi carregada.",
+  EXCHANGE_DEFAULT_BINDINGS:
+    "Os bindings implícitos da exchange padrão não são consultados por esta tela.",
   QUEUE_DECLARATION_CONFLICT:
     "A fila existente tem propriedades incompatíveis com a declaração.",
   QUEUE_DECLARATION_UNCERTAIN:
@@ -85,12 +108,23 @@ export type ManagementSnapshot = ManagementSnapshotHeader &
 export type QueueSnapshot<
   T extends QueuePage | QueueDetail = QueuePage | QueueDetail,
 > = ManagementSnapshotHeader & T;
-export type ManagementReadSnapshot = ManagementSnapshot | QueueSnapshot;
+export type ExchangeSnapshot<T extends ExchangeData = ExchangeData> =
+  ManagementSnapshotHeader & T;
+export type ManagementReadSnapshot =
+  ManagementSnapshot | QueueSnapshot | ExchangeSnapshot;
 export type QueueListInput = ManagementInput & {
   page: number;
   search?: string;
 };
 export type QueueDetailInput = ManagementInput & { name: string };
+export type ExchangeListInput = ManagementInput & {
+  page: number;
+  search?: string;
+};
+export type ExchangeDetailInput = ManagementInput & { name: string };
+export type ExchangeBindingsInput = ExchangeDetailInput & {
+  direction: BindingDirection;
+};
 export type QueueDeclarationInput = ManagementInput & {
   declaration: QueueDeclaration;
 };
@@ -124,6 +158,9 @@ export type ManagementRequest =
       input: ManagementInput;
     }
   | { command: "listSessionQueues"; input: QueueListInput }
+  | { command: "listSessionExchanges"; input: ExchangeListInput }
+  | { command: "getSessionExchange"; input: ExchangeDetailInput }
+  | { command: "listSessionExchangeBindings"; input: ExchangeBindingsInput }
   | {
       command: "getSessionQueue" | "purgeSessionQueue";
       input: QueueDetailInput;
@@ -142,6 +179,15 @@ export interface ManagementApi {
   getSessionQueue(
     input: QueueDetailInput,
   ): Promise<ManagementResult<QueueSnapshot<QueueDetail>>>;
+  listSessionExchanges(
+    input: ExchangeListInput,
+  ): Promise<ManagementResult<ExchangeSnapshot<ExchangePage>>>;
+  getSessionExchange(
+    input: ExchangeDetailInput,
+  ): Promise<ManagementResult<ExchangeSnapshot<ExchangeDetail>>>;
+  listSessionExchangeBindings(
+    input: ExchangeBindingsInput,
+  ): Promise<ManagementResult<ExchangeSnapshot<ExchangeBindings>>>;
   declareSessionQueue(
     input: QueueDeclarationInput,
   ): Promise<ManagementResult<QueueDeclarationSnapshot>>;
@@ -225,6 +271,32 @@ export function isQueueListInput(v: unknown): v is QueueListInput {
     isManagementRef(v) &&
     isQueuePageNumber(v.page) &&
     (!Object.hasOwn(v, "search") || boundedManagementText(v.search, 255))
+  );
+}
+
+export const isExchangeListInput: (v: unknown) => v is ExchangeListInput =
+  isQueueListInput;
+
+function exchangeName(value: unknown): value is string {
+  return value === "" || boundedManagementText(value, 255);
+}
+
+export function isExchangeDetailInput(v: unknown): v is ExchangeDetailInput {
+  return (
+    closedObject(v, [...inputKeys, "name"]) &&
+    isManagementRef(v) &&
+    exchangeName(v.name)
+  );
+}
+
+export function isExchangeBindingsInput(
+  v: unknown,
+): v is ExchangeBindingsInput {
+  return (
+    closedObject(v, [...inputKeys, "name", "direction"]) &&
+    isManagementRef(v) &&
+    exchangeName(v.name) &&
+    bindingDirection(v.direction)
   );
 }
 
@@ -502,4 +574,118 @@ export function isQueueSnapshot(value: unknown): value is QueueSnapshot {
     v.items.every(item => isQueueRow(item)) &&
     new Set(v.items.map(item => item.name)).size === v.items.length
   );
+}
+
+const exchangeFields = ["name", "type", "durable", "autoDelete", "internal"];
+const directionFields = ["name", "direction", "items"];
+
+function isArgumentsJson(value: unknown): boolean {
+  return (
+    value === null ||
+    (typeof value === "string" &&
+      value.length <= 2 * MAX_MANAGEMENT_BODY &&
+      value.startsWith("{") &&
+      value.endsWith("}"))
+  );
+}
+
+function isExchangeRow(value: unknown, detail = false) {
+  return (
+    closedObject(value, exchangeFields, detail ? ["argumentsJson"] : []) &&
+    exchangeName(value.name) &&
+    boundedManagementText(value.type, 255) &&
+    ["durable", "autoDelete", "internal"].every(field =>
+      isFlag(value[field]),
+    ) &&
+    (!detail ||
+      (!exchangeSegmentUnsupported(value.name) &&
+        optionalField(value, "argumentsJson", isArgumentsJson)))
+  );
+}
+
+function isExchangeBinding(value: unknown): value is ExchangeBinding {
+  return (
+    closedObject(
+      value,
+      [
+        "source",
+        "destination",
+        "destinationType",
+        "routingKey",
+        "propertiesKey",
+      ],
+      ["argumentsJson"],
+    ) &&
+    exchangeName(value.source) &&
+    (value.destinationType === "exchange"
+      ? exchangeName(value.destination)
+      : value.destinationType === "queue" &&
+        boundedManagementText(value.destination, 255)) &&
+    bindingText(value.routingKey, 255) &&
+    bindingText(value.propertiesKey, MAX_BINDING_ID_BYTES) &&
+    optionalField(value, "argumentsJson", isArgumentsJson)
+  );
+}
+
+export function isExchangeSnapshot(value: unknown): value is ExchangeSnapshot {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const v = value as Record<string, unknown>;
+  if (
+    !isSnapshotHeader(v) ||
+    !boundedManagementText(v.vhost, 255) ||
+    queueSegmentUnsupported(v.vhost)
+  )
+    return false;
+  const keys = [...snapshotKeys, "vhost"];
+  switch (v.kind) {
+    case "exchangeDetail":
+      return (
+        closedObject(v, [...keys, "exchange"]) &&
+        isExchangeRow(v.exchange, true)
+      );
+    case "exchangeBindings":
+      return (
+        closedObject(v, [...keys, ...directionFields]) &&
+        boundedManagementText(v.name, 255) &&
+        !exchangeSegmentUnsupported(v.name) &&
+        bindingDirection(v.direction) &&
+        Array.isArray(v.items) &&
+        v.items.length <= MAX_EXCHANGE_BINDINGS &&
+        v.items.every(
+          item =>
+            isExchangeBinding(item) &&
+            (v.direction === "outgoing"
+              ? item.source === v.name
+              : item.destinationType === "exchange" &&
+                item.destination === v.name),
+        ) &&
+        new Set(v.items.map(bindingIdentity)).size === v.items.length
+      );
+    case "exchangePage":
+      return (
+        closedObject(v, [
+          ...keys,
+          "page",
+          "pageCount",
+          "totalCount",
+          "filteredCount",
+          "items",
+        ]) &&
+        isQueuePageNumber(v.page) &&
+        nonnegativeInteger(v.totalCount) &&
+        nonnegativeInteger(v.filteredCount) &&
+        v.filteredCount <= v.totalCount &&
+        v.pageCount === Math.ceil(v.filteredCount / EXCHANGE_PAGE_SIZE) &&
+        Array.isArray(v.items) &&
+        v.items.length ===
+          Math.min(
+            EXCHANGE_PAGE_SIZE,
+            Math.max(0, v.filteredCount - (v.page - 1) * EXCHANGE_PAGE_SIZE),
+          ) &&
+        v.items.every(item => isExchangeRow(item)) &&
+        new Set(v.items.map(item => item.name)).size === v.items.length
+      );
+    default:
+      return false;
+  }
 }

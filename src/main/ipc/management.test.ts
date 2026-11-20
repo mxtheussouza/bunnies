@@ -223,3 +223,35 @@ it("validates queue bounds and rejects renderer-supplied vhost, URL and identity
   });
   f.dispose();
 });
+
+it("restricts exchange binding IPC to the exact input shape and trusted frame", async () => {
+  const f = fixture();
+  const command = "listSessionExchangeBindings";
+  const input = { ...f.input, name: "x", direction: "incoming" };
+  for (const invalid of [
+    { direction: "source" },
+    { vhost: "foreign" },
+    { route: "/api/exchanges" },
+    { sessionId: "forged" },
+  ]) {
+    expect(
+      (await f.call({ command, input: { ...input, ...invalid } })).error?.code,
+    ).toBe("VALIDATION");
+  }
+  expect(
+    (
+      await f.call({ command, input }, {
+        ...f.event,
+        senderFrame: { url: APP_URL },
+      } as IpcMainInvokeEvent)
+    ).error?.code,
+  ).toBe("FORBIDDEN");
+  expect(f.service.execute).not.toHaveBeenCalled();
+  expect((await f.call({ command, input })).error?.code).toBe("RESPONSE");
+  expect(f.service.execute).toHaveBeenCalledWith(42, input, {
+    kind: "exchangeBindings",
+    name: "x",
+    direction: "incoming",
+  });
+  f.dispose();
+});

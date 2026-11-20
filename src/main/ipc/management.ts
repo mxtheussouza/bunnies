@@ -7,6 +7,7 @@ import {
   isQueueSnapshot,
   isQueueDeclarationSnapshot,
   isQueuePurgeSnapshot,
+  isExchangeSnapshot,
   type ManagementResponse,
 } from "../../shared/management";
 import { isTrustedSender } from "./desktop";
@@ -132,6 +133,32 @@ export function registerManagementIpc(
               name: request.input.name,
             });
             if (!isQueueSnapshot(value) || value.kind !== "queueDetail")
+              throw new ManagementFailure("RESPONSE");
+            break;
+          case "listSessionExchanges":
+            value = await service.execute(owner, request.input, {
+              kind: "exchangePage",
+              page: request.input.page,
+              search: request.input.search,
+            });
+            if (!isExchangeSnapshot(value) || value.kind !== "exchangePage")
+              throw new ManagementFailure("RESPONSE");
+            break;
+          case "getSessionExchange":
+            value = await service.execute(owner, request.input, {
+              kind: "exchangeDetail",
+              name: request.input.name,
+            });
+            if (!isExchangeSnapshot(value) || value.kind !== "exchangeDetail")
+              throw new ManagementFailure("RESPONSE");
+            break;
+          case "listSessionExchangeBindings":
+            value = await service.execute(owner, request.input, {
+              kind: "exchangeBindings",
+              name: request.input.name,
+              direction: request.input.direction,
+            });
+            if (!isExchangeSnapshot(value) || value.kind !== "exchangeBindings")
               throw new ManagementFailure("RESPONSE");
             break;
           default:

@@ -190,3 +190,7 @@ A 5A implementa o recorte de leitura de MVP-Q01. O vhost de nome exato
 A 5B implementou e verificou o recorte de MVP-Q02. A 5C.1 implementa
 o purge confirmado de MVP-Q03. A exclusão condicional permanece
 pendente. Ver [M03](../04-modules/03-queue-management.md).
+
+A 6A implementa a parte de leitura de MVP-E01, com exchanges, propriedades e
+bindings de entrada e saída no vhost da sessão. Declaração, exclusão e
+alterações de bindings continuam pendentes. [M04](../04-modules/04-exchange-management.md).

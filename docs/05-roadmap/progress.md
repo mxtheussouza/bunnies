@@ -1142,3 +1142,50 @@ limpeza completa. Gate do adapter com 20 verificações e check
 `feat(queues): add confirmed message purge`. Exclusão condicional
 e validação nativa em Windows e Linux permanecem pendentes.
 [Evidências](../07-testing/queues-5c1.md).
+
+## 2026-11-20 — Contrato 6A proposto
+
+“Continue” iniciou a preparação após `013c899`, em `main`. O
+[contrato 6A](roadmap.md#contrato-proposto--6a-leitura-de-exchanges-e-bindings)
+propõe lista paginada, detalhe de exchanges e consulta de bindings por
+direção no vhost ativo. O recorte cobre FR-012 e a leitura de FR-014.
+O gate isolado do adapter nas duas versões fixadas precede IPC, interface
+e guia. A preparação foi documental. A execução aguarda aprovação e
+FR-010 segue pendente na Etapa 5.
+
+## 2026-11-20 — Execução da 6A aprovada
+
+“Aprovo” aceitou 6A-D01–07 e 6A-01–08. Adapter e gate isolado nas versões
+fixadas precedem IPC, interface e guia. Conclusão, commit e escritas de
+topologia têm aceites próprios.
+
+## 2026-11-20 — Gate 6A aprovado
+
+Passaram 11 verificações em cada RabbitMQ 4.4.0 e 4.3.6 isolado,
+com TLS, escopo, paginação e limites de bindings. Limpeza completa.
+Integração com IPC, interface e guia retomada.
+
+## 2026-11-20 — 6A empacotada, verificação parcial
+
+Ponte com 35 métodos, tela Exchanges e Guia/Ajuda integrados. Package
+macOS arm64 e smoke inicial da tela passaram. A matriz parcial verificou as
+leituras de exchanges em 4.4.0 antes de falhar na retomada do catálogo de
+vhosts na regressão. Limpeza verificada. O harness passou a recarregar o
+catálogo e a capturar a tela em zoom 200% pela janela do Electron.
+[Evidências](../07-testing/exchanges-6a.md).
+
+## 2026-11-20 — 6A pronta para revisão
+
+Gate final com 22 verificações e check com 308 testes em 40 arquivos
+mais seis Node. Passaram package, 11 smokes, capturas em ambos os temas
+a 200% e 70 verificações no mesmo executável macOS arm64 com RabbitMQ
+4.4.0 e 4.3.6. Guia/Ajuda com 19 tópicos. Inventário preservado e limpeza
+dos dois brokers verificada. A entrega aguarda aprovação da conclusão e
+do commit `feat(exchanges): add scoped exchange and binding reads`.
+[Evidências](../07-testing/exchanges-6a.md).
+
+## 2026-11-20 — Conclusão da 6A aprovada
+
+“Aprovo” aceitou a entrega e o commit local `feat(exchanges): add scoped exchange and binding reads`.
+Os 45 arquivos e o pacote coincidiram com a revisão apresentada.
+[Evidências](../07-testing/exchanges-6a.md).

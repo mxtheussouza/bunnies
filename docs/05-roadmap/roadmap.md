@@ -8,6 +8,7 @@ A revisão da 5A foi aceita por “Aprovo”. O gate revisado, os smokes e a
 matriz do pacote passaram, e o proprietário aprovou a conclusão e o
 registro local da 5A. “Aprovado” aceitou a conclusão e o registro local da 5B.
 A 5C.1 foi concluída e aprovada após o gate, os smokes e a matriz do pacote.
+“Aprovo” aceitou a conclusão da 6A de leitura de exchanges e bindings e o commit local.
 
 ## Sequência proposta
 
@@ -26,7 +27,7 @@ A 5C.1 foi concluída e aprovada após o gate, os smokes e a matriz do pacote.
 | 4B.1 | Contexto administrativo: versão, vhosts visíveis e leitura do vhost atual | Concluída/aprovada; commit `4a35424` |
 | 4B.2 | Seleção de vhost e transição de contexto | Concluída e aprovada em 2026-11-18 |
 | 5 | Filas e proteção das operações destrutivas | 5A, 5B e 5C.1 concluídas, aprovadas e registradas. Exclusão condicional aguarda solução no broker |
-| 6 | Exchanges e bindings | Proposta |
+| 6 | Exchanges e bindings | 6A concluída e aprovada após validação em macOS arm64. Escritas dependem de contratos próprios |
 | 7 | Publicação AMQP, confirmações e falhas de rede | Proposta |
 | 8 | Dashboard e monitoramento básico | Proposta |
 | 9 | Homologação integrada, segurança e compatibilidade do MVP | Proposta |
@@ -2214,3 +2215,200 @@ e 4.3.6 passaram. Capturas a 200% e do diálogo nativo conferidas.
 Registro local `feat(queues): add confirmed message purge`.
 FR-010 e homologação nativa nos demais alvos continuam pendentes.
 [Evidências](../07-testing/queues-5c1.md)
+
+## Contrato proposto — 6A: leitura de exchanges e bindings
+
+Proposto em 2026-11-20. Execução aprovada por “Aprovo” em 2026-11-20.
+Base observada em `main`, commit `013c899`, com a 5C.1 concluída.
+A integração fica condicionada ao gate.
+
+| Campo | Proposta para aprovação |
+| --- | --- |
+| Identificador e nome | 6A — Leitura de exchanges e bindings |
+| Objetivo | Consultar exchanges no vhost ativo, identificar a exchange padrão e recursos reservados e inspecionar bindings de entrada e saída |
+| Justificativa | Entregar a leitura do M04 e verificar escopo, permissões e identidade dos bindings nas versões fixadas antes de propor operações de escrita |
+| Escopo | Lista paginada e busca literal, detalhe de propriedades e consulta por direção no detalhe. Somente GET via Management HTTPS |
+| Tarefas | Implementar o adapter e provar o contrato na matriz real. Depois integrar IPC, interface e Guia/Ajuda e verificar o executável |
+| Módulos afetados | M04, com reuso da sessão M01, do transporte administrativo e da Ajuda M08 |
+| Arquivos previstos | Estrutura, testes e documentação listados abaixo |
+| Dependências | 4B.2 e 5C.1 registradas, contexto de sessão e TLS existentes, harness e imagens oficiais 4.4.0/4.3.6 fixadas por digest |
+| Branch | `main` existente, com base `013c899` |
+| Riscos | Escopo incorreto ao codificar nomes, confusão entre nome vazio e alias HTTP, divergências de paginação e permissão, listas de bindings grandes, resposta tardia e alteração externa entre consultas |
+| Critérios de aceitação | 6A-01–08, FR-012 e parte de leitura de FR-014/MVP-E01, com NFR-012–018 aplicáveis |
+| Verificação | Gate real do adapter antes da integração, testes direcionados, check, package, smokes em sequência e matriz real no mesmo pacote |
+| Resultado esperado | Tela Exchanges compartilhada pelos três SOs, com leitura sob demanda, origem e horário por consulta e diagnóstico preciso de resultados vazios, indisponíveis e limitados |
+| Impacto documental | Registrar evidências por SO e atualizar M04, requisitos e Guia/Ajuda conforme o comportamento verificado |
+
+O restante de MVP-E01 fica para contratos próprios de declaração e exclusão de
+exchanges (FR-013), criação e remoção de bindings (FR-014). A etapa de publicação
+continua no roadmap. A exclusão condicional de filas (FR-010) conserva sua
+pendência de garantia no broker e segue independente da leitura da 6A.
+
+### Decisões propostas
+
+1. **6A-D01 — Autoridade e ciclo de vida.** Derivar perfil, endpoint, CA,
+   revisão e vhost exato no main, incluindo o vhost temporário. Exigir sessão
+   desejada, janela em foreground, HTTPS disponível e AMQPS estabelecido no
+   contexto ativo. Bloqueio de fluxo AMQPS com conexão aberta segue elegível.
+   O HTTPS decide visibilidade e permissão no endpoint configurado. Compartilhar
+   a vaga administrativa existente com versão, vhosts e filas. `whoami`
+   continua independente. Até 10 s desde a aceitação. Cancelar e descartar
+   respostas obsoletas por janela, sessão, geração, operação, revisão ou ciclo
+   de vida. Atualização manual, sem polling próprio, retry automático, canais
+   AMQP, persistência ou ampliação de permissões.
+2. **6A-D02 — Listagem.** Usar `GET /api/exchanges/{vhost}` com
+   `disable_stats=true`, `pagination=true`, `page_size=100`, `sort=name`,
+   `use_regex=false` e colunas `vhost,name,type,durable,auto_delete,internal`.
+   Solicitar página positiva de até 2.147.483.647 e, se informado, trecho
+   literal `name` de até 255 bytes UTF-8. Aplicar busca explicitamente e
+   voltar à página 1. Validar envelope e contagens, unicidade de nomes e
+   vhost de cada item. Usar as contagens do broker, com retorno à primeira
+   página por ação explícita se a página ficar fora da faixa. Divergência
+   de contrato gera diagnóstico, sem fallback global ou sem paginação.
+3. **6A-D03 — Detalhe e nomes especiais.** Usar
+   `GET /api/exchanges/{vhost}/{name}` com `disable_stats=true` e
+   acrescentar apenas a coluna `arguments` ao conjunto de D02. Validar
+   nome e vhost do retorno. O nome canônico vazio identifica a exchange
+   padrão. Usar `amq.default` somente como alias HTTP para essa identidade,
+   conferir retorno com nome vazio e recusar um nome literal `amq.default`
+   em consulta exata, por ambiguidade. Identificar recursos `amq.*`
+   como reservados e indicar o flag `internal` separadamente. Mostrar
+   tipos informados pelo broker, inclusive tipos de plugins, sem inferir
+   capacidade de escrita. Codificar cada segmento uma vez e recusar
+   segmentos exatos `.` e `..` antes do I/O. A colisão `detailed` da
+   rota de filas não se aplica ao dispatcher de exchanges das versões
+   fixadas. Comprovar o escopo também nesse vhost no gate.
+4. **6A-D04 — Bindings por direção.** Após abrir o detalhe, consultar
+   por ação explícita `GET /api/exchanges/{vhost}/{name}/bindings/source`
+   para saída ou `GET /api/exchanges/{vhost}/{name}/bindings/destination`
+   para entrada. Cada ação usa uma request, com projeção de
+   `vhost,source,destination,destination_type,routing_key,arguments,properties_key`.
+   Aceitar lista da direção pedida com até 200 itens, respeitado o limite
+   de corpo. Acima do limite, sinalizar indisponibilidade sem truncar nem
+   simular paginação. Conferir vhost, lado da exchange consultada e tipo
+   de destino (`queue` ou `exchange`). Aceitar routing key vazia ou de
+   até 255 bytes UTF-8. Preservar `properties_key` como identidade opaca
+   de até 1 KiB, combinada com origem, tipo e destino para identificar a
+   linha. Nunca derivar identidade de routing key ou argumentos. Identidade
+   composta duplicada gera erro explícito. Exibir o resultado como
+   bindings retornados na consulta, sem inferir existência atual da
+   exchange a partir de uma lista vazia. Na exchange padrão, explicar no
+   detalhe os vínculos implícitos de cada fila com seu próprio nome
+   como routing key. Recusar a consulta de bindings da exchange padrão
+   antes do I/O para evitar enumerar filas por essa rota.
+5. **6A-D05 — Limites e apresentação dos dados.** Reutilizar HTTPS do
+   main com TLS, autenticação e prefixo do perfil, até 16 KiB de headers,
+   256 KiB de resposta `identity` e profundidade JSON 16. Recusar
+   redirects e respostas com estrutura, tipos ou identidades inválidos.
+   Enviar somente DTOs projetados pela ponte. Manter credenciais do perfil
+   e respostas brutas no main e excluir seus valores e os argumentos de
+   topologia dos logs. Mostrar os argumentos informados como JSON de
+   leitura, em texto escapado, sem atribuir
+   tipos AMQP ao JSON. Quando um valor numérico não for finito ou um
+   inteiro exceder a precisão segura, indicar os argumentos do item
+   como indisponíveis, sem exibir números arredondados. Preservar a
+   distinção entre argumento ausente, objeto vazio e valor indisponível.
+6. **6A-D06 — Ponte e tela.** Passar de 32 para 35 métodos explícitos com
+   `listSessionExchanges`, `getSessionExchange` e `listSessionExchangeBindings`
+   no canal administrativo existente. Reutilizar `cancelManagementRead`.
+   O renderer envia IDs de contexto/operação e, conforme a ação, página,
+   busca, nome ou direção de enum fechado. Sem URL, método, colunas,
+   headers ou vhost arbitrário na ponte. Habilitar Exchanges no shell
+   com estados de sessão, lista, detalhe e direção. Mostrar vhost, origem
+   Management HTTPS, horário e identificação de Produção pelo padrão do
+   shell. Preservar foco ao voltar, ignorar respostas de outra seleção e
+   distinguir carregamento, vazio, erro, limite e dados indisponíveis.
+   Usar o mesmo fluxo em Windows, Linux e macOS.
+7. **6A-D07 — Sequência de verificação.** Provar primeiro o adapter de
+   produto em RabbitMQ oficial 4.4.0/4.3.6 com TLS e fixtures efêmeras.
+   Se houver divergência que mude escopo ou semântica, apresentar o
+   resultado para decisão antes de integrar IPC/UI. Depois executar
+   testes direcionados, `npm run check`, `npm run package`, smokes
+   sequenciais e matriz das duas versões com o mesmo pacote. Em cada
+   SO/CPU com sessão gráfica e runner disponíveis, registrar package e
+   smoke do fluxo, com teclado, foco e zoom. Distinguir empacotamento de
+   execução nativa. Windows e Linux seguem pendentes até execução
+   comprovada. Sem mudança de dependência, patch, ADR, schema ou CI
+   neste recorte. Conclusão, commit e push têm aceites próprios.
+
+### Critérios de aceitação
+
+1. **6A-01.** Nas duas versões, uma conta Management de vhost, sem tag
+   administrator, lista mais de uma página, busca um trecho literal com
+   caracteres de regex, vê vazios e recupera página fora da faixa. A
+   listagem valida contagens e recusa resposta global, nomes duplicados
+   ou itens de outro vhost.
+2. **6A-02.** Detalhe exato inclui tipo, flags e argumentos conforme a
+   resposta. A exchange padrão aparece com identidade vazia e abre
+   usando o alias da rota. Reservados, internos e tipo desconhecido
+   são apresentados como tais. Exchange ausente tem diagnóstico
+   próprio. Literal `amq.default`, `.` e `..` seguem as
+   restrições de D03.
+3. **6A-03.** Nos vhosts `/`, `detailed` e temporário com caracteres
+   especiais, validar nomes que incluem barra, percentual literal,
+   espaço e Unicode. Homônimos permanecem isolados e nenhuma request
+   consulta outra rota. A troca temporária não edita o perfil.
+4. **6A-04.** Exibir saída para fila e para exchange e entrada de
+   exchange, com routing key vazia e bindings de mesma chave e
+   argumentos diferentes identificados separadamente por
+   `properties_key`. Verificar lista vazia, limite de 200 e excesso
+   na matriz. Na exchange padrão, conferir texto dos vínculos implícitos
+   e zero requests de listagem de bindings.
+5. **6A-05.** Reproduzir falta de acesso ao vhost, TLS inválido,
+   cancelamento e perda de contexto sem reutilizar dados antigos.
+   Testar redirect, resposta malformada, limite de corpo e profundidade,
+   argumentos com perda de precisão e erros de IPC. Nenhum caso escreve
+   no broker, cria canais no produto ou eleva privilégios.
+6. **6A-06.** Exercitar origem, frame e IDs inválidos, cancelamento cruzado
+   e concorrência com operações de filas/vhosts. Verificar descarte após
+   navegação, background, suspensão, disconnect e troca de contexto, e
+   preservar `whoami` e cotas de recuperação existentes.
+7. **6A-07.** Revisar navegação por teclado, foco ao abrir e voltar,
+   rótulos, estados de lista/detalhe/bindings, temas claro e escuro e
+   zoom 200%. Conferir artefato, regressões e matriz no executável,
+   registrando resultados por SO/CPU e ambientes indisponíveis.
+8. **6A-08.** Sincronizar o estado e as evidências com M04, Guia/Ajuda e
+   Markdown vinculado ao README. Rastrear o que foi verificado em
+   FR-012 e na leitura de FR-014, mantendo as demais partes de MVP-E01
+   e FR-010 pendentes.
+
+### Estrutura e evidências previstas
+
+- Projetar DTOs em `src/shared/exchanges.ts` e integrar o protocolo existente
+  de `src/shared/management.ts`. Implementar rotas/projeção em
+  `src/main/management/exchangeRead.ts` e integrar o transporte, serviço e
+  validação em `src/main/management`, o handler em `src/main/ipc/management.ts`
+  e a ponte em `src/preload/desktopApi.ts`.
+- Integrar `src/renderer/pages/Exchanges.tsx` à navegação existente em
+  `src/renderer/shell`, reutilizando os padrões de Filas e os componentes do
+  shell onde couber. Exercitar contratos do adapter, fronteiras IPC, serviço,
+  preload e componentes com testes dirigidos aos cenários desta etapa.
+- Estender `tools/testing/management.cjs` e `tools/testing/rabbitmq-real.cjs`
+  para os smokes e a matriz, preservando brokers, rede, portas, credenciais
+  e dados temporários isolados e limpeza verificada. Fixtures podem semear
+  topologia apenas nos próprios brokers. Verificar inventário antes/depois
+  e ausência de chamadas de escrita no fluxo do produto.
+- Registrar a execução em `docs/07-testing/exchanges-6a.md`, detalhar M04 em
+  `docs/04-modules/04-exchange-management.md` e sincronizar a fonte canônica
+  `docs/10-user-guide/guide.json`, o Markdown gerado e a Ajuda após integração.
+
+As rotas, a paginação de exchanges, as listas de bindings por direção e o
+alias da exchange padrão foram revisados nas fontes oficiais. O comportamento
+efetivo com TLS, permissões, nomes especiais e formatos de resposta será
+verificado no gate.
+
+[Referência HTTP](https://www.rabbitmq.com/docs/http-api-reference),
+[exchange padrão e predefinidas](https://www.rabbitmq.com/docs/exchanges#default-exchange),
+[rotas 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_dispatcher.erl#L136-L141),
+[rotas 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_dispatcher.erl#L136-L141),
+[listagem de exchanges 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_wm_exchanges.erl#L33-L46),
+[listagem de exchanges 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_wm_exchanges.erl#L33-L46),
+[listagem de bindings 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_wm_bindings.erl#L55-L61),
+[listagem de bindings 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_wm_bindings.erl#L55-L61),
+[alias 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_access_control.erl#L336-L344)
+e [alias 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_access_control.erl#L337-L345).
+
+O gate final passou 11 verificações por versão. O check, package, 11
+smokes e 70 verificações no executável passaram em macOS arm64. Guia e
+Ajuda acompanham a leitura de exchanges e bindings. O proprietário aprovou a conclusão e o
+commit local em 2026-11-20. [Evidências](../07-testing/exchanges-6a.md).

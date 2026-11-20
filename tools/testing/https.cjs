@@ -406,7 +406,7 @@ async function run() {
         })),
       ).includes(sentinel),
     );
-    for (const name of ["Visão geral", "Exchanges", "Publicar"])
+    for (const name of ["Visão geral", "Publicar"])
       assert.equal(
         await page
           .getByRole("button", { name, exact: true })

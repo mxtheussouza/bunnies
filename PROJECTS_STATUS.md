@@ -5,14 +5,12 @@ Atualizado em: 2026-11-20.
 ## Estado atual
 
 - Branch: `main`.
-- Última entrega aprovada: **5C.1 — purge com confirmação nativa**.
-- Aprovação mais recente: “Validado e aprovado, pode continuar” aceitou
-  o fluxo da 5C.1 apresentado. “Aprovado” reiterou o aceite em 2026-11-20.
-- Última entrega registrada: `feat(queues): add confirmed message purge`
-  em `main`, com pai `dd52421`.
-- Task atual: **5C.1 — concluída, aprovada e registrada**.
-- Próxima ação: aguardar solicitação própria para preparar o próximo
-  contrato. [Evidências da 5C.1](docs/07-testing/queues-5c1.md).
+- Última entrega aprovada: **6A — leitura de exchanges e bindings no vhost ativo**.
+- Aprovação mais recente: “Aprovo” aceitou a conclusão e o commit local em 2026-11-20.
+- Última entrega registrada: `feat(exchanges): add scoped exchange and binding reads` em `main`, com pai `013c899`.
+- Task atual: **6A concluída e aprovada**.
+- Próxima ação: aguardar solicitação para preparar o próximo contrato.
+  [Evidências da 6A](docs/07-testing/exchanges-6a.md).
 
 ## Tarefas concluídas
 
@@ -35,6 +33,7 @@ Atualizado em: 2026-11-20.
 | 5A | Listagem paginada, busca literal e detalhe de filas no vhost ativo | Concluída, aprovada e registrada em 2026-11-19 |
 | 5B | Declaração de filas classic e quorum e conferência das propriedades | Concluída, aprovada e registrada em 2026-11-20 |
 | 5C.1 | Purge de filas classic/quorum com confirmação nativa e revalidação | Concluída, aprovada e registrada em 2026-11-20 |
+| 6A | Listagem, detalhe de exchanges e bindings por direção no vhost ativo | Concluída, aprovada e registrada em 2026-11-20 |
 
 ## Entrega DOC.1 aprovada
 
@@ -99,6 +98,61 @@ Guia/Ajuda sincronizados e artefato final revisado; conclusão/commit aprovados.
 [Evidências finais](docs/07-testing/sessions-4a2c.md).
 
 ## Histórico de atividades
+
+### 2026-11-20 — T-6A-CONCLUSAO
+
+- Na retomada em `main`, “Aprovo” aceitou a conclusão apresentada e o commit
+  local `feat(exchanges): add scoped exchange and binding reads`.
+- Os hashes dos 45 arquivos apresentados e do ASAR coincidiram com o registro
+  da revisão antes da atualização documental do aceite. As evidências funcionais
+  são da execução da 6A em macOS arm64. A validação nativa em Windows e Linux
+  e as operações de escrita do M04 seguem pendentes.
+- No encerramento, `npm run docs:check` confirmou a sincronização do Guia com
+  a Ajuda offline e `git diff --check` passou.
+
+### 2026-11-20 — T-6A-EXECUCAO
+
+- “Aprovo” aceitou o contrato 6A, D01–07 e 01–08. Retomada em `main`,
+  base `013c899`, com os cinco arquivos da proposta. Docker 29.8.0 arm64 disponível.
+  Iniciar adapter e gate isolado antes de IPC/UI. Conclusão e commit pendentes.
+- `node tools/testing/rabbitmq-real.cjs --exchanges-gate` passou 11 verificações
+  por RabbitMQ 4.4.0/4.3.6, com TLS, escopo, paginação, bindings, limites e
+  inventário preservado. Os dois relatórios registram limpeza completa. Sem
+  contêineres ou redes de teste restantes. Integração iniciada.
+- IPC de 35 métodos, tela Exchanges e Guia/Ajuda integrados. Package macOS
+  arm64 e primeiro smoke da feature passaram. A primeira matriz mostrou as
+  leituras de exchanges em 4.4.0 antes de falhar ao reutilizar o catálogo de
+  vhosts na regressão. Rodada parcial limpa. Atualizar o catálogo no harness
+  e repetir no mesmo ASAR. Referência da execução e das limitações em
+  [evidências da 6A](docs/07-testing/exchanges-6a.md).
+- O check passou com 308 testes em 40 arquivos e seis testes Node. A
+  matriz intermediária passou 35 verificações por versão após o ajuste de
+  foco do harness. A revisão acrescentou o título visível da direção dos
+  bindings e antecipou a validação da rota antes da leitura das credenciais.
+  Os smokes e a matriz foram iniciados novamente no pacote atualizado.
+- ASAR final SHA-256
+  `92bc68c328ced16e3b75508e15e1b26d44a88aaf801bd19a0af16ca46c3a22b6`.
+  Passaram 11 smokes após atualizar asserções da navegação e estabilizar
+  o foco da sessão e do purge no harness. Capturas finais nos dois temas
+  a 200% revisadas. Os 22 checks do adapter repetiram no código final.
+  A matriz no mesmo ASAR passou 70 verificações, 35 em cada versão.
+  Inventário preservado, zero canais criados e limpeza completa. Referências
+  locais e 15 entradas do ASAR conferidas. Validado em macOS arm64.
+  Windows e Linux seguem pendentes. Apresentar para aceite da conclusão e
+  do commit `feat(exchanges): add scoped exchange and binding reads`.
+
+### 2026-11-20 — T-6A-PREPARACAO
+
+- “Continue” iniciou a preparação documental após `013c899`, em `main`,
+  com a árvore limpa e dois commits locais à frente de `origin/main`.
+- Revisados requisitos, código atual e fontes oficiais de 4.4.0/4.3.6.
+  O contrato 6A propõe leitura paginada, detalhe e bindings por direção,
+  limites, tratamento da exchange padrão e gate do adapter antes da UI.
+  FR-010 segue pendente na Etapa 5. Escritas do M04 exigem contratos próprios.
+- Conferência documental de links, status, Git e sincronização do guia.
+  Sem execução funcional, broker, empacotamento ou commit nesta preparação.
+  Resultados anteriores permanecem limitados aos alvos já executados.
+  Próxima ação: obter aprovação explícita para executar a 6A.
 
 ### 2026-11-20 — T-5C1-FOCO-E-MATRIZ
 

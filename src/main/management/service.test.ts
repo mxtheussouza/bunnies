@@ -447,3 +447,54 @@ it("expires native confirmation and classifies post-send loss as uncertain", asy
   expect(f.purge).toHaveBeenCalledTimes(1);
   f.service.dispose();
 });
+
+it("scopes an exchange query to the current vhost and shares cancellation with other readers", async () => {
+  const f = fixture();
+  const request = input();
+  const query = {
+    kind: "exchangeBindings",
+    name: "src",
+    direction: "outgoing",
+  } as const;
+  f.session.managementContext.mockReturnValue({
+    profileId: "synthetic",
+    revision: "revision",
+    vhost: "detailed",
+  });
+  f.read.mockImplementationOnce(() => new Promise(() => undefined));
+  const pending = f.service.execute(1, request, query);
+  const cancelled = expect(pending).rejects.toMatchObject({
+    code: "CANCELLED",
+  });
+  await Promise.resolve();
+  expect(f.read.mock.calls[0][1]).toEqual({ ...query, vhost: "detailed" });
+  await expect(
+    f.service.execute(1, input(), { kind: "queuePage", page: 1 }),
+  ).rejects.toMatchObject({ code: "BUSY" });
+  f.service.cancel(2, request);
+  f.service.cancel(1, { ...request, operationId: randomUUID() });
+  expect(f.read.mock.calls[0][2].aborted).toBe(false);
+  f.service.cancel(1, request);
+  await cancelled;
+  f.service.dispose();
+});
+
+it("rejects unsafe exchange segments and default binding reads before loading credentials", async () => {
+  const f = fixture();
+  await expect(
+    f.service.execute(1, input(), {
+      kind: "exchangeDetail",
+      name: "amq.default",
+    }),
+  ).rejects.toMatchObject({ code: "EXCHANGE_SEGMENT" });
+  await expect(
+    f.service.execute(1, input(), {
+      kind: "exchangeBindings",
+      name: "",
+      direction: "outgoing",
+    }),
+  ).rejects.toMatchObject({ code: "EXCHANGE_DEFAULT_BINDINGS" });
+  expect(f.profiles.connectionSnapshot).not.toHaveBeenCalled();
+  expect(f.read).not.toHaveBeenCalled();
+  f.service.dispose();
+});

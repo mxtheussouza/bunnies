@@ -27,13 +27,19 @@ import {
   type ManagementQuery,
 } from "./httpsRead";
 import type { SelectSessionVhostInput } from "../../shared/session";
-import { queueRouteError, type QueueQuery } from "./queueRead";
+import { queueRouteError } from "./queueRead";
+import { assertExchangeRoute } from "./exchangeRead";
 import { VhostCatalog } from "./vhostCatalog";
+type ResourceKind = Exclude<ManagementQuery["kind"], "broker" | "vhosts">;
 type Read =
   | "broker"
   | "vhosts"
-  | Omit<Extract<QueueQuery, { kind: "queuePage" }>, "vhost">
-  | Omit<Extract<QueueQuery, { kind: "queueDetail" }>, "vhost">;
+  | {
+      [Kind in ResourceKind]: Omit<
+        Extract<ManagementQuery, { kind: Kind }>,
+        "vhost"
+      >;
+    }[ResourceKind];
 type Active = {
   owner: number;
   input: ManagementInput;
@@ -118,6 +124,8 @@ export class ManagementService {
         if (query.kind === "queuePage" || query.kind === "queueDetail") {
           const routeError = queueRouteError(query);
           if (routeError) throw new ManagementFailure(routeError);
+        } else if (query.kind !== "broker" && query.kind !== "vhosts") {
+          assertExchangeRoute(query);
         }
         const profile = await this.profiles.connectionSnapshot(
           context.profileId,
@@ -139,10 +147,8 @@ export class ManagementService {
           checkedAt: new Date().toISOString(),
         };
         if (data.kind !== query.kind) throw new ManagementFailure("RESPONSE");
-        if (data.kind === "queuePage" || data.kind === "queueDetail") {
-          if (data.vhost !== context.vhost)
-            throw new ManagementFailure("RESPONSE");
-        }
+        if ("vhost" in data && data.vhost !== context.vhost)
+          throw new ManagementFailure("RESPONSE");
         if (data.kind !== "vhosts") return { ...header, ...data };
         const selectionId = this.catalog.replace(
           {

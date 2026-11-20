@@ -1,0 +1,96 @@
+.exchanges {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.exchange-reading {
+  color: var(--bn-muted);
+}
+
+.exchange-section-heading {
+  margin-block-start: 0;
+}
+
+.exchange-controls,
+.exchange-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bn-space-3, 12px);
+  align-items: end;
+  margin-block: var(--bn-space-3, 12px);
+}
+
+.exchange-controls label {
+  display: grid;
+  gap: var(--bn-space-2, 8px);
+  flex: 1 1 240px;
+  max-width: 100%;
+}
+
+.exchange-controls input {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 36px;
+  border: 1px solid var(--bn-border);
+  border-radius: var(--bn-radius-sm, 6px);
+  background: var(--bn-surface);
+  color: var(--bn-text);
+  font: inherit;
+  padding: 6px 10px;
+}
+
+.exchange-list,
+.exchange-bindings {
+  list-style: none;
+  padding: 0;
+  border: 1px solid var(--bn-border);
+  border-radius: var(--bn-radius-sm, 6px);
+  background: var(--bn-surface);
+}
+
+.exchange-list > li,
+.exchange-bindings > li {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--bn-separator);
+}
+
+.exchange-list > li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.exchange-list > li:last-child,
+.exchange-bindings > li:last-child {
+  border-bottom: 0;
+}
+
+.exchange-list button {
+  max-width: 100%;
+  white-space: normal;
+  text-align: start;
+}
+
+.exchange-name {
+  white-space: pre-wrap;
+}
+
+.exchange-properties {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 6px 12px;
+}
+
+.exchange-properties dt {
+  color: var(--bn-muted);
+}
+
+.exchange-properties dd,
+.exchange-arguments {
+  margin: 0;
+}
+
+.exchange-arguments {
+  white-space: pre-wrap;
+}

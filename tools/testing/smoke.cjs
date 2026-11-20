@@ -278,7 +278,7 @@ async function smoke() {
         .count(),
       1,
     );
-    for (const name of ["Visão geral", "Exchanges", "Publicar"]) {
+    for (const name of ["Visão geral", "Publicar"]) {
       const button = page.getByRole("button", { name, exact: true });
       assert.equal(await button.getAttribute("aria-disabled"), "true");
       await button.focus();
@@ -288,6 +288,17 @@ async function smoke() {
         .getByRole("heading", { name: "Conexões", exact: true })
         .waitFor();
     }
+    await page
+      .getByRole("button", { name: "Exchanges", exact: true })
+      .press("Enter");
+    await page
+      .getByRole("heading", { name: "Exchanges", exact: true })
+      .waitFor();
+    await page
+      .getByText("Conecte uma sessão em Conexões.", { exact: true })
+      .waitFor();
+    assert.equal(page.url(), entry);
+    await page.getByRole("button", { name: "Conexões", exact: true }).click();
     await page
       .getByRole("button", { name: "Sobre o Bunnies", exact: true })
       .click();

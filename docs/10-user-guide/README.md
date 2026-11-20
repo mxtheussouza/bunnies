@@ -23,6 +23,7 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 - [Listar, pesquisar e detalhar filas](#consultar-filas)
 - [Criar uma fila classic ou quorum](#declarar-fila)
 - [Limpar mensagens de uma fila](#limpar-mensagens)
+- [Consultar exchanges e bindings](#consultar-exchanges)
 - [Funções de broker ainda indisponíveis](#funcoes-de-broker)
 
 <a id="disponibilidade"></a>
@@ -330,6 +331,22 @@ O diálogo expira após 60 segundos. Cancelar ou Esc antes do envio preserva a f
 2. Acione Limpar mensagens. Confira destino e efeito no diálogo nativo e confirme a limpeza somente se corresponderem à operação desejada.
 3. Use Verificar fila para consultar a situação atual. Essa leitura não confirma retrospectivamente uma limpeza com resultado incerto. Atualize a lista para obter métricas atuais.
 
+<a id="consultar-exchanges"></a>
+
+## Consultar exchanges e bindings
+
+Exchanges consulta o vhost da sessão ativa pelo endpoint HTTPS Management. A janela precisa estar ativa e a sessão precisa ter HTTPS disponível e AMQPS estabelecido. Consulte os horários da lista, do detalhe e de cada direção para saber quando os dados foram recebidos.
+
+A lista tem até 100 exchanges por página. A busca encontra um trecho literal do nome no broker e aceita até 255 bytes UTF-8. A exchange padrão tem nome AMQP vazio. O detalhe explica os vínculos implícitos de cada fila com seu próprio nome como routing key. Exchanges com prefixo amq. aparecem como reservadas. O indicador Interna representa a propriedade informada pelo broker.
+
+Os bindings de entrada são os que têm a exchange selecionada como destino. Os de saída podem apontar para filas ou outras exchanges. Routing key, identidade do binding e argumentos aparecem como dados da última consulta. A lista mostra até 200 vínculos por direção. Se o endpoint ultrapassar esse limite ou o limite de resposta, o aplicativo sinaliza o limite e recusa a lista inteira.
+
+A consulta pode ser cancelada. Navegar para outra tela, trocar de vhost ou perder o contexto descarta a consulta. Os nomes exatos . e .. e o literal amq.default podem aparecer na lista com detalhe indisponível. Os argumentos são exibidos como JSON de leitura, com indicação quando não foram informados ou quando excedem a precisão segura.
+
+1. Abra Exchanges e clique em Carregar exchanges. Para pesquisar, informe Buscar trecho do nome e acione Buscar exchanges ou pressione Enter.
+2. Abra o detalhe pelo nome da exchange. Para consultar os vínculos, acione Consultar bindings de entrada ou Consultar bindings de saída.
+3. Use Voltar à lista para retornar à exchange selecionada. Se uma página ficar fora da faixa, use Voltar à primeira página.
+
 <a id="funcoes-de-broker"></a>
 
 ## Funções de broker ainda indisponíveis
@@ -340,6 +357,6 @@ Os itens a seguir descrevem o propósito planejado das funções, não instruç�
 | --- | --- | --- |
 | Visão geral e monitoramento | Apresentar informações e métricas do broker com estado e atualidade claros. Ainda não há métricas reais, gráficos ou histórico no aplicativo. | — |
 | Exclusão condicional de filas | A exclusão de filas permanece pendente de uma forma verificável de aplicar as condições no broker. | — |
-| Exchanges e bindings | Organizar exchanges, relacionamentos de roteamento e routing keys. Ainda não existem formulários ou operações implementados. | — |
+| Alterações em exchanges e bindings | Criar ou excluir exchanges e criar ou remover bindings depende de entregas próprias. Consulte os vínculos pela tela Exchanges. | — |
 | Publicar mensagens | Preparar payloads e propriedades para publicação com resultado explícito. Publicação, consumo e inspeção de mensagens não estão disponíveis; inspeção/consumo ficam fora do MVP aprovado. | — |
 | Administração avançada e produtividade | Usuários, permissões, policies, operações em lote, favoritos e ferramentas avançadas dependem de planejamento e entregas posteriores. Não estão disponíveis nesta versão. | — |

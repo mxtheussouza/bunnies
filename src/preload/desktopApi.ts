@@ -4,6 +4,8 @@ import {
   isQueueSnapshot,
   isQueueDeclarationSnapshot,
   isQueuePurgeSnapshot,
+  isExchangeSnapshot,
+  type ExchangeSnapshot,
   type QueueDeclarationSnapshot,
   type QueuePurgeSnapshot,
   type ManagementResponse,
@@ -15,6 +17,11 @@ import {
   type ManagementSnapshot,
 } from "../shared/management";
 import type { QueueDetail, QueuePage } from "../shared/queues";
+import type {
+  ExchangeBindings,
+  ExchangeDetail,
+  ExchangePage,
+} from "../shared/exchanges";
 import type { ConnectionRequest, ConnectionsApi } from "../shared/connections";
 import type { SessionRequest, SessionSnapshot } from "../shared/session";
 import { isSessionSnapshot } from "../shared/session";
@@ -73,6 +80,7 @@ export function createDesktopApi(
         if (
           !isQueueSnapshot(value) &&
           !isManagementSnapshot(value) &&
+          !isExchangeSnapshot(value) &&
           !isQueueDeclarationSnapshot(value) &&
           !isQueuePurgeSnapshot(value)
         )
@@ -99,6 +107,24 @@ export function createDesktopApi(
             matches =
               value.kind === "queueDetail" &&
               value.queue.name === request.input.name;
+            break;
+          case "listSessionExchanges":
+            matches =
+              value.kind === "exchangePage" &&
+              value.page === request.input.page &&
+              (request.input.search !== undefined ||
+                value.totalCount === value.filteredCount);
+            break;
+          case "getSessionExchange":
+            matches =
+              value.kind === "exchangeDetail" &&
+              value.exchange.name === request.input.name;
+            break;
+          case "listSessionExchangeBindings":
+            matches =
+              value.kind === "exchangeBindings" &&
+              value.name === request.input.name &&
+              value.direction === request.input.direction;
             break;
           case "getBrokerInfo":
             matches = value.kind === "broker";
@@ -220,6 +246,19 @@ export function createDesktopApi(
       managementCall({ command: "getSessionQueue", input }) as Promise<
         ManagementResult<QueueSnapshot<QueueDetail>>
       >,
+    listSessionExchanges: input =>
+      managementCall({ command: "listSessionExchanges", input }) as Promise<
+        ManagementResult<ExchangeSnapshot<ExchangePage>>
+      >,
+    getSessionExchange: input =>
+      managementCall({ command: "getSessionExchange", input }) as Promise<
+        ManagementResult<ExchangeSnapshot<ExchangeDetail>>
+      >,
+    listSessionExchangeBindings: input =>
+      managementCall({
+        command: "listSessionExchangeBindings",
+        input,
+      }) as Promise<ManagementResult<ExchangeSnapshot<ExchangeBindings>>>,
     declareSessionQueue: input =>
       managementCall({ command: "declareSessionQueue", input }) as Promise<
         ManagementResult<QueueDeclarationSnapshot>

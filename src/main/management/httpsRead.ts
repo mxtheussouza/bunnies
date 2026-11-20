@@ -1,5 +1,11 @@
 import type { HttpsProbeInput } from "../connections/httpsProbe";
 import type { QueueDetail, QueuePage } from "../../shared/queues";
+import type { ExchangeData } from "../../shared/exchanges";
+import {
+  exchangePath,
+  parseExchangeBody,
+  type ExchangeQuery,
+} from "./exchangeRead";
 import {
   parseQueueBody,
   queuePath,
@@ -22,8 +28,9 @@ import {
 } from "./httpsTransport";
 export { ManagementFailure } from "./httpsTransport";
 type BrokerQuery = { kind: "broker" } | { kind: "vhosts"; vhost: string };
-export type ManagementQuery = BrokerQuery | QueueQuery;
-type ManagementData = BrokerData | VhostsData | QueuePage | QueueDetail;
+export type ManagementQuery = BrokerQuery | QueueQuery | ExchangeQuery;
+type ManagementData =
+  BrokerData | VhostsData | QueuePage | QueueDetail | ExchangeData;
 export function parseManagementBody(
   value: unknown,
   query: ManagementQuery,
@@ -31,6 +38,12 @@ export function parseManagementBody(
   if (!managementDepthOk(value)) throw new ManagementFailure("RESPONSE");
   if (query.kind === "queuePage" || query.kind === "queueDetail")
     return parseQueueBody(value, query);
+  if (
+    query.kind === "exchangePage" ||
+    query.kind === "exchangeDetail" ||
+    query.kind === "exchangeBindings"
+  )
+    return parseExchangeBody(value, query);
   if (query.kind === "broker") {
     if (!value || typeof value !== "object" || Array.isArray(value))
       throw new ManagementFailure("RESPONSE");
@@ -75,20 +88,36 @@ export function parseManagementBody(
     currentVisible: names.includes(query.vhost),
   };
 }
+function managementPath(query: ManagementQuery) {
+  switch (query.kind) {
+    case "broker":
+      return "/api/overview?columns=rabbitmq_version,management_version";
+    case "vhosts":
+      return "/api/vhosts?disable_stats=true&columns=name&sort=name";
+    case "queuePage":
+    case "queueDetail": {
+      const error = queueRouteError(query);
+      if (error) throw new ManagementFailure(error);
+      return queuePath(query);
+    }
+    default:
+      return exchangePath(query);
+  }
+}
+
 export async function readManagement(
   input: HttpsProbeInput,
   query: ManagementQuery,
   signal: AbortSignal,
 ): Promise<ManagementData> {
-  const routes = {
-    broker: "/api/overview?columns=rabbitmq_version,management_version",
-    vhosts: "/api/vhosts?disable_stats=true&columns=name&sort=name",
-  };
-  const isQueue = query.kind === "queuePage" || query.kind === "queueDetail";
-  const routeError = isQueue ? queueRouteError(query) : undefined;
-  if (routeError) throw new ManagementFailure(routeError);
-  const route = isQueue ? queuePath(query) : routes[query.kind];
+  const route = managementPath(query);
   if (!route) throw new ManagementFailure("VALIDATION");
+  const pageError =
+    query.kind === "queuePage"
+      ? "QUEUE_PAGE"
+      : query.kind === "exchangePage"
+        ? "EXCHANGE_PAGE"
+        : undefined;
   const { status, bytes } = await requestManagement(
     input,
     {
@@ -105,7 +134,7 @@ export async function readManagement(
         if (
           (status !== 200 &&
             status !== 401 &&
-            !(status === 400 && query.kind === "queuePage")) ||
+            !(status === 400 && pageError)) ||
           !isManagementJson(headers) ||
           (headers["content-encoding"] !== undefined &&
             headers["content-encoding"].toLowerCase().trim() !== "identity")
@@ -138,7 +167,9 @@ export async function readManagement(
         "reason" in value &&
         typeof value.reason === "string" &&
         value.reason.startsWith("Page out of range,");
-      throw new ManagementFailure(outOfRange ? "QUEUE_PAGE" : "RESPONSE");
+      throw new ManagementFailure(
+        outOfRange && pageError ? pageError : "RESPONSE",
+      );
     }
     return parseManagementBody(value, query);
   } catch (error) {

@@ -4,10 +4,19 @@ import SessionContextBar from "./SessionContextBar";
 import IconButton from "../components/IconButton";
 import Connections from "../pages/Connections";
 import Queues from "../pages/Queues";
+import Exchanges from "../pages/Exchanges";
 import Help from "../pages/Help";
 import About from "../pages/About";
 import "./shell.scss";
 import SessionProvider, { useSession, sessionLabels } from "./SessionProvider";
+
+const pageTitles: Record<LocalPage, string> = {
+  connections: "Conexões",
+  queues: "Filas",
+  exchanges: "Exchanges",
+  help: "Ajuda",
+  about: "Sobre o Bunnies",
+};
 
 function Shell({ feedback }: { feedback?: React.ReactNode }) {
   const { state: session } = useSession();
@@ -114,15 +123,9 @@ function Shell({ feedback }: { feedback?: React.ReactNode }) {
             <div className="page-heading">
               <p className="eyebrow">SEU WORKSPACE RABBITMQ</p>
               <h1 tabIndex={-1} ref={heading}>
-                {page === "connections"
-                  ? "Conexões"
-                  : page === "queues"
-                    ? "Filas"
-                    : page === "help"
-                      ? "Ajuda"
-                      : "Sobre o Bunnies"}
+                {pageTitles[page]}
               </h1>
-              {page !== "queues" && (
+              {page !== "queues" && page !== "exchanges" && (
                 <p>
                   {page === "connections"
                     ? "Um contexto claro para cada ambiente."
@@ -136,6 +139,8 @@ function Shell({ feedback }: { feedback?: React.ReactNode }) {
               <Connections />
             ) : page === "queues" ? (
               <Queues />
+            ) : page === "exchanges" ? (
+              <Exchanges />
             ) : page === "help" ? (
               <Help />
             ) : (

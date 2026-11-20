@@ -62,6 +62,9 @@ describe("preload API", () => {
         "getBrokerInfo",
         "listSessionVhosts",
         "listSessionQueues",
+        "listSessionExchanges",
+        "getSessionExchange",
+        "listSessionExchangeBindings",
         "getSessionQueue",
         "declareSessionQueue",
         "cancelQueueDeclaration",
@@ -345,5 +348,52 @@ it("limits purge replies to the requested queue and context", async () => {
       error: { code: "QUEUE_PURGE_UNCERTAIN" },
     });
     expect(JSON.stringify(result)).not.toContain("SENTINEL");
+  }
+});
+
+it("refuses binding data for another direction, target or operation", async () => {
+  const call = vi.fn();
+  const management = vi.fn();
+  const api = createDesktopApi(
+    call,
+    call,
+    call,
+    undefined,
+    undefined,
+    management,
+  );
+  const input = {
+    sessionId: "00000000-0000-4000-8000-000000000001",
+    operationId: "00000000-0000-4000-8000-000000000002",
+    generation: 1,
+    name: "topic",
+    direction: "incoming" as const,
+  };
+  const value = {
+    ...input,
+    kind: "exchangeBindings",
+    vhost: "detailed",
+    source: "https-management",
+    checkedAt: "2026-11-20T12:00:00.000Z",
+    items: [],
+  };
+  management.mockResolvedValueOnce({
+    ok: true,
+    requestId: input.operationId,
+    value,
+  });
+  expect((await api.listSessionExchangeBindings(input)).ok).toBe(true);
+  for (const change of [
+    { name: "wrong" },
+    { direction: "outgoing" },
+    { generation: 2 },
+    { items: [{ ...value, source: "other" }] },
+  ]) {
+    management.mockResolvedValueOnce({
+      ok: true,
+      requestId: input.operationId,
+      value: { ...value, ...change },
+    });
+    expect((await api.listSessionExchangeBindings(input)).ok).toBe(false);
   }
 });

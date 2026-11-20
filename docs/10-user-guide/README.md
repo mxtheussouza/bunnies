@@ -22,13 +22,14 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 - [Resolver problemas](#resolver-problemas)
 - [Listar, pesquisar e detalhar filas](#consultar-filas)
 - [Criar uma fila classic ou quorum](#declarar-fila)
+- [Limpar mensagens de uma fila](#limpar-mensagens)
 - [Funções de broker ainda indisponíveis](#funcoes-de-broker)
 
 <a id="disponibilidade"></a>
 
 ## O que está disponível nesta versão
 
-Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, consultar versões informadas e vhosts visíveis por HTTPS, listar, detalhar e declarar filas no vhost ativo, usar temas e consultar a Ajuda.
+Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, consultar versões informadas e vhosts visíveis por HTTPS, listar, detalhar e declarar filas no vhost ativo, limpar mensagens de filas classic e quorum, usar temas e consultar a Ajuda.
 
 Salvar ou selecionar um perfil não conecta ao broker. Testar HTTPS e Testar AMQPS usam conexões transitórias. Conectar mantém uma conexão AMQPS e verifica a autenticação HTTPS periodicamente. Os dois endereços são independentes: o aplicativo não comprova que apontam ao mesmo broker.
 
@@ -86,7 +87,7 @@ O nome exato do vhost atual é procurado na lista recebida. Visível no snapshot
 
 As consultas são apenas leitura, mas geram requisições/logs no servidor. O servidor pode construir uma lista maior antes da interrupção do cliente; o limite local não garante baixo custo para ambientes grandes. Para esses ambientes, o aplicativo pode recusar a listagem nesta versão.
 
-Somente uma operação administrativa ocorre por vez. O prazo das consultas manuais é de 10 segundos, e uma declaração de fila pode ocupar a vaga por até 30 segundos. A verificação whoami da sessão continua independente. Cancelar consulta interrompe apenas a consulta manual, mantendo a sessão e suas cotas de recuperação.
+Somente uma operação administrativa ocorre por vez. O prazo das consultas manuais é de 10 segundos e o de declaração é de 30 segundos. A limpeza de mensagens ocupa a vaga enquanto consulta o alvo, aguarda a confirmação e recebe o resultado. A verificação whoami da sessão continua independente.
 
 O horário do último sucesso permanece visível. Se uma nova consulta falhar, seu horário de falha aparece separado, e o resultado anterior fica marcado Desatualizado. Não trate um resultado antigo como disponibilidade atual.
 
@@ -291,7 +292,7 @@ Cancelar consulta, sair de Filas, fechar um detalhe pendente, perder elegibilida
 
 1. Em Conexões, ative a sessão e confirme o vhost. Abra Filas na barra lateral.
 2. Clique em Carregar filas. Para pesquisar, preencha Buscar trecho do nome e clique em Buscar filas ou pressione Enter. Use Página anterior ou Próxima página para percorrer a mesma busca.
-3. Ative o nome da fila para abrir o detalhe. Use Fechar detalhe ou Esc para voltar à linha.
+3. Ative o nome da fila para abrir o detalhe. No vhost detailed, informe o Nome exato da fila e acione Consultar fila. Use Fechar detalhe ou Esc para voltar.
 
 <a id="declarar-fila"></a>
 
@@ -313,6 +314,22 @@ Parar de aguardar interrompe o trabalho local. Se o envio pode ter ocorrido e a 
 2. Preencha os argumentos desejados, confira perfil, ambiente e vhost e acione Declarar fila. Depois de uma possível escrita, carregue a lista novamente para atualizar o snapshot.
 3. Feche o formulário ou use Verificar fila para inspecionar os metadados no mesmo contexto.
 
+<a id="limpar-mensagens"></a>
+
+## Limpar mensagens de uma fila
+
+Use Limpar mensagens no detalhe de uma fila classic ou quorum. A operação usa o endpoint HTTPS Management do perfil e o vhost da sessão. O broker exige permissão de leitura na fila. A janela e a sessão precisam estar ativas.
+
+O purge é irreversível. A fila e seus vínculos permanecem. O broker remove mensagens prontas e preserva as entregas ainda sem confirmação. Em quorum, pode remover também mensagens com nova tentativa adiada ou dead-lettering pendente. Novas publicações e reentregas podem alterar a contagem.
+
+O diálogo mostra perfil, ambiente, endpoint HTTPS, vhost e nome completo da fila. Produção aparece com texto e símbolo de alerta. O broker usa o nome no momento da execução. Outro operador pode ter recriado a fila com esse nome após a consulta.
+
+O diálogo expira após 60 segundos. Cancelar ou Esc antes do envio preserva a fila. Após possível envio, Parar de aguardar interrompe a espera local e pode deixar o resultado incerto. Uma limpeza aceita registra o aceite do broker, sem estimar quantas mensagens saíram. O aplicativo nunca repete a limpeza automaticamente.
+
+1. Abra o detalhe pelo nome da fila. No vhost detailed, use Nome exato da fila e Consultar fila.
+2. Acione Limpar mensagens. Confira destino e efeito no diálogo nativo e confirme a limpeza somente se corresponderem à operação desejada.
+3. Use Verificar fila para consultar a situação atual. Essa leitura não confirma retrospectivamente uma limpeza com resultado incerto. Atualize a lista para obter métricas atuais.
+
 <a id="funcoes-de-broker"></a>
 
 ## Funções de broker ainda indisponíveis
@@ -322,7 +339,7 @@ Os itens a seguir descrevem o propósito planejado das funções, não instruç�
 | Campo ou função | Como usar / para que serve | Exemplo fictício |
 | --- | --- | --- |
 | Visão geral e monitoramento | Apresentar informações e métricas do broker com estado e atualidade claros. Ainda não há métricas reais, gráficos ou histórico no aplicativo. | — |
-| Operações destrutivas em filas | Exclusão e limpeza de mensagens prontas dependem de entregas posteriores. | — |
+| Exclusão condicional de filas | A exclusão de filas permanece pendente de uma forma verificável de aplicar as condições no broker. | — |
 | Exchanges e bindings | Organizar exchanges, relacionamentos de roteamento e routing keys. Ainda não existem formulários ou operações implementados. | — |
 | Publicar mensagens | Preparar payloads e propriedades para publicação com resultado explícito. Publicação, consumo e inspeção de mensagens não estão disponíveis; inspeção/consumo ficam fora do MVP aprovado. | — |
 | Administração avançada e produtividade | Usuários, permissões, policies, operações em lote, favoritos e ferramentas avançadas dependem de planejamento e entregas posteriores. Não estão disponíveis nesta versão. | — |

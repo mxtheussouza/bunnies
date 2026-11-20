@@ -63,4 +63,21 @@ A declaração compartilha a vaga administrativa das consultas. Resultados
 ficam em memória no contexto autorizado. O [guia](../10-user-guide/README.md#declarar-fila)
 explica permissões, cancelamento e próximos passos. Ver
 [evidências](../07-testing/queues-5b.md) para o recorte verificado.
-Exclusão e purge permanecem na 5C.
+## Limpeza de mensagens
+
+O detalhe de uma fila classic ou quorum oferece **Limpar mensagens**.
+Em `detailed`, a consulta de item pelo nome exato permite abrir o
+detalhe mesmo com a listagem indisponível. O main faz outra consulta
+pontual, verifica tipo e identidade e apresenta a confirmação nativa
+com destino, ambiente e efeito. Após aceite explícito, revalida a
+janela, a sessão e a revisão e envia um único DELETE de `/contents`.
+
+O purge mantém a fila e os vínculos. Remove Ready e preserva entregas
+sem ack. Em quorum também pode limpar mensagens em retry adiado e
+dead-lettering pendente. Uma possível escrita torna lista e detalhe
+desatualizados. **Verificar fila** faz uma leitura pontual atual,
+sem atribuir ao purge os contadores observados. FR-010 (exclusão
+condicional de fila) permanece pendente.
+
+[Contrato 5C.1](../05-roadmap/roadmap.md#contrato-proposto--5c1-purge-com-confirmação-nativa)
+· [Evidências](../07-testing/queues-5c1.md)

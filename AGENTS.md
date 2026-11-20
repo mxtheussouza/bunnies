@@ -106,12 +106,12 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **5B — concluída, aprovada e registrada**.
-- Última etapa concluída e aprovada: **5B — declaração de filas classic e quorum**.
-- Última entrega registrada: `feat(queues): add verified queue declarations`
-  em `main`, com pai `cd1c2bf`.
+- Etapa atual: **5C.1 — concluída, aprovada e registrada**.
+- Última etapa concluída e aprovada: **5C.1 — purge com confirmação nativa**.
+- Última entrega registrada: `feat(queues): add confirmed message purge`
+  em `main`, com pai `dd52421`.
 - Mudança da barra macOS em `9401448` preservada.
-- Próxima ação: aguardar solicitação para preparar o contrato da 5C.
+- Próxima ação: aguardar solicitação própria para preparar o próximo contrato.
 
 Ao retomar, ler este arquivo, [PROJECTS_STATUS.md](PROJECTS_STATUS.md), a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -607,3 +607,46 @@ Em 2026-11-20, “Aprovado” aceitou a conclusão e autorizou o commit local
 apresentados, o ASAR e a matriz foram conferidos antes do registro.
 O aceite mantém as limitações documentadas. A 5C exige solicitação e
 contrato próprios. Ver [evidências](docs/07-testing/queues-5b.md).
+
+## Preparação vigente — 5C.1
+
+“Continue” após `dd52421` iniciou a preparação. O
+[contrato 5C.1](docs/05-roadmap/roadmap.md#contrato-proposto--5c1-purge-com-confirmação-nativa)
+propõe purge de fila classic/quorum com diálogo nativo no main e gate
+em brokers isolados, incluindo efeitos sobre estados adicionais em quorum.
+Status Proposed. A exclusão condicional segue pendente de um contrato
+com garantia verificável no broker. O aceite da 5B permanece registrado.
+Aguardar aprovação da 5C.1 antes de código, brokers, package ou
+smokes. Conclusão e commit exigem seus próprios aceites.
+
+## Execução aprovada — 5C.1
+
+Em 2026-11-20, “Aprovo” aceitou 5C.1-D01–07 e 5C.1-01–08.
+Começar pelo adapter e gate real no harness isolado. Integrar IPC/UI
+e Guia/Ajuda após passar o gate. Uma mudança de semântica ou escopo
+exige decisão antes do trabalho dependente. Exclusão condicional,
+conclusão, commit e push têm aceites próprios.
+
+Gate passou 20 verificações, dez em cada versão, após ajustar a
+negociação e o tratamento de 404. A integração autorizada prossegue
+com base nas [evidências](docs/07-testing/queues-5c1.md).
+
+Check 299 + seis Node, package macOS arm64 e smokes de Perfis, HTTPS
+e AMQPS passaram. Foco nativo, capturas e matriz no mesmo ASAR aguardam
+sessão gráfica desbloqueada. Guia/Ajuda acompanham o fluxo de purge.
+
+Na retomada, “Validado e aprovado, pode continuar” aceitou o fluxo
+apresentado. Nove smokes de regressão passaram no mesmo pacote.
+O diálogo de purge foi aberto e cancelado nativamente com zero
+DELETEs. Capturas a 200% e matriz do pacote aguardam foco nativo.
+
+## Conclusão da 5C.1 aprovada
+
+Em 2026-11-20, “Aprovado” reiterou o aceite da 5C.1. O smoke de
+purge passou seis grupos, as capturas a 200% foram revisadas e a
+matriz do executável passou 36 verificações por versão. Check com 299
+testes e seis Node, além de dez smokes no mesmo ASAR. Registra-se o commit local
+`feat(queues): add confirmed message purge`. Exclusão condicional
+e validação nativa em Windows/Linux permanecem pendentes. Próximos
+contratos exigem solicitação própria.
+[Evidências](docs/07-testing/queues-5c1.md)

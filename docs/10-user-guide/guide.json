@@ -6,7 +6,7 @@
       "id": "disponibilidade",
       "title": "O que está disponível nesta versão",
       "paragraphs": [
-        "Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, consultar versões informadas e vhosts visíveis por HTTPS, listar, detalhar e declarar filas no vhost ativo, usar temas e consultar a Ajuda.",
+        "Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, consultar versões informadas e vhosts visíveis por HTTPS, listar, detalhar e declarar filas no vhost ativo, limpar mensagens de filas classic e quorum, usar temas e consultar a Ajuda.",
         "Salvar ou selecionar um perfil não conecta ao broker. Testar HTTPS e Testar AMQPS usam conexões transitórias. Conectar mantém uma conexão AMQPS e verifica a autenticação HTTPS periodicamente. Os dois endereços são independentes: o aplicativo não comprova que apontam ao mesmo broker.",
         "Visão geral, Exchanges e Publicar permanecem indisponíveis. A sessão atual não abre canais nem publica ou consome mensagens. Senhas protegidas salvas no dispositivo continuam indisponíveis; use senha somente nesta execução."
       ]
@@ -56,7 +56,7 @@
         "Listar vhosts mostra uma lista completa limitada a 200 nomes e 256 KiB de resposta. Quando algum limite é ultrapassado, o painel recusa a lista inteira. Os metadados extras são descartados. A lista fica disponível para selecionar um vhost durante cinco minutos, enquanto a sessão e a janela permanecem no mesmo contexto.",
         "O nome exato do vhost atual é procurado na lista recebida. Visível no snapshot HTTPS não comprova acesso AMQP, direito de criar filas ou publicar. Não listado não comprova inexistência e não encerra a sessão. Monitoring e administrator podem visualizar vhosts sem acesso AMQP. Os dois endpoints do perfil podem apontar para brokers diferentes.",
         "As consultas são apenas leitura, mas geram requisições/logs no servidor. O servidor pode construir uma lista maior antes da interrupção do cliente; o limite local não garante baixo custo para ambientes grandes. Para esses ambientes, o aplicativo pode recusar a listagem nesta versão.",
-        "Somente uma operação administrativa ocorre por vez. O prazo das consultas manuais é de 10 segundos, e uma declaração de fila pode ocupar a vaga por até 30 segundos. A verificação whoami da sessão continua independente. Cancelar consulta interrompe apenas a consulta manual, mantendo a sessão e suas cotas de recuperação.",
+        "Somente uma operação administrativa ocorre por vez. O prazo das consultas manuais é de 10 segundos e o de declaração é de 30 segundos. A limpeza de mensagens ocupa a vaga enquanto consulta o alvo, aguarda a confirmação e recebe o resultado. A verificação whoami da sessão continua independente.",
         "O horário do último sucesso permanece visível. Se uma nova consulta falhar, seu horário de falha aparece separado, e o resultado anterior fica marcado Desatualizado. Não trate um resultado antigo como disponibilidade atual.",
         "Sair de Conexões, selecionar outro perfil, salvar/remover perfil, desconectar, recarregar/fechar a janela, sair, perder foco/minimizar ou suspender cancela a consulta pendente e limpa seu contexto. Ao voltar, consulte novamente. Nenhum resultado é persistido em disco.",
         "Uma recusa HTTP pode decorrer de permissão ou tag mesmo com senha válida. O aplicativo distingue motivos conhecidos de negação sem mostrar a mensagem bruta do broker. Não aumente privilégios nem desabilite TLS para contornar falhas; confirme URL, CA e direitos com o responsável pelo ambiente."
@@ -339,7 +339,7 @@
       "steps": [
         "Em Conexões, ative a sessão e confirme o vhost. Abra Filas na barra lateral.",
         "Clique em Carregar filas. Para pesquisar, preencha Buscar trecho do nome e clique em Buscar filas ou pressione Enter. Use Página anterior ou Próxima página para percorrer a mesma busca.",
-        "Ative o nome da fila para abrir o detalhe. Use Fechar detalhe ou Esc para voltar à linha."
+        "Ative o nome da fila para abrir o detalhe. No vhost detailed, informe o Nome exato da fila e acione Consultar fila. Use Fechar detalhe ou Esc para voltar."
       ]
     },
     {
@@ -360,6 +360,21 @@
       ]
     },
     {
+      "id": "limpar-mensagens",
+      "title": "Limpar mensagens de uma fila",
+      "paragraphs": [
+        "Use Limpar mensagens no detalhe de uma fila classic ou quorum. A operação usa o endpoint HTTPS Management do perfil e o vhost da sessão. O broker exige permissão de leitura na fila. A janela e a sessão precisam estar ativas.",
+        "O purge é irreversível. A fila e seus vínculos permanecem. O broker remove mensagens prontas e preserva as entregas ainda sem confirmação. Em quorum, pode remover também mensagens com nova tentativa adiada ou dead-lettering pendente. Novas publicações e reentregas podem alterar a contagem.",
+        "O diálogo mostra perfil, ambiente, endpoint HTTPS, vhost e nome completo da fila. Produção aparece com texto e símbolo de alerta. O broker usa o nome no momento da execução. Outro operador pode ter recriado a fila com esse nome após a consulta.",
+        "O diálogo expira após 60 segundos. Cancelar ou Esc antes do envio preserva a fila. Após possível envio, Parar de aguardar interrompe a espera local e pode deixar o resultado incerto. Uma limpeza aceita registra o aceite do broker, sem estimar quantas mensagens saíram. O aplicativo nunca repete a limpeza automaticamente."
+      ],
+      "steps": [
+        "Abra o detalhe pelo nome da fila. No vhost detailed, use Nome exato da fila e Consultar fila.",
+        "Acione Limpar mensagens. Confira destino e efeito no diálogo nativo e confirme a limpeza somente se corresponderem à operação desejada.",
+        "Use Verificar fila para consultar a situação atual. Essa leitura não confirma retrospectivamente uma limpeza com resultado incerto. Atualize a lista para obter métricas atuais."
+      ]
+    },
+    {
       "id": "funcoes-de-broker",
       "title": "Funções de broker ainda indisponíveis",
       "paragraphs": [
@@ -371,8 +386,8 @@
           "description": "Apresentar informações e métricas do broker com estado e atualidade claros. Ainda não há métricas reais, gráficos ou histórico no aplicativo."
         },
         {
-          "name": "Operações destrutivas em filas",
-          "description": "Exclusão e limpeza de mensagens prontas dependem de entregas posteriores."
+          "name": "Exclusão condicional de filas",
+          "description": "A exclusão de filas permanece pendente de uma forma verificável de aplicar as condições no broker."
         },
         {
           "name": "Exchanges e bindings",

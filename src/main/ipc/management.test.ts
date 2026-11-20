@@ -9,8 +9,10 @@ const mock = vi.hoisted(() => ({
     | undefined
     | ((event: IpcMainInvokeEvent, input: unknown) => Promise<unknown>),
   remove: vi.fn(),
+  message: vi.fn(),
 }));
 vi.mock("electron", () => ({
+  dialog: { showMessageBox: mock.message },
   ipcMain: {
     handle: (_name: string, fn: typeof mock.handler) => {
       mock.handler = fn;
@@ -22,10 +24,19 @@ import { registerManagementIpc } from "./management";
 function fixture() {
   const frame = { url: APP_URL },
     contents = { id: 42, mainFrame: frame };
-  const window = { webContents: contents, isDestroyed: () => false };
+  const window = {
+    webContents: contents,
+    isDestroyed: () => false,
+    isFocused: () => true,
+    isVisible: () => true,
+    isMinimized: () => false,
+    on: vi.fn(),
+    removeListener: vi.fn(),
+  };
   const service = {
     execute: vi.fn(async () => undefined),
     cancel: vi.fn(() => undefined),
+    purgeQueue: vi.fn<ManagementService["purgeQueue"]>(),
   };
   const dispose = registerManagementIpc(
     () => window as unknown as BrowserWindow,
@@ -96,6 +107,87 @@ describe("management IPC exact frame authority", () => {
     expect(f.service.cancel).toHaveBeenCalledWith(42, f.input);
     f.dispose();
   });
+});
+
+it("rejects renderer-supplied confirmation, options and context for a purge", async () => {
+  const f = fixture();
+  const input = { ...f.input, name: "fila" };
+  for (const extra of [
+    { confirmed: true },
+    { vhost: "other" },
+    { url: "https://outside.invalid" },
+    { generation: 0 },
+    { operationId: "invalid" },
+    { method: "DELETE" },
+  ])
+    expect(
+      (
+        await f.call({
+          command: "purgeSessionQueue",
+          input: { ...input, ...extra },
+        })
+      ).error?.code,
+    ).toBe("VALIDATION");
+  await f.call({ command: "cancelQueuePurge", input: f.input });
+  expect(f.service.cancel).toHaveBeenCalledWith(42, f.input, "purge");
+  expect(f.service.purgeQueue).not.toHaveBeenCalled();
+  f.dispose();
+});
+
+it("presents a main-owned default-cancel modal with the exact vhost and safe endpoint", async () => {
+  const f = fixture();
+  const name = "fila \u202E %2F ";
+  mock.message.mockResolvedValueOnce({ response: 1 });
+  f.service.purgeQueue.mockImplementationOnce(
+    async (_owner, input, trusted, confirm) => {
+      expect(trusted()).toBe(true);
+      expect(
+        await confirm(
+          {
+            name: input.name,
+            vhost: "literal%2F",
+            queueType: "classic",
+            profileName: "Isolado",
+            environment: "production",
+            httpsUrl: "https://broker.local:15671/prefix",
+          },
+          new AbortController().signal,
+        ),
+      ).toBe(true);
+      return {
+        ...input,
+        vhost: "literal%2F",
+        kind: "queuePurge",
+        source: "https-management",
+        checkedAt: new Date().toISOString(),
+        status: "accepted",
+      };
+    },
+  );
+  expect(
+    (
+      await f.call({
+        command: "purgeSessionQueue",
+        input: { ...f.input, name },
+      })
+    ).ok,
+  ).toBe(true);
+  expect(mock.message).toHaveBeenCalledWith(
+    expect.objectContaining({ webContents: f.event.sender }),
+    expect.objectContaining({
+      message: expect.stringContaining("⚠ Produção"),
+      buttons: ["Cancelar", "Limpar mensagens"],
+      defaultId: 0,
+      cancelId: 0,
+      signal: expect.any(AbortSignal),
+    }),
+  );
+  const detail = mock.message.mock.lastCall?.[1].detail;
+  expect(detail).toContain('Vhost: "literal%2F"');
+  expect(detail).toContain(String.raw`Fila: "fila \u{202E} %2F "`);
+  expect(detail).toContain("https://broker.local:15671/prefix");
+  expect(detail).toContain("dead-lettering pendente");
+  f.dispose();
 });
 
 it("validates queue bounds and rejects renderer-supplied vhost, URL and identity", async () => {

@@ -87,6 +87,7 @@ export class SessionService {
     owner: number,
     ref: { sessionId: string; generation: number },
     requireAmqps = false,
+    awaitingNativeDialog = false,
   ) {
     const c = this.context;
     if (
@@ -99,7 +100,8 @@ export class SessionService {
     if (
       !this.live(c) ||
       c.snapshot.stopping ||
-      this.paused ||
+      this.suspended ||
+      (!this.visible && !awaitingNativeDialog) ||
       c.snapshot.https.phase !== "available" ||
       (requireAmqps &&
         (!c.amqps.handle ||

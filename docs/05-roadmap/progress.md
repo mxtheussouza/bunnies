@@ -1080,4 +1080,65 @@ locais. Aguarda aceite de conclusão e commit.
 o ASAR e os relatórios da matriz foram conferidos. As evidências
 e limitações do recorte aprovado permanecem registradas.
 O contrato da 5C depende de solicitação própria.
-[Evidências](../07-testing/queues-5b.md).
+
+## 2026-11-20 — Contrato 5C.1 proposto
+
+“Continue” iniciou a preparação após `dd52421`. O
+[contrato 5C.1](roadmap.md#contrato-proposto--5c1-purge-com-confirmação-nativa)
+propõe purge classic/quorum via Management HTTPS, com destino e efeito
+em diálogo nativo e um único envio após revalidar o contexto. O gate
+isolado verifica mensagens prontas, entregas sem ack e o efeito adicional
+em quorum sobre novas tentativas adiadas e dead-lettering pendente.
+
+Nas fontes de 4.4.0 e 4.3.6, quorum rejeita as condições de exclusão
+e stream as ignora. Uma leitura prévia não vincula a instância ao
+DELETE. FR-010 segue pendente de solução no broker, e MVP-Q03 exige
+ambos os fluxos. A revisão foi documental. A execução da 5C.1
+aguarda aprovação.
+
+## 2026-11-20 — Execução da 5C.1 aprovada
+
+“Aprovo” aceitou o contrato, incluindo o gate real em 4.4.0 e
+4.3.6. Adapter e gate precedem a integração. Conclusão, commit e
+exclusão condicional exigem aceites próprios.
+
+## 2026-11-20 — Gate 5C.1 aprovado
+
+Depois dos ajustes de negociação e de tratamento de HTTP 404, o
+gate passou dez verificações em cada versão. Fila e vínculos
+permaneceram, entregas sem ack foram preservadas e o purge quorum
+removeu também retry adiado e dead-lettering pendente. Ambas as
+execuções limparam os recursos. A integração e o pacote estão em
+andamento. [Evidências](../07-testing/queues-5c1.md).
+
+## 2026-11-20 — Integração e validação parcial da 5C.1
+
+Purge no detalhe de Filas, diálogo nativo, restauração do foco de
+resultado, consulta exata em `detailed` e Guia/Ajuda integrados.
+Check 299 + seis Node e package passaram. Os smokes de Perfis,
+HTTPS e AMQPS passaram no ASAR verificado. A sessão gráfica
+bloqueada deixa as verificações com foco e a matriz do pacote
+pendentes. Os gates de purge e de declaração repetiram 20
+verificações cada e limparam os recursos próprios.
+[Evidências](../07-testing/queues-5c1.md).
+
+## 2026-11-20 — Aceite e retomada da 5C.1
+
+O proprietário informou “Validado e aprovado, pode continuar”.
+A sessão gráfica está disponível novamente. Os smokes com foco,
+capturas e matriz do pacote foram retomados com o mesmo ASAR.
+Passaram os nove smokes de regressão. O diálogo nativo foi exibido e
+cancelado sem escrita, com captura conferida. Mudança de tema e foco
+interromperam a rodada do smoke de purge. Capturas a 200% e matriz
+aguardam a repetição. [Evidências](../07-testing/queues-5c1.md).
+
+## 2026-11-20 — Conclusão e registro da 5C.1
+
+“Aprovado” reiterou o aceite do purge. O décimo smoke passou e as
+capturas em ambos os temas a 200% foram revisadas. A matriz do mesmo
+ASAR passou 36 verificações em cada RabbitMQ 4.4.0 e 4.3.6 com
+limpeza completa. Gate do adapter com 20 verificações e check
+299 + seis Node passaram. Registra-se a entrega local
+`feat(queues): add confirmed message purge`. Exclusão condicional
+e validação nativa em Windows e Linux permanecem pendentes.
+[Evidências](../07-testing/queues-5c1.md).

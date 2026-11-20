@@ -55,7 +55,7 @@ operação destrutiva só podem usar brokers/recursos isolados e reproduzíveis.
 | --- | --- | --- | --- |
 | M01 | CRUD/HTTPS/AMQPS 4A.2B aprovados; sessão 4A.2C concluída/aprovada | [Connection Manager](01-connection-manager.md) | Próximo contrato e homologações restantes |
 | M02 | Planejado; não implementado | `02-dashboard.md` | Conjunto de métricas; fonte, atualização e layout |
-| M03 | Listagem e detalhe 5A aprovados. Declaração 5B concluída e aprovada | [Gerenciamento de filas](03-queue-management.md) | Exclusão e purge em contrato próprio; validação nativa por SO |
+| M03 | Listagem e detalhe 5A, declaração 5B e purge 5C.1 concluídos e aprovados | [Gerenciamento de filas](03-queue-management.md) | Exclusão condicional e validação nativa por SO |
 | M04 | Planejado; não implementado | `04-exchange-management.md` | Tipos/plugins; identidade de binding; restrições de recursos |
 | M05 | Planejado; não implementado | `05-message-management.md` | Propriedades/headers; limites; confirms e semântica de resultado |
 | M06 | Planejado; não implementado | `06-administration.md` | Matriz de permissão/capacidade e recorte pós-MVP |

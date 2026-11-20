@@ -537,3 +537,17 @@ indisponível e resultado incerto. Ao trocar de contexto, o renderer
 descarta o estado transitório. A lista existente fica desatualizada
 após possível escrita no mesmo contexto. Ver
 [detalhamento do M03](../04-modules/03-queue-management.md).
+
+## Limpeza de mensagens — 5C.1
+
+`ManagementService` compartilha a vaga de leitura e declaração com purge.
+`purgeSessionQueue` e `cancelQueuePurge` elevam a ponte a 32 métodos
+específicos. O adapter lê a identidade e o tipo da fila exata. O handler
+abre a confirmação nativa com dados do main e, após revalidação, o
+transporte pode emitir um DELETE sem corpo em `/contents`.
+
+Enquanto o modal nativo está aberto, a checagem de contexto tolera a
+mudança de foco da janela associada. A suspensão, a perda do contexto
+e o encerramento continuam invalidando o fluxo. A abertura do diálogo,
+a transmissão e a entrega do resultado exigem a janela ativa.
+Ver [detalhamento do M03](../04-modules/03-queue-management.md).

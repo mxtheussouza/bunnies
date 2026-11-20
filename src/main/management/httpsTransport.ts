@@ -62,12 +62,10 @@ type RequestOptions = {
   checkResponse(status: number, headers: IncomingHttpHeaders): void;
 } & (
   | { method: "GET" }
-  | {
-      method: "PUT";
-      body: Buffer;
+  | (({ method: "PUT"; body: Buffer } | { method: "DELETE" }) & {
       authorizeSend(): Promise<void>;
       onSend(): void;
-    }
+    })
 );
 
 export async function requestManagement(
@@ -151,7 +149,7 @@ export async function requestManagement(
           checkServerIdentity,
           maxHeaderSize: MAX_MANAGEMENT_HEADERS,
           headers: {
-            Accept: "application/json",
+            Accept: options.method === "DELETE" ? "*/*" : "application/json",
             "Accept-Encoding": "identity",
             Authorization:
               "Basic " +
@@ -220,7 +218,8 @@ export async function requestManagement(
               .then(() => {
                 if (done || signal.aborted) return;
                 options.onSend();
-                req.end(options.body);
+                if (options.method === "PUT") req.end(options.body);
+                else req.end();
               })
               .catch(error =>
                 fail(

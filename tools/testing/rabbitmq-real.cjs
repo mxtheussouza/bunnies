@@ -27,6 +27,8 @@ const managementGateA = process.argv.includes("--management-gate-a");
 const revisedVhostGate = process.argv.includes("--vhost-gate-revised");
 const vhostGate = process.argv.includes("--vhost-gate") || revisedVhostGate;
 const queuesGate = process.argv.includes("--queues-gate");
+const purgeGate = process.argv.includes("--purge-gate");
+const purgeMatrix = process.argv.includes("--purge-matrix");
 const declarationGate = process.argv.includes("--declaration-gate");
 const declarationMatrix = process.argv.includes("--declaration-matrix");
 const queuesMatrix =
@@ -42,6 +44,8 @@ assert.ok(
           "--vhost-gate",
           "--vhost-gate-revised",
           "--queues-gate",
+          "--purge-gate",
+          "--purge-matrix",
           "--declaration-gate",
           "--declaration-matrix",
           "--queues-matrix",
@@ -49,23 +53,27 @@ assert.ok(
       ),
 );
 const managementFixture = managementGate || managementGateA || vhostGate;
-const reportPrefix = declarationGate
-  ? "queues-declaration-gate-5b"
-  : queuesGate
-    ? "queues-gate-revised-5a"
-    : vhostGate
-      ? revisedVhostGate
-        ? "vhost-gate-revised-4b2"
-        : "vhost-gate-4b2"
-      : managementGateA
-        ? "management-gate-A-4b1"
-        : managementGate
-          ? "management-gate-4b1"
-          : declarationMatrix
-            ? "rabbitmq-real-5b"
-            : queuesMatrix
-              ? "rabbitmq-real-5a"
-              : "rabbitmq-real-4b2";
+const reportPrefix = purgeMatrix
+  ? "rabbitmq-real-5c1"
+  : purgeGate
+    ? "queues-purge-gate-5c1"
+    : declarationGate
+      ? "queues-declaration-gate-5b"
+      : queuesGate
+        ? "queues-gate-revised-5a"
+        : vhostGate
+          ? revisedVhostGate
+            ? "vhost-gate-revised-4b2"
+            : "vhost-gate-4b2"
+          : managementGateA
+            ? "management-gate-A-4b1"
+            : managementGate
+              ? "management-gate-4b1"
+              : declarationMatrix
+                ? "rabbitmq-real-5b"
+                : queuesMatrix
+                  ? "rabbitmq-real-5a"
+                  : "rabbitmq-real-4b2";
 let managementAdapter;
 let amqpsAdapter;
 let switchAdapter;
@@ -95,8 +103,10 @@ async function runVersion({ version, digest }) {
   const declarationFixture = declarationGate
     ? require("./queue-declaration-gate.cjs")
     : undefined;
+  const purgeFixture =
+    purgeGate || purgeMatrix ? require("./queue-purge-gate.cjs") : undefined;
   const managementPrefix =
-    queueFixture || declarationFixture ? "/bunnies-test" : "";
+    queueFixture || declarationFixture || purgeFixture ? "/bunnies-test" : "";
   const vhosts = [
     "/",
     "equipe/pedidos",
@@ -104,7 +114,7 @@ async function runVersion({ version, digest }) {
     "área pedidos",
     ".",
     "negado",
-    ...(queueFixture || declarationFixture ? ["detailed"] : []),
+    ...(queueFixture || declarationFixture || purgeFixture ? ["detailed"] : []),
     ...(managementFixture
       ? [
           "..",
@@ -246,7 +256,7 @@ async function runVersion({ version, digest }) {
             vhost,
             configure: declarationMatrix ? "^bunnies-new-" : "^$",
             write: "^$",
-            read: "^$",
+            read: purgeFixture ? "^bunnies-purge-" : "^$",
           }))
           .concat(
             managementFixture || queueFixture
@@ -281,7 +291,8 @@ async function runVersion({ version, digest }) {
                 ]
               : [],
           )
-          .concat(declarationFixture?.permissions(vhosts) ?? []),
+          .concat(declarationFixture?.permissions(vhosts) ?? [])
+          .concat(purgeFixture?.permissions(vhosts, purgeGate) ?? []),
         ...(declarationFixture
           ? {
               exchanges: declarationFixture.exchanges,
@@ -399,6 +410,27 @@ async function runVersion({ version, digest }) {
     console.log(`RabbitMQ ${version}: TLS ready (${inspection.Architecture})`);
     checks.push("exact-broker-version-and-TLS-readiness");
     await noConnections();
+    if (purgeGate) {
+      report.failures = await purgeFixture.run({
+        adapter: managementAdapter,
+        fixture,
+        httpsPort,
+        amqpsPort,
+        managementPrefix,
+        username,
+        password,
+        observerPassword,
+        checks,
+        api,
+        noConnections,
+        observations: (report.purgeObservations = {}),
+      });
+      report.passed = report.failures.length === 0;
+      console.log(
+        `RabbitMQ ${version}: purge gate ${checks.length} passed, ${report.failures.length} failed`,
+      );
+      return report;
+    }
     if (declarationGate) {
       report.failures = await declarationFixture.run({
         adapter: managementAdapter,
@@ -741,6 +773,10 @@ async function runVersion({ version, digest }) {
             a.vhost.localeCompare(b.vhost) || a.name.localeCompare(b.name),
         );
     }
+    if (purgeMatrix) {
+      await purgeFixture.seedMatrix({ fixture, amqpsPort, observerPassword });
+      await noConnections();
+    }
     const initialQueues = await queueIdentity();
     const declaredQueues = [];
     const profileId = randomUUID();
@@ -1049,6 +1085,30 @@ async function runVersion({ version, digest }) {
       assert.equal(selected.channels, 0);
       assert.equal((await sessionState()).profile.savedVhost, "/");
       assert.deepEqual(await readFile(profileFile), saved);
+      if (purgeMatrix) {
+        const purge = require("./queue-purge.cjs");
+        const driver = await purge.installDialogDriver(app);
+        const matrix = {
+          page,
+          driver,
+          api,
+          checks,
+          queue: purgeFixture.specialName,
+        };
+        await purge.verifyRealPurge(matrix, "literal%2F");
+        await openConnections();
+        await page
+          .getByRole("button", { name: "Listar vhosts", exact: true })
+          .click();
+        await page.getByText(/Lista completa recebida:/).waitFor();
+        await selectVhost(page, "detailed");
+        await awaitSession(
+          s => s.state === "ready" && s.profile.vhost === "detailed",
+        );
+        await purge.verifyRealPurge(matrix, "detailed");
+        await openConnections();
+        assert.deepEqual(await readFile(profileFile), saved);
+      }
       if (queuesMatrix) {
         const stale = await page.evaluate(
           ref =>
@@ -1509,16 +1569,32 @@ async function runVersion({ version, digest }) {
     assert.equal((await api("consumers")).length, 0);
     const overview = await api("overview");
     report.churn = overview.churn_rates;
-    assert.equal(overview.churn_rates?.channel_created, 0);
+    if (purgeMatrix) {
+      assert.equal(overview.object_totals.channels, 0);
+      assert.equal(overview.churn_rates?.channel_created, 3);
+      assert.equal(
+        (
+          await api(
+            `${purgeFixture.queueRoute("/", purgeFixture.specialName)}?columns=messages_ready`,
+          )
+        ).messages_ready,
+        1,
+      );
+      checks.push(
+        "homonym-in-other-vhost-kept-messages-and-broker-topology-unchanged",
+      );
+    } else assert.equal(overview.churn_rates?.channel_created, 0);
     assert.deepEqual(requests, []);
     assert.deepEqual(errors, []);
     assert.equal(await page.url(), "bunnies://app/app_window/index.html");
     checks.push(
-      declarationMatrix
-        ? "only-declared-queues-changed-no-consumers-channels-connections-or-renderer-network"
-        : queuesMatrix
-          ? "fixture-queues-unchanged-no-consumers-channels-connections-or-renderer-network"
-          : "no-queues-consumers-live-channels-connections-or-renderer-network",
+      purgeMatrix
+        ? "no-client-channels-or-consumers-live-connections-or-renderer-network"
+        : declarationMatrix
+          ? "only-declared-queues-changed-no-consumers-channels-connections-or-renderer-network"
+          : queuesMatrix
+            ? "fixture-queues-unchanged-no-consumers-channels-connections-or-renderer-network"
+            : "no-queues-consumers-live-channels-connections-or-renderer-network",
     );
     report.app = await app.evaluate(({ app }) => ({
       version: app.getVersion(),
@@ -1582,6 +1658,11 @@ async function runVersion({ version, digest }) {
 }
 async function run() {
   try {
+    if (purgeGate)
+      managementAdapter =
+        await require("./management-gate.cjs").prepareGateAdapter(
+          "src/main/management/queuePurge.ts",
+        );
     if (declarationGate)
       managementAdapter =
         await require("./management-gate.cjs").prepareGateAdapter(

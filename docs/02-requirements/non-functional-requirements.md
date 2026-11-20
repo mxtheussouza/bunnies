@@ -203,3 +203,14 @@ constam nas [evidências](../07-testing/queues-5a.md).
 | NFR-017 | Uma operação manual administrativa em voo, compartilhada com as leituras; `whoami` independente |
 
 Ver [evidências da 5B](../07-testing/queues-5b.md) para resultados e plataformas.
+
+## Sublimites aprovados — 5C.1
+
+| Referência | Recorte de purge |
+| --- | --- |
+| NFR-009/010 | Um DELETE de `/contents` por confirmação contextual nativa, com revalidação do main antes do envio e nenhum replay |
+| NFR-012/013 | Até 10 s para ler o alvo, 60 s de confirmação e 30 s para validação final e envio/resposta |
+| NFR-015/016 | 256 KiB de resposta, 16 KiB de cabeçalhos, profundidade JSON 16 e nomes até 255 bytes UTF-8 |
+| NFR-017 | Uma vaga administrativa desde a leitura até finalizar o fluxo, com `whoami` independente |
+
+Ver [evidências da 5C.1](../07-testing/queues-5c1.md) para resultados e plataformas.

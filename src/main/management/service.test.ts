@@ -26,6 +26,8 @@ function fixture() {
   };
   const profiles = {
     connectionSnapshot: vi.fn(async () => ({
+      name: "Isolado",
+      environment: "production" as const,
       httpsUrl: "https://localhost",
       username: "fixture",
       password: "SYNTHETIC-PRIVATE",
@@ -38,11 +40,17 @@ function fixture() {
     matrix: "unknown" as const,
   }));
   const declaration = vi.fn<typeof import("./queueDeclaration").declareQueue>();
+  const inspectPurge = vi.fn<typeof import("./queuePurge").inspectPurgeQueue>(
+    async () => "classic",
+  );
+  const purge = vi.fn<typeof import("./queuePurge").purgeQueue>();
   const service = new ManagementService(
     session as unknown as SessionService,
     profiles as unknown as ProfileService,
     read,
     declaration,
+    inspectPurge,
+    purge,
   );
   return {
     service,
@@ -50,6 +58,8 @@ function fixture() {
     profiles,
     read,
     declaration,
+    inspectPurge,
+    purge,
     notify: () => notify(),
   };
 }
@@ -159,7 +169,7 @@ it("shares the administrative slot and cancels queue reads when the AMQPS contex
   f.read.mockImplementationOnce(() => new Promise(() => undefined));
   const p = f.service.execute(1, i, query);
   await Promise.resolve();
-  expect(f.session.managementContext).toHaveBeenCalledWith(1, i, true);
+  expect(f.session.managementContext).toHaveBeenCalledWith(1, i, true, false);
   expect(f.read.mock.calls[0][1]).toEqual({ ...query, vhost: "literal%2F" });
   await expect(f.service.execute(1, input(), "vhosts")).rejects.toMatchObject({
     code: "BUSY",
@@ -281,5 +291,159 @@ it("treats changed profile revision after the declared write as unverified", asy
     status: "unverified",
     reason: "CONFLICT",
   });
+  f.service.dispose();
+});
+
+const purgeInput = () => ({ ...input(), name: "fila %2F" });
+
+it("derives the purge target in the main and transmits once only after confirmation", async () => {
+  const f = fixture();
+  const request = purgeInput();
+  const confirm = vi.fn(async () => false);
+  await expect(
+    f.service.purgeQueue(1, request, () => true, confirm),
+  ).rejects.toMatchObject({
+    code: "CANCELLED",
+  });
+  expect(confirm).toHaveBeenCalledWith(
+    {
+      profileName: "Isolado",
+      environment: "production",
+      httpsUrl: "https://localhost",
+      vhost: "/",
+      name: request.name,
+      queueType: "classic",
+    },
+    expect.any(AbortSignal),
+  );
+  expect(f.purge).not.toHaveBeenCalled();
+  confirm.mockResolvedValue(true);
+  f.purge.mockImplementation(
+    async (_profile, vhost, name, _signal, sent, authorize) => {
+      expect({ vhost, name }).toEqual({ vhost: "/", name: request.name });
+      await authorize();
+      sent();
+    },
+  );
+  await expect(
+    f.service.purgeQueue(1, request, () => true, confirm),
+  ).resolves.toMatchObject({
+    ...request,
+    vhost: "/",
+    status: "accepted",
+  });
+  expect(f.purge).toHaveBeenCalledTimes(1);
+  f.service.dispose();
+});
+
+it("keeps the shared slot while an aborted purge confirmation closes", async () => {
+  const f = fixture();
+  const request = purgeInput();
+  let close!: (confirmed: boolean) => void;
+  const confirm = vi.fn<Parameters<ManagementService["purgeQueue"]>[3]>(
+    async () =>
+      new Promise<boolean>(resolve => {
+        close = resolve;
+      }),
+  );
+  const operation = f.service.purgeQueue(1, request, () => true, confirm);
+  const check = expect(operation).rejects.toMatchObject({ code: "CANCELLED" });
+  await vi.waitFor(() => expect(confirm).toHaveBeenCalledOnce());
+  const modalSignal = confirm.mock.calls[0][1];
+  f.service.cancel(2, request, "purge");
+  f.service.cancel(1, request, "declaration");
+  expect(modalSignal.aborted).toBe(false);
+  f.service.cancel(1, request, "purge");
+  expect(modalSignal.aborted).toBe(true);
+  await expect(f.service.execute(1, input(), "broker")).rejects.toMatchObject({
+    code: "BUSY",
+  });
+  close(true);
+  await check;
+  expect(f.purge).not.toHaveBeenCalled();
+  await expect(f.service.execute(1, input(), "broker")).resolves.toMatchObject({
+    kind: "broker",
+  });
+  f.service.dispose();
+});
+
+it("revalidates the foreground after native confirmation and just before transmission", async () => {
+  const f = fixture();
+  const request = purgeInput();
+  let foreground = true;
+  await expect(
+    f.service.purgeQueue(
+      1,
+      request,
+      () => foreground,
+      async () => {
+        foreground = false;
+        return true;
+      },
+    ),
+  ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  expect(f.purge).not.toHaveBeenCalled();
+  foreground = true;
+  const sent = vi.fn();
+  f.purge.mockImplementation(
+    async (_profile, _vhost, _name, _signal, notifySent, authorize) => {
+      f.profiles.assertRevision.mockRejectedValueOnce(
+        new ProfileFailure("CONFLICT"),
+      );
+      await authorize();
+      sent();
+      notifySent();
+    },
+  );
+  await expect(
+    f.service.purgeQueue(
+      1,
+      request,
+      () => foreground,
+      async () => true,
+    ),
+  ).rejects.toMatchObject({
+    code: "CONFLICT",
+  });
+  expect(sent).not.toHaveBeenCalled();
+  f.service.dispose();
+});
+
+it("expires native confirmation and classifies post-send loss as uncertain", async () => {
+  vi.useFakeTimers();
+  const f = fixture();
+  const request = purgeInput();
+  const timeout = f.service.purgeQueue(
+    1,
+    request,
+    () => true,
+    async (_target, signal) =>
+      new Promise(resolve =>
+        signal.addEventListener("abort", () => resolve(true), { once: true }),
+      ),
+  );
+  const check = expect(timeout).rejects.toMatchObject({ code: "TIMEOUT" });
+  await vi.advanceTimersByTimeAsync(60_000);
+  await check;
+  expect(f.purge).not.toHaveBeenCalled();
+  f.purge.mockImplementationOnce(
+    async (_profile, _vhost, _name, _signal, sent, authorize) => {
+      await authorize();
+      sent();
+      throw new ManagementFailure("NETWORK");
+    },
+  );
+  await expect(
+    f.service.purgeQueue(
+      1,
+      request,
+      () => true,
+      async () => true,
+    ),
+  ).resolves.toMatchObject({
+    status: "uncertain",
+    reason: "NETWORK",
+  });
+  expect(f.purge).toHaveBeenCalledTimes(1);
   f.service.dispose();
 });

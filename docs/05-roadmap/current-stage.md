@@ -5,16 +5,16 @@ de cada Task; atualizá-lo em cada bloco/fase/alteração.
 
 | Campo | Estado |
 | --- | --- |
-| Etapa atual | 5B — declaração de filas classic e quorum |
+| Etapa atual | 5C.1 — purge com confirmação nativa |
 | Status | Concluída, aprovada e registrada |
-| Última etapa concluída | 5B — declaração de filas classic e quorum |
-| Última entrega registrada | `feat(queues): add verified queue declarations` em `main`, com pai `cd1c2bf` |
-| Decisões aprovadas | ADRs 0001–0009, MVP/requisitos/design, contratos anteriores e conclusão da 5B |
-| Decisões pendentes | Contrato próprio da 5C |
-| Tarefas concluídas | Gate 5B com 20 verificações, IPC/UI/guia, check (291 + seis Node), package, nove smokes, revisão visual e matriz no executável com 76 verificações |
-| Tarefas pendentes | Preparação da 5C após solicitação; validação nativa em Windows e Linux |
-| Problemas conhecidos | Vhost `detailed` colide com rota global de filas. Paginação HTTP de vhosts retorna 500 na matriz e GET individual exige admin |
-| Próxima ação | Aguardar solicitação para preparar o contrato 5C |
+| Última etapa concluída | 5C.1 — purge com confirmação nativa |
+| Última entrega registrada | `feat(queues): add confirmed message purge` em `main`, com pai `dd52421` |
+| Decisões aprovadas | ADRs 0001–0009, MVP/requisitos/design e conclusão da 5C.1 |
+| Decisões pendentes | Garantia no broker para exclusão condicional |
+| Tarefas concluídas | Gate 5C.1 com 20 verificações, check 299 + seis Node, package, dez smokes, capturas a 200% e matriz do executável com 72 verificações |
+| Tarefas pendentes | Exclusão condicional e validação nativa em Windows e Linux |
+| Problemas conhecidos | Quorum rejeita condições de exclusão e stream as ignora no código das versões de referência. Vhost `detailed` colide com a rota global de listagem de filas. Paginação HTTP de vhosts retorna 500 na matriz e GET individual exige admin |
+| Próxima ação | Aguardar solicitação própria para preparar o próximo contrato |
 
 “Autorizado” aceitou o [contrato 4A.2C](roadmap.md). O gate inicial reprovou e
 interrompeu trabalho dependente; o proprietário então autorizou explicitamente

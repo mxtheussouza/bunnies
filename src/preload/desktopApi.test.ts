@@ -65,6 +65,8 @@ describe("preload API", () => {
         "getSessionQueue",
         "declareSessionQueue",
         "cancelQueueDeclaration",
+        "purgeSessionQueue",
+        "cancelQueuePurge",
         "selectSessionVhost",
         "cancelManagementRead",
         "openLink",
@@ -291,6 +293,56 @@ it("rejects mismatched declaration responses conservatively after an IPC call", 
     expect(result).toMatchObject({
       ok: false,
       error: { code: "QUEUE_DECLARATION_UNCERTAIN" },
+    });
+    expect(JSON.stringify(result)).not.toContain("SENTINEL");
+  }
+});
+
+it("limits purge replies to the requested queue and context", async () => {
+  const call = vi.fn(),
+    management = vi.fn();
+  const api = createDesktopApi(
+    call,
+    call,
+    call,
+    undefined,
+    undefined,
+    management,
+  );
+  const input = {
+    sessionId: "00000000-0000-4000-8000-000000000001",
+    operationId: "00000000-0000-4000-8000-000000000002",
+    generation: 1,
+    name: "fila",
+  };
+  const envelope = { ok: true, requestId: input.operationId };
+  const value = {
+    ...input,
+    kind: "queuePurge",
+    source: "https-management",
+    checkedAt: "2026-11-20T12:00:00.000Z",
+    vhost: "/",
+    status: "accepted",
+  };
+  management.mockResolvedValueOnce({ ...envelope, value });
+  expect((await api.purgeSessionQueue(input)).ok).toBe(true);
+  expect(management).toHaveBeenCalledWith({
+    command: "purgeSessionQueue",
+    input,
+  });
+  for (const change of [
+    { generation: 2 },
+    { name: "outside" },
+    { raw: "SENTINEL" },
+  ]) {
+    management.mockResolvedValueOnce({
+      ...envelope,
+      value: { ...value, ...change },
+    });
+    const result = await api.purgeSessionQueue(input);
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "QUEUE_PURGE_UNCERTAIN" },
     });
     expect(JSON.stringify(result)).not.toContain("SENTINEL");
   }

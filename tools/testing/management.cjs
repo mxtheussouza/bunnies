@@ -59,11 +59,13 @@ async function selectVhost(page, target) {
   await button.focus();
   await page.keyboard.press("Enter");
 }
-async function run(transitionSmoke, queuesSmoke, declarationSmoke) {
+async function run(transitionSmoke, queuesSmoke, declarationSmoke, purgeSmoke) {
   const declaration = declarationSmoke
     ? require("./queue-declaration.cjs")
     : undefined;
   const declarations = declaration?.fixture();
+  const purge = purgeSmoke ? require("./queue-purge.cjs") : undefined;
+  const purgeFixture = purge?.fixture();
   const fixture = await createTlsFixture(),
     root = await mkdtemp(path.join(tmpdir(), "bunnies-management-smoke-"));
   const file = path.join(root, "profiles.json"),
@@ -99,6 +101,13 @@ async function run(transitionSmoke, queuesSmoke, declarationSmoke) {
           "Basic " + Buffer.from("synthetic:" + sentinel).toString("base64"),
         );
         res.setHeader("Content-Type", "application/json");
+        if (purgeFixture && req.url.startsWith("/api/queues/")) {
+          void purgeFixture.serve(req, res).catch(error => {
+            errors.push(error.message);
+            res.destroy();
+          });
+          return;
+        }
         if (declarations && req.url.startsWith("/api/queues/")) {
           void declarations.serve(req, res).catch(error => {
             errors.push(error.message);
@@ -264,8 +273,20 @@ async function run(transitionSmoke, queuesSmoke, declarationSmoke) {
     }
     assert.equal(adminRequests, 0);
     const before = await readFile(file, "utf8");
-    if (queuesSmoke || declarationSmoke) {
-      if (declarations)
+    if (queuesSmoke || declarationSmoke || purgeSmoke) {
+      if (purgeFixture)
+        checks.push(
+          ...(await purge.verifyPurgeSmoke({
+            app,
+            page,
+            win,
+            state,
+            focus,
+            until,
+            fixture: purgeFixture,
+          })),
+        );
+      else if (declarations)
         checks.push(
           ...(await declaration.verifyDeclarationSmoke(
             page,
@@ -302,9 +323,11 @@ async function run(transitionSmoke, queuesSmoke, declarationSmoke) {
       );
       checks.push("no-profile-write-credentials-renderer-network-or-reconnect");
       await writeFile(
-        declarationSmoke
-          ? "out/queue-declaration-5b-smoke-results.json"
-          : "out/queues-5a-smoke-results.json",
+        purgeSmoke
+          ? "out/queue-purge-5c1-smoke-results.json"
+          : declarationSmoke
+            ? "out/queue-declaration-5b-smoke-results.json"
+            : "out/queues-5a-smoke-results.json",
         JSON.stringify(
           {
             passed: true,
@@ -317,7 +340,7 @@ async function run(transitionSmoke, queuesSmoke, declarationSmoke) {
         ) + "\n",
       );
       console.log(
-        `${declarationSmoke ? "Declaration" : "Queues"} smoke: ${checks.length} groups passed`,
+        `${purgeSmoke ? "Purge" : declarationSmoke ? "Declaration" : "Queues"} smoke: ${checks.length} groups passed`,
       );
       return;
     }
@@ -659,6 +682,7 @@ if (require.main === module)
     process.argv.includes("--vhost-transition"),
     process.argv.includes("--queues"),
     process.argv.includes("--declare-queue"),
+    process.argv.includes("--purge-queue"),
   ).catch(error => {
     console.error(error);
     process.exitCode = 1;

@@ -99,6 +99,8 @@ export class ProfileService {
       if (password === undefined) throw new ProfileFailure("CREDENTIALS");
       return {
         id,
+        name: profile.name,
+        environment: profile.environment,
         httpsUrl: profile.httpsUrl,
         amqpsUrl: profile.amqpsUrl,
         username: profile.username,

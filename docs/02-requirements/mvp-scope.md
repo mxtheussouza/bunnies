@@ -187,5 +187,6 @@ permissões de fila, exchange e publicação.
 
 A 5A implementa o recorte de leitura de MVP-Q01. O vhost de nome exato
 `detailed` tem a listagem recusada antes do I/O, conforme revisão aprovada.
-A 5B implementou e verificou o recorte de MVP-Q02. MVP-Q03
-aguarda contrato próprio. Ver [M03](../04-modules/03-queue-management.md).
+A 5B implementou e verificou o recorte de MVP-Q02. A 5C.1 implementa
+o purge confirmado de MVP-Q03. A exclusão condicional permanece
+pendente. Ver [M03](../04-modules/03-queue-management.md).

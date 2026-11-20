@@ -5,14 +5,14 @@ Atualizado em: 2026-11-20.
 ## Estado atual
 
 - Branch: `main`.
-- Última entrega aprovada: **5B — declaração de filas classic e quorum**.
-- Aprovação atual: “Aprovado” aceitou a conclusão e o commit da 5B
-  em 2026-11-20.
-- Última entrega registrada: `feat(queues): add verified queue declarations`
-  em `main`, com pai `cd1c2bf`. O registro inclui este histórico.
-- Task atual: **5B — concluída, aprovada e registrada**.
-- Próxima ação: aguardar solicitação para preparar o contrato 5C.
-  [Evidências 5B](docs/07-testing/queues-5b.md).
+- Última entrega aprovada: **5C.1 — purge com confirmação nativa**.
+- Aprovação mais recente: “Validado e aprovado, pode continuar” aceitou
+  o fluxo da 5C.1 apresentado. “Aprovado” reiterou o aceite em 2026-11-20.
+- Última entrega registrada: `feat(queues): add confirmed message purge`
+  em `main`, com pai `dd52421`.
+- Task atual: **5C.1 — concluída, aprovada e registrada**.
+- Próxima ação: aguardar solicitação própria para preparar o próximo
+  contrato. [Evidências da 5C.1](docs/07-testing/queues-5c1.md).
 
 ## Tarefas concluídas
 
@@ -34,6 +34,7 @@ Atualizado em: 2026-11-20.
 | 4B.2 | Seleção temporária de vhost com fechamento confirmado e bloqueio em estado remoto incerto | Concluída/aprovada em `43113eb`, integrada à `main` em `2f1f6cc` |
 | 5A | Listagem paginada, busca literal e detalhe de filas no vhost ativo | Concluída, aprovada e registrada em 2026-11-19 |
 | 5B | Declaração de filas classic e quorum e conferência das propriedades | Concluída, aprovada e registrada em 2026-11-20 |
+| 5C.1 | Purge de filas classic/quorum com confirmação nativa e revalidação | Concluída, aprovada e registrada em 2026-11-20 |
 
 ## Entrega DOC.1 aprovada
 
@@ -47,9 +48,9 @@ Atualizado em: 2026-11-20.
 ## Pendências e decisões
 
 - 4A.2C, 4B.1 e 4B.2 concluídas e aprovadas. O gate da 5A identificou
-  colisão da rota para o vhost `detailed`. Criação (5B), exclusão e
-  limpeza de mensagens prontas (5C)
-  terão contratos próprios.
+  colisão da rota para o vhost `detailed`. A criação (5B) foi concluída.
+  Purge (5C.1) foi concluído. Exclusão condicional exige solução no
+  broker que aplique as condições ao alvo vigente.
 - Mudança da barra de título macOS foi registrada pelo proprietário em 9401448;
   preservar e revalidar no próximo pacote. Não integra o pacote/testes da 4A.2A.
 - Atualizar este arquivo a cada Task/fase/alteração, mantendo histórico de decisões,
@@ -98,6 +99,131 @@ Guia/Ajuda sincronizados e artefato final revisado; conclusão/commit aprovados.
 [Evidências finais](docs/07-testing/sessions-4a2c.md).
 
 ## Histórico de atividades
+
+### 2026-11-20 — T-5C1-FOCO-E-MATRIZ
+
+- “Aprovado” reiterou o aceite do proprietário. O aviso do macOS deixou
+  o primeiro plano e a sessão está desbloqueada. Retomada em `main`,
+  base `dd52421`, com o mesmo ASAR conferido e sem mudanças de produto
+  desde a apresentação. Repetir o smoke com o diálogo real, manter a
+  captura nativa anterior e executar a matriz isolada do pacote.
+- A primeira repetição chegou às capturas a 200% com foco visível
+  nos dois temas. O teardown procurou o perfil em Filas. O helper
+  passou a voltar para Conexões antes do teardown compartilhado.
+  Repetir o smoke completo e a matriz no mesmo pacote.
+- Smoke de purge completo passou seis grupos no mesmo ASAR.
+  Diálogo nativo cancelado por sinal com zero DELETEs. Capturas
+  dos temas claro e escuro a 200% conferidas com foco visível.
+  Iniciada a matriz isolada com RabbitMQ 4.4.0 e 4.3.6.
+- A primeira matriz preservou 13 verificações e limpou o broker.
+  O fixture do gate havia concedido acesso ao vhost para a conta
+  que testa ausência desse acesso na matriz. O acesso restrito ao
+  recurso foi isolado no gate. A matriz usa a conta original sem
+  acesso ao vhost e testa a negação de purge por fila em outra conta,
+  como previsto. Repetir no mesmo ASAR.
+- A repetição passou 72 verificações no executável, 36 em 4.4.0 e
+  36 em 4.3.6. O gate do adapter repetiu 20 verificações. Check final
+  passou 299 testes e seis Node. Conferidos hash do pacote, guia e
+  resultados. Limpeza completa dos brokers e redes de teste. Windows,
+  Linux, cluster/HA e exclusão condicional permanecem pendentes.
+- O aceite da conclusão e o registro local coeso acompanham
+  `feat(queues): add confirmed message purge`, com pai `dd52421`.
+  Próxima ação: aguardar solicitação própria para o próximo contrato.
+
+### 2026-11-20 — T-5C1-RETOMADA
+
+- O proprietário informou “Validado e aprovado, pode continuar” após
+  a apresentação dos resultados parciais. Retomada em `main`, base
+  `dd52421` e ASAR SHA-256
+  `2eae2c5b940d65a64ffcb9977cb5fbad93becbe03c70a913c0ff914a10a6d20e`.
+- A sessão gráfica está disponível. A aprovação do proprietário e as
+  verificações executadas pelo agente têm registros próprios.
+  Retomar foco, capturas e matriz no mesmo ASAR antes da apresentação
+  do registro da entrega.
+- Os nove smokes de regressão passaram no mesmo ASAR. O smoke de purge
+  abriu o diálogo nativo e passou os cenários de cancelamento, aceite e
+  incerteza, mas atingiu o prazo ao reabrir Filas depois de alterar
+  tema/zoom. O harness foi ajustado para confirmar foco e usar teclado
+  no alvo antes de repetir. O pacote foi preservado.
+- Duas repetições pararam antes de conectar porque o Bunnies não
+  recebeu foco. O macOS identificava `UserNotificationCenter` em
+  primeiro plano. A captura nativa já foi obtida e será preservada.
+  A próxima sequência pode repetir o diálogo sem refazer a captura.
+- O aviso permaneceu em primeiro plano durante o monitoramento.
+  `npm run check` passou novamente com 299 testes e seis Node. O
+  ASAR mantém o mesmo hash. Smoke de purge com os dois temas e matriz
+  do executável continuam pendentes, sem recursos de teste retidos.
+
+### 2026-11-20 — T-5C1-INTEGRACAO
+
+- Main, ponte com 32 métodos, detalhe de Filas, lookup exato em
+  `detailed` e Guia/Ajuda integrados. Package macOS arm64 passou.
+  As quatro suítes focadas passaram 35 testes. Typecheck passou após
+  ajustar a tipagem da consulta do teste. O lint da primeira rodada
+  encontrou três variáveis de teste sem uso, removidas antes da repetição.
+- Os smokes de Perfis, HTTPS e AMQPS passaram. O ASAR desta rodada tem
+  SHA-256 `2eae2c5b940d65a64ffcb9977cb5fbad93becbe03c70a913c0ff914a10a6d20e`.
+  O bloqueio da sessão gráfica impediu iniciar os smokes com foco e matriz
+  do pacote. Aguardando desbloqueio enquanto seguem as verificações
+  independentes.
+- Check integral repetido com 299 testes e seis Node aprovados.
+  Conferidos 24 links novos em 13 Markdown, guia com 18 tópicos e
+  conteúdo do ASAR com 15 entradas. Nenhum broker, recurso Docker ou
+  processo de teste retido após as verificações já executadas.
+- Com o código integrado, repetiram-se 20 verificações do gate 5C.1
+  e 20 do gate de declaração 5B em 4.4.0/4.3.6, com limpeza completa.
+  A sessão gráfica permaneceu bloqueada durante o monitoramento.
+  Ao desbloquear, retomar smokes com foco, capturas e matriz no
+  mesmo pacote. A entrega permanece em validação.
+
+### 2026-11-20 — T-5C1-GATE-APROVADO
+
+- Gate final passou dez verificações em cada RabbitMQ 4.4.0/4.3.6
+  oficial arm64, com os dois formatos 404 tratados e cleanup completo.
+  O observador confirmou Ready removidas, entregas sem ack e vínculos
+  preservados, e contadores de retry adiado e dead-lettering pendente
+  de 1 a 0 em quorum. [Evidências](docs/07-testing/queues-5c1.md).
+- Retomar IPC/UI e Guia/Ajuda conforme o mesmo contrato aprovado.
+
+### 2026-11-20 — T-5C1-EXECUCAO
+
+- “Aprovo” aceitou a execução do contrato 5C.1 apresentado. Retomada
+  em `main` na base `dd52421` com as cinco mudanças da proposta.
+  Docker Engine 29.8.0 disponível. Escopo inicial: adapter e gate em
+  4.4.0/4.3.6 isolados antes da integração. Conclusão, commit e
+  exclusão condicional ficam para aceites próprios.
+
+### 2026-11-20 — T-5C1-GATE-INICIAL
+
+- Adapter e fixture do gate preparados. Check passou 291 testes e seis
+  Node, além de typecheck, lint, formatação e docs:check.
+- Gate inicial nas duas versões registrou três verificações aprovadas
+  e seis falhas por versão, com limpeza dos dois brokers. O adapter
+  devolveu RESPONSE nos DELETEs reais. Diagnóstico e repetição em
+  andamento, antes de IPC, interface e Guia/Ajuda.
+- A negociação com Accept somente JSON devolveu HTTP 406 nas duas
+  versões, e o DELETE sem corpo funcionou após ajustar esse cabeçalho.
+  O diagnóstico de fila ausente distinguiu dois envelopes 404 nas
+  versões fixadas. O adapter passou a reconhecer os dois formatos.
+  Integração aguarda o gate. [Evidências](docs/07-testing/queues-5c1.md).
+
+### 2026-11-20 — T-5C-PREPARACAO
+
+- “Continue” iniciou a preparação documental após a 5B em `dd52421`.
+  Retomada com `main` e árvore limpa, um commit à frente de `origin/main`.
+  Escopo desta Task: cotejar requisitos, código atual e fontes oficiais,
+  preparar o contrato da 5C e apresentar a proposta para aceite.
+- A fonte das duas versões fixadas mostra que quorum rejeita as
+  condições de exclusão e stream as ignora. O GET prévio não vincula
+  o DELETE à mesma instância. FR-010 permanece pendente. Purge fica
+  na 5C.1 com gate pré-UI e diálogo nativo sobre o efeito irreversível,
+  inclusive nova tentativa adiada e dead-lettering pendente em quorum.
+- Cinco documentos de planejamento/estado no recorte. Produto,
+  dependências e Guia/Ajuda preservados. Nenhum broker iniciado e
+  nenhum teste funcional, package, smoke, commit ou push nesta Task.
+- `npm run docs:check` confirmou Guia/Ajuda sincronizados. `git diff --check`
+  passou e os dez links internos adicionados foram conferidos. Próxima
+  ação: receber o aceite da 5C.1 antes de iniciar o adapter e o gate.
 
 ### 2026-11-20 — Conclusão e commit da 5B aprovados
 

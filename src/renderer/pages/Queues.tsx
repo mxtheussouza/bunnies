@@ -21,6 +21,7 @@ import { useSession } from "../shell/SessionProvider";
 import Button from "../components/Button";
 import StatusMessage from "../components/StatusMessage";
 import QueueDeclarationForm from "./QueueDeclarationForm";
+import QueuePurgeAction from "./QueuePurgeAction";
 import "./queues.scss";
 
 type ReadError = { code: ManagementError; requestId: string };
@@ -29,6 +30,7 @@ type DetailView = {
   name: string;
   data?: QueueSnapshot<QueueDetail>;
   error?: ReadError;
+  stale?: boolean;
 };
 const unknown = "Indisponível";
 const knownTypes = ["classic", "quorum", "stream"];
@@ -172,6 +174,8 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
   const [running, setRunning] = React.useState<"page" | "detail">();
   const [detail, setDetail] = React.useState<DetailView>();
   const [declarationOpen, setDeclarationOpen] = React.useState(false);
+  const [purging, setPurging] = React.useState(false);
+  const purgePending = React.useRef(false);
   const declarationButton = React.useRef<HTMLButtonElement>(null);
   const active = React.useRef<ManagementInput | null>(null);
   const returnFocus = React.useRef<HTMLButtonElement | null>(null);
@@ -185,6 +189,7 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
   const canInspect = !reason && routeError !== "QUEUE_SEGMENT" && !!sessionId;
   const canRead = canInspect && !routeError;
   const invalidDraft = draft !== "" && !boundedManagementText(draft, 255);
+  const exactLookup = React.useRef<HTMLButtonElement>(null);
 
   const requestCancellation = React.useCallback(() => {
     if (active.current)
@@ -197,7 +202,7 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
     if (!canInspect) {
       setRunning(undefined);
       setStale(true);
-      setDetail(undefined);
+      if (!purgePending.current) setDetail(undefined);
     }
     return () => {
       requestCancellation();
@@ -302,6 +307,7 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
   }
 
   function closeDetail() {
+    if (purgePending.current) return;
     if (active.current) {
       requestCancellation();
       active.current = null;
@@ -409,6 +415,38 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
               Use até 255 bytes UTF-8 em uma única linha.
             </span>
           )}
+        </form>
+      )}
+      {canInspect && routeError === "QUEUE_LIST_ROUTE" && (
+        <form
+          className="queue-controls"
+          onSubmit={event => {
+            event.preventDefault();
+            if (!invalidDraft && draft && !queueSegmentUnsupported(draft))
+              openDetail(draft, exactLookup.current);
+          }}
+        >
+          <label>
+            Nome exato da fila
+            <input
+              value={draft}
+              maxLength={255}
+              onChange={event => setDraft(event.target.value)}
+            />
+          </label>
+          <Button
+            ref={exactLookup}
+            type="submit"
+            aria-haspopup="dialog"
+            disabled={
+              !draft ||
+              invalidDraft ||
+              queueSegmentUnsupported(draft) ||
+              !!running
+            }
+          >
+            Consultar fila
+          </Button>
         </form>
       )}
       {running === "page" && (
@@ -575,12 +613,41 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
             <p className="queue-context">
               Vhost <b>{profile?.vhost}</b>
             </p>
-            <Button onClick={closeDetail}>Fechar detalhe</Button>
+            <Button disabled={purging} onClick={closeDetail}>
+              Fechar detalhe
+            </Button>
             {running === "detail" && (
               <StatusMessage title="Carregando detalhe…" />
             )}
             {detail.error && <ReadFailure error={detail.error} />}
-            {detail.data && <QueueMetadata data={detail.data} />}
+            {detail.stale && <p role="status">Detalhe desatualizado</p>}
+            {detail.data && (
+              <>
+                {sessionId &&
+                  (detail.data.queue.type === "classic" ||
+                    detail.data.queue.type === "quorum") && (
+                    <QueuePurgeAction
+                      key={detail.name}
+                      session={{ sessionId, generation: state.generation }}
+                      name={detail.name}
+                      vhost={detail.data.vhost}
+                      disabled={!canInspect || !!running}
+                      onPending={value => {
+                        purgePending.current = value;
+                        setPurging(value);
+                      }}
+                      onPossibleWrite={() => {
+                        setStale(true);
+                        setDetail(current =>
+                          current ? { ...current, stale: true } : current,
+                        );
+                      }}
+                      onVerify={() => void execute({ name: detail.name })}
+                    />
+                  )}
+                <QueueMetadata data={detail.data} />
+              </>
+            )}
           </>
         )}
       </dialog>

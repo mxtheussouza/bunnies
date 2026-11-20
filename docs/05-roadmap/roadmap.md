@@ -7,6 +7,7 @@ confirmado. “Aprovado” aceitou a conclusão e o commit da 4B.2.
 A revisão da 5A foi aceita por “Aprovo”. O gate revisado, os smokes e a
 matriz do pacote passaram, e o proprietário aprovou a conclusão e o
 registro local da 5A. “Aprovado” aceitou a conclusão e o registro local da 5B.
+A 5C.1 foi concluída e aprovada após o gate, os smokes e a matriz do pacote.
 
 ## Sequência proposta
 
@@ -24,7 +25,7 @@ registro local da 5A. “Aprovado” aceitou a conclusão e o registro local da 
 | 4A.2 | Testes HTTPS/AMQPS, CA customizada e ciclo de sessão | A/B/C concluídas/aprovadas; última entrega aba792d |
 | 4B.1 | Contexto administrativo: versão, vhosts visíveis e leitura do vhost atual | Concluída/aprovada; commit `4a35424` |
 | 4B.2 | Seleção de vhost e transição de contexto | Concluída e aprovada em 2026-11-18 |
-| 5 | Filas e proteção das operações destrutivas | 5A concluída e registrada. 5B concluída, aprovada e registrada. 5C aguarda contrato próprio |
+| 5 | Filas e proteção das operações destrutivas | 5A, 5B e 5C.1 concluídas, aprovadas e registradas. Exclusão condicional aguarda solução no broker |
 | 6 | Exchanges e bindings | Proposta |
 | 7 | Publicação AMQP, confirmações e falhas de rede | Proposta |
 | 8 | Dashboard e monitoramento básico | Proposta |
@@ -1652,7 +1653,7 @@ entrega 4B.2 em `43113eb`.
 | --- | --- |
 | 5A | Leitura de filas conforme este contrato, cobrindo FR-007/008 e MVP-Q01 no recorte validado |
 | 5B | Declaração classic/quorum e validação de argumentos/conflitos, com contrato para FR-009 e MVP-Q02 |
-| 5C | Exclusão condicional e limpeza de mensagens prontas com confirmações nativas no main, com contrato para FR-010/011 e MVP-Q03 |
+| 5C | Purge com confirmação nativa proposto para 5C.1 (FR-011). Exclusão condicional (FR-010) depende da decisão registrada no contrato 5C. MVP-Q03 cobre ambos |
 
 ### Decisões propostas
 
@@ -2033,5 +2034,183 @@ capturas nos dois temas a 200% foram revisadas.
 Ver [evidências da 5B](../07-testing/queues-5b.md).
 
 “Aprovado” aceitou a conclusão da 5B e autorizou o commit local
-`feat(queues): add verified queue declarations`. O contrato da 5C
-será preparado após solicitação própria.
+`feat(queues): add verified queue declarations`. O pedido posterior
+“Continue” iniciou a preparação da 5C.
+
+## Contrato proposto — 5C.1: purge com confirmação nativa
+
+Proposto em 2026-11-20. Execução aprovada por “Aprovo” em 2026-11-20,
+com integração condicionada ao gate.
+Base da preparação em `main`, commit `dd52421`.
+
+| Campo | Proposta para aprovação |
+| --- | --- |
+| Objetivo | Limpar mensagens de uma fila classic ou quorum no vhost da sessão, com efeito e destino explícitos |
+| Escopo | Consulta pontual, confirmação nativa no main e uma única solicitação de purge via Management HTTPS |
+| Aceitação | 5C.1-01–08 abaixo, FR-011/025 e NFR-009/010. MVP-Q03 fica parcial até a entrega de FR-010 |
+| Dependências | Sessão 4B.2, leitura exata 5A, transporte HTTPS 5B e imagens oficiais já fixadas por digest |
+| Verificação | Gate antes da integração em RabbitMQ 4.4.0 e 4.3.6, seguido de check, package, smokes e matriz no executável |
+
+### Exclusão condicional pendente
+
+A API de item encaminha `if-empty` e `if-unused` ao broker.
+Nas duas versões fixadas, quorum rejeita ambas as condições e stream
+as ignora. A implementação classic separa mensagens prontas de
+entregas pendentes de confirmação. Uma leitura do tipo seguida de DELETE
+pode alcançar outro objeto recriado com o mesmo nome. Ela também pode
+observar estado diferente daquele no momento da exclusão.
+[HTTP DELETE de fila](https://www.rabbitmq.com/docs/http-api-reference#delete-apiqueuesvhostname),
+[quorum 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/src/rabbit_quorum_queue.erl#L1049-L1057),
+[quorum 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/src/rabbit_quorum_queue.erl#L1027-L1035),
+[stream 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/src/rabbit_stream_queue.erl#L253-L271),
+[stream 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/src/rabbit_stream_queue.erl#L229-L247),
+[condições classic](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/src/rabbit_amqqueue_process.erl#L1395-L1405),
+[contagem classic](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/src/rabbit_variable_queue.erl#L620-L626).
+
+FR-010 e o restante de MVP-Q03 dependem de um contrato próprio com garantia
+verificável no broker de que o alvo vigente respeita as condições pedidas.
+Excluir sem condições ou simular condições com métricas precedendo o
+DELETE fica fora desta proposta. A constatação acima vem de documentação
+e código publicado. A preparação ainda não executou o gate real.
+
+### Decisões propostas
+
+1. **5C.1-D01 — Alvo.** A ação começa no detalhe exato de Filas da 5A,
+   incluindo o vhost temporário e o vhost `detailed` mesmo com a listagem
+   indisponível. O main deriva perfil, ambiente, endpoint HTTPS, revisão,
+   owner, sessão, geração e vhost. Exigir janela ativa, HTTPS disponível
+   e AMQPS estabelecido no vhost atual, conforme 5A/5B. O endpoint HTTPS
+   é o destino real do purge. A sessão AMQPS fornece contexto.
+   Um GET de item limitado valida identidade e tipo classic/quorum antes
+   do diálogo. Ausência, falha ou outro tipo impedem a ação.
+2. **5C.1-D02 — Confirmação.** Usar `dialog.showMessageBox` assíncrono
+   associado à janela, com `AbortSignal`, prazo de 60 s, **Cancelar**
+   como padrão e Esc, e **Limpar mensagens** como aceite explícito.
+   O main monta o texto com perfil, ambiente, origem e prefixo HTTPS
+   sem segredo, vhost, nome completo da fila e efeito irreversível.
+   Identificar produção por texto e símbolo. Exibir nomes exatos de
+   forma legível, tornando caracteres de formatação invisíveis visíveis.
+   O diálogo explicita que a operação encontra a fila pelo nome na hora
+   da execução. A Management API não oferece condição de identidade
+   da instância e o nome pode ter sido recriado externamente.
+3. **5C.1-D03 — Efeito real.** Remover mensagens prontas e preservar
+   entregas a consumidores ainda sem ack. Nas duas versões de referência,
+   em quorum o purge pode remover também mensagens em nova tentativa
+   adiada e pendentes de dead-lettering. O diálogo e a Ajuda explicitam o
+   efeito em quorum mesmo quando a consulta observou classic, pois o
+   tipo pode mudar após a leitura. A fila permanece. Novas publicações
+   e reentregas podem ocorrer em paralelo. O resultado mostra o aceite
+   do broker, sem atribuir um total removido ou garantir fila vazia.
+   [Purge na API](https://www.rabbitmq.com/docs/http-api-reference#delete-apiqueuesvhostnamecontents),
+   [purge quorum 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/src/rabbit_fifo.erl#L502-L532),
+   [purge quorum 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/src/rabbit_fifo.erl#L480-L498).
+4. **5C.1-D04 — Envio e ciclo de vida.** Reservar a vaga administrativa
+   única desde o GET até o fim do fluxo, compartilhada com leituras e
+   declaração. Manter `whoami` independente. Vincular a confirmação ao
+   pedido em memória, sem aprovação reutilizável. Revalidar origem,
+   frame, janela ativa, contexto de sessão e revisão após o diálogo,
+   imediatamente antes do envio sobre TLS validado, e ao entregar o
+   resultado. Suspensão, mudança de contexto, reload, perda do renderer
+   ou encerramento invalidam a ação. A mudança de foco própria do
+   modal exige verificação com janela nativa. Sem comprovar retorno ao
+   foreground, encerrar o pedido local antes de enviar.
+5. **5C.1-D05 — Transporte e resultado.** Usar apenas
+   `DELETE /api/queues/{vhost}/{name}/contents` sem corpo ou query,
+   codificando os segmentos uma vez com as mesmas guardas da 5A.
+   Reusar TLS, CA, prefixo e bloqueio de redirects/proxy da 5B. Limitar a
+   leitura inicial a 10 s e o envio/resposta a 30 s, com 256 KiB de
+   resposta, 16 KiB de headers, encoding identity e profundidade JSON
+   16 caso seja preciso interpretar uma negativa. Aceitar somente
+   respostas comprovadas pelo gate. Distinguir desistência antes do
+   envio, recusa explícita (incluindo falta de permissão ou alvo que
+   deixou de existir), aceite HTTP e resultado incerto após possível
+   envio. Timeout, queda, 5xx ambíguo e cancelamento nessa última
+   situação preservam a incerteza, sem repetição automática. Após
+   possível envio, **Verificar fila** faz a leitura atual da 5A. Essa
+   leitura não confirma retrospectivamente o purge.
+6. **5C.1-D06 — IPC e interface.** Acrescentar `purgeSessionQueue` e
+   `cancelQueuePurge` a `bunnies:management` (30 → 32 métodos).
+   O pedido leva referência de sessão, geração, ID da operação e nome.
+   O cancelamento só alcança a operação correspondente. Método e rota
+   são definidos no main. Em Filas, mostrar progresso, restaurar foco
+   após o diálogo e marcar lista/detalhe desatualizados após possível
+   envio. Depois do envio, o rótulo **Parar de aguardar** explica que
+   a ação local não desfaz o que o broker fez. Um resultado do contexto
+   anterior não modifica a nova tela. Entradas e respostas têm projeção
+   fechada, sem persistência de dados do fluxo.
+7. **5C.1-D07 — Sequência de verificação.** Provar o adapter de produto
+   nas duas imagens de referência. Usar somente brokers criados pelo
+   harness, com vhosts, filas e contas descartáveis. O observador do
+   harness prepara publicações, entregas sem ack, novas tentativas
+   adiadas e dead-lettering pendente e verifica os estados antes/depois.
+   Fixtures HTTPS exercitam atrasos e cortes. Divergência de semântica
+   exige decisão antes da integração dependente. Após o gate, integrar
+   IPC/UI/Guia e Ajuda, executar check, package, os nove smokes existentes
+   em sequência, smoke nativo de purge e matriz no mesmo ASAR. Registrar
+   a plataforma e a arquitetura por execução.
+
+### Critérios de aceitação
+
+1. **5C.1-01.** Em classic/quorum nas duas versões, Ready é removido e
+   entregas sem ack são preservadas. A fila e seus vínculos permanecem.
+   Verificar fila vazia e os efeitos de nova tentativa adiada e dead-lettering
+   pendente em quorum. O diálogo deve descrever o efeito verificado.
+2. **5C.1-02.** Provar o destino exato com vhosts temporário e `detailed`,
+   barra, Unicode, espaços e percentual literal, preservando homônimos
+   em outro vhost. Stream e tipo desconhecido falham antes do envio
+   quando observados no GET. A matriz verifica a resposta a um stream
+   que substitui o alvo durante o fluxo.
+3. **5C.1-03.** Conta Management sem permissão de leitura no recurso recebe
+   recusa. Conta mínima autorizada executa o purge. Também cobrir fila
+   removida durante o diálogo, rejeição TLS e redirect. Diferenciar
+   negativa e resultado incerto com códigos sanitizados.
+4. **5C.1-04.** Cancelar, pressionar Esc, esgotar o prazo do modal ou
+   invalidar sessão, perfil ou janela antes do envio produz zero
+   DELETEs. O aceite explícito permite no máximo um DELETE, com
+   bloqueio de diálogo e operação concorrentes. Verificar a perda de
+   foco e o retorno à janela proprietária.
+5. **5C.1-05.** Queda ou cancelamento após possível envio sem resposta
+   conclusiva mostra incerteza. Reconectar, recarregar ou trocar vhost
+   não repete purge. Verificar usa somente o GET de item existente.
+6. **5C.1-06.** Origem, frame, owner, geração e ID inválidos são recusados.
+   O main verifica o contexto real mesmo diante de argumentos IPC
+   adulterados. Segredos, payloads, resposta bruta e acesso genérico
+   ao transporte ficam fora da ponte.
+7. **5C.1-07.** Revisar diálogo, teclado, foco e identificação de Produção,
+   com Filas em ambos os temas e a 200%. Package e smokes locais registram
+   o alvo executado. Registrar testes nativos de Windows e Linux quando
+   houver executores adequados. Os jobs de package da CI não comprovam os
+   diálogos nativos.
+8. **5C.1-08.** Atualizar M03, FR-011, segurança, evidências, histórico
+   e Guia/Ajuda a partir do comportamento verificado; FR-010 segue
+   pendente. Conclusão e commit passam por aprovação própria.
+
+### Estrutura e fontes
+
+- Contratos e guardas em `src/shared`, adapter e coordenação em
+  `src/main/management`, handler e confirmação em
+  `src/main/ipc/management.ts`, métodos explícitos em
+  `src/preload/desktopApi.ts` e ação no detalhe em Filas.
+- Reusar `tools/testing/rabbitmq-real.cjs` e o smoke de Management.
+  Registrar resultados em `docs/07-testing/queues-5c1.md` durante a
+  execução. Atualizar `docs/10-user-guide/guide.json` e gerar o Markdown
+  após o gate e a integração.
+- Fora do escopo: exclusão de fila, operações em lote, inspeção,
+  publicação ou consumo pelo produto, novas dependências, mudanças
+  de versão do broker de referência, patch, ADR, schema, commit ou
+  push antes dos aceites correspondentes.
+- [Requisitos funcionais](../02-requirements/functional-requirements.md),
+  [MVP](../02-requirements/mvp-scope.md),
+  [NFRs](../02-requirements/non-functional-requirements.md),
+  [segurança](../08-security/security-model.md),
+  [estratégia de testes](../07-testing/test-strategy.md) e
+  [diálogo no Electron 45.1.0](https://github.com/electron/electron/blob/v45.1.0/docs/api/dialog.md#dialogshowmessageboxwindow-options).
+
+### Conclusão da 5C.1 aprovada
+
+“Aprovado” reiterou o aceite do fluxo apresentado. Check 299 + seis
+Node, dez smokes, gate de 20 e matriz de 72 verificações em 4.4.0
+e 4.3.6 passaram. Capturas a 200% e do diálogo nativo conferidas.
+Registro local `feat(queues): add confirmed message purge`.
+FR-010 e homologação nativa nos demais alvos continuam pendentes.
+[Evidências](../07-testing/queues-5c1.md)

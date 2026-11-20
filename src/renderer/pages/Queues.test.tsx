@@ -11,7 +11,9 @@ const mock = vi.hoisted(() => ({
 vi.mock("../shell/SessionProvider", () => ({ useSession: () => mock }));
 const list = vi.fn(),
   detail = vi.fn(),
-  cancel = vi.fn();
+  cancel = vi.fn(),
+  purge = vi.fn(),
+  cancelPurge = vi.fn();
 
 const result = (vhost = "/") => ({
   ok: true,
@@ -50,6 +52,8 @@ beforeEach(() => {
     listSessionQueues: list,
     getSessionQueue: detail,
     cancelManagementRead: cancel,
+    purgeSessionQueue: purge,
+    cancelQueuePurge: cancelPurge,
   });
 });
 
@@ -193,4 +197,72 @@ it("offers an explicit return to the first page after a broker range error", asy
   );
   expect(list.mock.calls.map(([input]) => input.page)).toEqual([1, 2, 1]);
   expect(screen.queryByText(/Desatualizado/)).toBeNull();
+});
+
+it("offers exact lookup in detailed and uses only a GET to check an uncertain purge", async () => {
+  const user = userEvent.setup();
+  mock.state.profile!.vhost = "detailed";
+  const name = "fila literal%2F /";
+  const { container, rerender } = render(<Queues />);
+  const modal = container.querySelector("dialog")!;
+  modal.showModal = () => {
+    modal.open = true;
+  };
+  modal.close = () => {
+    modal.open = false;
+  };
+  detail.mockResolvedValue({
+    ok: true,
+    value: {
+      vhost: "detailed",
+      checkedAt: "2026-11-20T12:00:00Z",
+      queue: { name, type: "quorum", ready: 3 },
+    },
+  });
+  let finish!: (result: object) => void;
+  purge.mockImplementationOnce(
+    () =>
+      new Promise(resolve => {
+        finish = resolve;
+      }),
+  );
+  await user.type(
+    screen.getByRole("textbox", { name: "Nome exato da fila" }),
+    name,
+  );
+  await user.click(screen.getByRole("button", { name: /^Consultar fila$/ }));
+  await user.click(
+    await screen.findByRole("button", { name: "Limpar mensagens" }),
+  );
+  expect(purge).toHaveBeenCalledWith(
+    expect.objectContaining({ name, generation: 1 }),
+  );
+  mock.state = { ...mock.state, paused: true };
+  rerender(<Queues />);
+  expect(modal.open).toBe(true);
+  expect(cancelPurge).not.toHaveBeenCalled();
+  mock.state = { ...mock.state, paused: false };
+  rerender(<Queues />);
+  await act(async () =>
+    finish({
+      ok: true,
+      requestId: "ref",
+      value: {
+        status: "uncertain",
+        reason: "NETWORK",
+        vhost: "detailed",
+      },
+    }),
+  );
+  expect(screen.getByText("Resultado incerto")).toBeTruthy();
+  expect(screen.getByText("Detalhe desatualizado")).toBeTruthy();
+  expect(document.activeElement?.textContent).toContain("Resultado incerto");
+  await user.click(screen.getByRole("button", { name: "Verificar fila" }));
+  expect(detail).toHaveBeenCalledTimes(2);
+  expect(detail.mock.lastCall?.[0]).toMatchObject({
+    name,
+    generation: 1,
+  });
+  expect(purge).toHaveBeenCalledOnce();
+  expect(list).not.toHaveBeenCalled();
 });

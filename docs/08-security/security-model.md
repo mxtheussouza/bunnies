@@ -348,3 +348,17 @@ A declaração faz um PUT por operação. Perder a resposta após possível
 envio gera resultado incerto. Cancelar interrompe o trabalho local e
 uma nova tentativa depende de ação explícita. A conferência consulta
 somente o item declarado. Ver [evidências](../07-testing/queues-5b.md).
+
+### Limpeza de mensagens 5C.1
+
+O renderer informa apenas nome e referência da operação no contexto
+ativo. O main consulta o alvo e controla a confirmação nativa, com
+cancelamento por padrão. Valida o mesmo owner, frame, perfil, revisão,
+vhost e geração depois do diálogo e antes de transmitir com TLS validado.
+Minimizar, ocultar, suspender ou perder autoridade interrompe o fluxo.
+
+O único DELETE permitido termina em `/contents`. A API encontra a fila
+pelo nome atual, de modo que a recriação externa entra no texto da
+confirmação. A confirmação explica o efeito adicional em quorum.
+O app não usa métricas como prova de rollback, aceite ou estado final.
+Ver [evidências](../07-testing/queues-5c1.md).

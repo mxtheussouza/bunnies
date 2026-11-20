@@ -1,14 +1,22 @@
 import type {
   ManagementInput,
   ManagementReadSnapshot,
+  QueueDetailInput,
   QueueDeclarationInput,
   QueueDeclarationSnapshot,
+  QueuePurgeSnapshot,
 } from "../../shared/management";
+import type { ProfileEnvironment } from "../../shared/profiles";
 import {
   QUEUE_DECLARATION_TIMEOUT_MS,
   queueSegmentUnsupported,
 } from "../../shared/queues";
 import { declareQueue, type DeclarationPhase } from "./queueDeclaration";
+import {
+  inspectPurgeQueue,
+  purgeQueue,
+  QUEUE_PURGE_TIMEOUT_MS,
+} from "./queuePurge";
 import { MANAGEMENT_TIMEOUT_MS } from "../../shared/management";
 import type { SessionService } from "../sessions/sessionService";
 import type { ProfileService } from "../profiles/service";
@@ -30,9 +38,20 @@ type Active = {
   owner: number;
   input: ManagementInput;
   requireAmqps: boolean;
-  kind: "read" | "declaration";
+  kind: "read" | "declaration" | "purge";
   controller: AbortController;
+  confirmation?: Promise<boolean>;
 };
+export type QueuePurgeTarget = {
+  profileName: string;
+  environment: ProfileEnvironment;
+  httpsUrl: string;
+  vhost: string;
+  name: string;
+  queueType: "classic" | "quorum";
+};
+const PURGE_CONFIRMATION_TIMEOUT_MS = 60_000;
+
 export class ManagementService {
   private active?: Active;
   private disposed = false;
@@ -43,6 +62,8 @@ export class ManagementService {
     private readonly profiles: ProfileService,
     private readonly read = readManagement,
     private readonly declare = declareQueue,
+    private readonly inspectPurge = inspectPurgeQueue,
+    private readonly purge = purgeQueue,
   ) {
     this.unsubscribe = sessions.onChange(() => {
       this.catalog.validateCurrent(
@@ -51,17 +72,22 @@ export class ManagementService {
       const a = this.active;
       if (a)
         try {
-          this.context(a);
+          this.context(a, !!a.confirmation);
         } catch {
           a.controller.abort(new ManagementFailure("CONFLICT"));
         }
     });
   }
-  private context(a: Active) {
+  private context(a: Active, awaitingNativeDialog = false) {
     if (this.disposed || this.active !== a)
       throw new ManagementFailure("CONFLICT");
     try {
-      return this.sessions.managementContext(a.owner, a.input, a.requireAmqps);
+      return this.sessions.managementContext(
+        a.owner,
+        a.input,
+        a.requireAmqps,
+        awaitingNativeDialog,
+      );
     } catch (error) {
       throw new ManagementFailure(
         error instanceof ProfileFailure && error.code === "CONFLICT"
@@ -197,12 +223,117 @@ export class ManagementService {
     }
   }
 
+  async purgeQueue(
+    owner: number,
+    input: QueueDetailInput,
+    trustedActiveWindow: () => boolean,
+    confirm: (
+      target: QueuePurgeTarget,
+      signal: AbortSignal,
+    ) => Promise<boolean>,
+  ): Promise<QueuePurgeSnapshot> {
+    let sent = false;
+    let vhost = "";
+    const snapshot = () => ({
+      kind: "queuePurge" as const,
+      sessionId: input.sessionId,
+      generation: input.generation,
+      operationId: input.operationId,
+      source: "https-management" as const,
+      checkedAt: new Date().toISOString(),
+      vhost,
+      name: input.name,
+    });
+    try {
+      return await this.run(
+        owner,
+        input,
+        "purge",
+        true,
+        async (active, setDeadline) => {
+          const context = this.context(active);
+          vhost = context.vhost;
+          const { signal } = active.controller;
+          const assertContext = async () => {
+            signal.throwIfAborted();
+            if (!trustedActiveWindow())
+              throw new ManagementFailure("FORBIDDEN");
+            this.context(active);
+            await this.profiles.assertRevision(context.revision);
+            signal.throwIfAborted();
+            if (!trustedActiveWindow())
+              throw new ManagementFailure("FORBIDDEN");
+            this.context(active);
+          };
+          const profile = await this.profiles.connectionSnapshot(
+            context.profileId,
+            context.revision,
+          );
+          await assertContext();
+          const queueType = await this.inspectPurge(
+            profile,
+            vhost,
+            input.name,
+            signal,
+          );
+          await assertContext();
+
+          setDeadline(PURGE_CONFIRMATION_TIMEOUT_MS);
+          active.confirmation = Promise.resolve().then(() => {
+            signal.throwIfAborted();
+            return confirm(
+              {
+                profileName: profile.name,
+                environment: profile.environment,
+                httpsUrl: profile.httpsUrl,
+                vhost,
+                name: input.name,
+                queueType,
+              },
+              signal,
+            );
+          });
+          const confirmed = await active.confirmation;
+          active.confirmation = undefined;
+          signal.throwIfAborted();
+          if (!confirmed) throw new ManagementFailure("CANCELLED");
+
+          setDeadline(QUEUE_PURGE_TIMEOUT_MS);
+          await assertContext();
+          await this.purge(
+            profile,
+            vhost,
+            input.name,
+            signal,
+            () => {
+              sent = true;
+            },
+            assertContext,
+          );
+          await assertContext();
+          return { ...snapshot(), status: "accepted" };
+        },
+      );
+    } catch (error) {
+      const reason =
+        error instanceof ManagementFailure ? error.code : "INTERNAL";
+      if (
+        sent &&
+        reason !== "DENIED" &&
+        reason !== "NOT_FOUND" &&
+        reason !== "QUEUE_PURGE_TYPE"
+      )
+        return { ...snapshot(), status: "uncertain", reason };
+      throw error;
+    }
+  }
+
   private async run<T>(
     owner: number,
     input: ManagementInput,
     kind: Active["kind"],
     requireAmqps: boolean,
-    work: (active: Active) => Promise<T>,
+    work: (active: Active, setDeadline: (ms: number) => void) => Promise<T>,
   ): Promise<T> {
     if (this.disposed) throw new ManagementFailure("UNAVAILABLE");
     if (this.active) throw new ManagementFailure("BUSY");
@@ -215,9 +346,18 @@ export class ManagementService {
     };
     this.active = a;
     const { signal } = a.controller;
-    const timer = setTimeout(
-      () => a.controller.abort(new ManagementFailure("TIMEOUT")),
-      kind === "read" ? MANAGEMENT_TIMEOUT_MS : QUEUE_DECLARATION_TIMEOUT_MS,
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const setDeadline = (ms: number) => {
+      clearTimeout(timer);
+      timer = setTimeout(
+        () => a.controller.abort(new ManagementFailure("TIMEOUT")),
+        ms,
+      );
+    };
+    setDeadline(
+      kind === "declaration"
+        ? QUEUE_DECLARATION_TIMEOUT_MS
+        : MANAGEMENT_TIMEOUT_MS,
     );
     let abort!: () => void;
     const aborted = new Promise<never>((_, reject) => {
@@ -226,7 +366,7 @@ export class ManagementService {
     });
 
     try {
-      return await Promise.race([work(a), aborted]);
+      return await Promise.race([work(a, setDeadline), aborted]);
     } catch (error) {
       if (error instanceof ManagementFailure) throw error;
       if (error instanceof ProfileFailure)
@@ -242,6 +382,7 @@ export class ManagementService {
       clearTimeout(timer);
       signal.removeEventListener("abort", abort);
       a.controller.abort(new ManagementFailure("CANCELLED"));
+      if (a.confirmation) await a.confirmation.catch(() => undefined);
       if (this.active === a) this.active = undefined;
     }
   }

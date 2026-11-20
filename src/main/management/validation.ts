@@ -14,6 +14,7 @@ export function parseManagementRequest(v: unknown): ManagementRequest | null {
         ? { command: v.command, input: v.input }
         : null;
     case "getSessionQueue":
+    case "purgeSessionQueue":
       return isQueueDetailInput(v.input)
         ? { command: v.command, input: v.input }
         : null;
@@ -25,6 +26,7 @@ export function parseManagementRequest(v: unknown): ManagementRequest | null {
     case "listSessionVhosts":
     case "cancelManagementRead":
     case "cancelQueueDeclaration":
+    case "cancelQueuePurge":
       return isManagementInput(v.input)
         ? { command: v.command, input: v.input }
         : null;

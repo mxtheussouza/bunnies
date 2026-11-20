@@ -144,6 +144,14 @@ Ver [M03](../04-modules/03-queue-management.md) e [evidências](../07-testing/qu
 FR-009 tem implementação de declaração de filas classic e quorum com flags
 fixas e catálogo fechado, seguida de conferência das propriedades. O main
 distingue recusa, divergência, confirmação e resultado incerto. O recorte
-usa o vhost atual, incluindo seleção temporária. FR-010/011 permanecem
+usa o vhost atual, incluindo seleção temporária. FR-010/011 permaneceram
 pendentes. Ver [M03](../04-modules/03-queue-management.md) e
 [evidências](../07-testing/queues-5b.md).
+
+## Implementação 5C.1
+
+FR-011 e o recorte de FR-025 para purge estão implementados no detalhe
+de filas classic/quorum. A confirmação nativa identifica destino e efeito.
+O main revalida a autoridade antes do envio e preserva a incerteza quando
+a escrita pode ter ocorrido. FR-010 continua pendente.
+[M03](../04-modules/03-queue-management.md) · [Evidências](../07-testing/queues-5c1.md)

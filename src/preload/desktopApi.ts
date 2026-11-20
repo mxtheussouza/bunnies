@@ -3,7 +3,9 @@ import {
   isManagementSnapshot,
   isQueueSnapshot,
   isQueueDeclarationSnapshot,
+  isQueuePurgeSnapshot,
   type QueueDeclarationSnapshot,
+  type QueuePurgeSnapshot,
   type ManagementResponse,
   type QueueSnapshot,
   managementErrors,
@@ -63,32 +65,48 @@ export function createDesktopApi(
         const value = result.value;
         if (
           (request.command === "cancelManagementRead" ||
-            request.command === "cancelQueueDeclaration") &&
+            request.command === "cancelQueueDeclaration" ||
+            request.command === "cancelQueuePurge") &&
           value === undefined
         )
           return { ok: true, requestId: result.requestId, value };
         if (
           !isQueueSnapshot(value) &&
           !isManagementSnapshot(value) &&
-          !isQueueDeclarationSnapshot(value)
+          !isQueueDeclarationSnapshot(value) &&
+          !isQueuePurgeSnapshot(value)
         )
           throw new Error();
-        const matches =
-          request.command === "declareSessionQueue"
-            ? value.kind === "queueDeclaration" &&
-              value.name === request.input.declaration.name
-            : request.command === "listSessionQueues"
-              ? value.kind === "queuePage" &&
-                value.page === request.input.page &&
-                (request.input.search !== undefined ||
-                  value.totalCount === value.filteredCount)
-              : request.command === "getSessionQueue"
-                ? value.kind === "queueDetail" &&
-                  value.queue.name === request.input.name
-                : request.command === "getBrokerInfo"
-                  ? value.kind === "broker"
-                  : request.command === "listSessionVhosts" &&
-                    value.kind === "vhosts";
+        let matches = false;
+        switch (request.command) {
+          case "purgeSessionQueue":
+            matches =
+              value.kind === "queuePurge" && value.name === request.input.name;
+            break;
+          case "declareSessionQueue":
+            matches =
+              value.kind === "queueDeclaration" &&
+              value.name === request.input.declaration.name;
+            break;
+          case "listSessionQueues":
+            matches =
+              value.kind === "queuePage" &&
+              value.page === request.input.page &&
+              (request.input.search !== undefined ||
+                value.totalCount === value.filteredCount);
+            break;
+          case "getSessionQueue":
+            matches =
+              value.kind === "queueDetail" &&
+              value.queue.name === request.input.name;
+            break;
+          case "getBrokerInfo":
+            matches = value.kind === "broker";
+            break;
+          case "listSessionVhosts":
+            matches = value.kind === "vhosts";
+            break;
+        }
         if (
           matches &&
           value.sessionId === input.sessionId &&
@@ -114,9 +132,11 @@ export function createDesktopApi(
       throw new Error();
     } catch {
       const code =
-        request.command === "declareSessionQueue"
-          ? "QUEUE_DECLARATION_UNCERTAIN"
-          : "UNAVAILABLE";
+        request.command === "purgeSessionQueue"
+          ? "QUEUE_PURGE_UNCERTAIN"
+          : request.command === "declareSessionQueue"
+            ? "QUEUE_DECLARATION_UNCERTAIN"
+            : "UNAVAILABLE";
       return {
         ok: false,
         requestId: "transport",
@@ -206,6 +226,14 @@ export function createDesktopApi(
       >,
     cancelQueueDeclaration: input =>
       managementCall({ command: "cancelQueueDeclaration", input }) as Promise<
+        ManagementResult<undefined>
+      >,
+    purgeSessionQueue: input =>
+      managementCall({ command: "purgeSessionQueue", input }) as Promise<
+        ManagementResult<QueuePurgeSnapshot>
+      >,
+    cancelQueuePurge: input =>
+      managementCall({ command: "cancelQueuePurge", input }) as Promise<
         ManagementResult<undefined>
       >,
     cancelManagementRead: input =>

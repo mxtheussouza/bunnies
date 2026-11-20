@@ -48,6 +48,9 @@ export const managementErrors = {
   QUEUE_DECLARATION_UNCERTAIN:
     "O resultado da declaração é incerto. Verifique a fila no broker antes de reenviar.",
   QUEUE_DECLARATION_REFUSED: "O RabbitMQ recusou os parâmetros da declaração.",
+  QUEUE_PURGE_TYPE: "A limpeza de mensagens exige uma fila classic ou quorum.",
+  QUEUE_PURGE_UNCERTAIN:
+    "O resultado da limpeza é incerto. Verifique a fila antes de solicitar outra limpeza.",
   CREDENTIALS:
     "Revise usuário e senha disponíveis nesta execução; use texto UTF-8 e usuário sem dois-pontos.",
   INTERNAL: "Não foi possível concluir a consulta administrativa.",
@@ -99,8 +102,16 @@ export type QueueDeclarationSnapshot = ManagementSnapshotHeader & {
     | { status: "confirmed" | "divergent" }
     | { status: "unverified" | "uncertain"; reason: ManagementError }
   );
+export type QueuePurgeSnapshot = ManagementSnapshotHeader & {
+  kind: "queuePurge";
+  vhost: string;
+  name: string;
+} & ({ status: "accepted" } | { status: "uncertain"; reason: ManagementError });
 export type ManagementResponse =
-  ManagementReadSnapshot | QueueDeclarationSnapshot | undefined;
+  | ManagementReadSnapshot
+  | QueueDeclarationSnapshot
+  | QueuePurgeSnapshot
+  | undefined;
 
 export type ManagementRequest =
   | {
@@ -108,11 +119,15 @@ export type ManagementRequest =
         | "getBrokerInfo"
         | "listSessionVhosts"
         | "cancelManagementRead"
-        | "cancelQueueDeclaration";
+        | "cancelQueueDeclaration"
+        | "cancelQueuePurge";
       input: ManagementInput;
     }
   | { command: "listSessionQueues"; input: QueueListInput }
-  | { command: "getSessionQueue"; input: QueueDetailInput }
+  | {
+      command: "getSessionQueue" | "purgeSessionQueue";
+      input: QueueDetailInput;
+    }
   | { command: "declareSessionQueue"; input: QueueDeclarationInput };
 export interface ManagementApi {
   getBrokerInfo(
@@ -131,6 +146,12 @@ export interface ManagementApi {
     input: QueueDeclarationInput,
   ): Promise<ManagementResult<QueueDeclarationSnapshot>>;
   cancelQueueDeclaration(
+    input: ManagementInput,
+  ): Promise<ManagementResult<undefined>>;
+  purgeSessionQueue(
+    input: QueueDetailInput,
+  ): Promise<ManagementResult<QueuePurgeSnapshot>>;
+  cancelQueuePurge(
     input: ManagementInput,
   ): Promise<ManagementResult<undefined>>;
   cancelManagementRead(
@@ -244,6 +265,31 @@ export function isQueueDeclarationSnapshot(
     return !Object.hasOwn(value, "reason");
   return (
     (value.status === "unverified" || value.status === "uncertain") &&
+    typeof value.reason === "string" &&
+    Object.hasOwn(managementErrors, value.reason)
+  );
+}
+
+export function isQueuePurgeSnapshot(
+  value: unknown,
+): value is QueuePurgeSnapshot {
+  if (
+    !closedObject(
+      value,
+      [...snapshotKeys, "name", "vhost", "status"],
+      ["reason"],
+    ) ||
+    value.kind !== "queuePurge" ||
+    !isSnapshotHeader(value) ||
+    !boundedManagementText(value.name, 255) ||
+    queueSegmentUnsupported(value.name) ||
+    !boundedManagementText(value.vhost, 255) ||
+    queueSegmentUnsupported(value.vhost)
+  )
+    return false;
+  if (value.status === "accepted") return !Object.hasOwn(value, "reason");
+  return (
+    value.status === "uncertain" &&
     typeof value.reason === "string" &&
     Object.hasOwn(managementErrors, value.reason)
   );

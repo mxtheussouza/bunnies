@@ -1,20 +1,20 @@
 # Estado atual do projeto
 
-Atualizado em: 2026-11-19. Ler [PROJECTS_STATUS.md](../../PROJECTS_STATUS.md) antes
+Atualizado em: 2026-11-20. Ler [PROJECTS_STATUS.md](../../PROJECTS_STATUS.md) antes
 de cada Task; atualizá-lo em cada bloco/fase/alteração.
 
 | Campo | Estado |
 | --- | --- |
-| Etapa atual | 5A — listagem e detalhe de filas |
+| Etapa atual | 5B — declaração de filas classic e quorum |
 | Status | Concluída, aprovada e registrada |
-| Última etapa concluída | 5A — listagem e detalhe de filas |
-| Última entrega registrada | `feat(queues): add scoped queue reads` em `main`, com pai `2f1f6cc` |
-| Decisões aprovadas | ADRs 0001–0009, MVP/requisitos/design, contratos anteriores e conclusão da 5A com a revisão de `detailed` |
-| Decisões pendentes | Contratos próprios de 5B e 5C |
-| Tarefas concluídas | Adapter, IPC/UI/guia, 28 checks no gate, check (283 + seis Node), package, oito smokes, quatro capturas revisadas e 70 checks na matriz empacotada |
-| Tarefas pendentes | Preparação da 5B após solicitação |
+| Última etapa concluída | 5B — declaração de filas classic e quorum |
+| Última entrega registrada | `feat(queues): add verified queue declarations` em `main`, com pai `cd1c2bf` |
+| Decisões aprovadas | ADRs 0001–0009, MVP/requisitos/design, contratos anteriores e conclusão da 5B |
+| Decisões pendentes | Contrato próprio da 5C |
+| Tarefas concluídas | Gate 5B com 20 verificações, IPC/UI/guia, check (291 + seis Node), package, nove smokes, revisão visual e matriz no executável com 76 verificações |
+| Tarefas pendentes | Preparação da 5C após solicitação; validação nativa em Windows e Linux |
 | Problemas conhecidos | Vhost `detailed` colide com rota global de filas. Paginação HTTP de vhosts retorna 500 na matriz e GET individual exige admin |
-| Próxima ação | Aguardar solicitação para preparar o contrato 5B |
+| Próxima ação | Aguardar solicitação para preparar o contrato 5C |
 
 “Autorizado” aceitou o [contrato 4A.2C](roadmap.md). O gate inicial reprovou e
 interrompeu trabalho dependente; o proprietário então autorizou explicitamente

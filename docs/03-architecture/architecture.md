@@ -522,3 +522,18 @@ A listagem tem escopo de um único vhost. A revisão da 5A bloqueia o nome exato
 Os detalhes usam a identidade da linha e exibem até 100 consumidores.
 A tela consulta por ação manual e vincula seu estado à geração da sessão.
 Ver [M03](../04-modules/03-queue-management.md).
+
+## Declaração de filas — 5B
+
+`ManagementService` compartilha a vaga entre leitura e declaração. Dois
+comandos nomeados em `bunnies:management` levam a ponte a 30 métodos.
+O adapter de declaração reusa o transporte HTTPS com conexões TLS
+separadas e valida o contexto novamente antes de iniciar a transmissão.
+O PUT usa o item exato do vhost da sessão, com corpo montado no main.
+Um GET restrito ao mesmo item verifica o estado após o aceite observado.
+
+A fase de transmissão distingue falha local, aceite com conferência
+indisponível e resultado incerto. Ao trocar de contexto, o renderer
+descarta o estado transitório. A lista existente fica desatualizada
+após possível escrita no mesmo contexto. Ver
+[detalhamento do M03](../04-modules/03-queue-management.md).

@@ -138,3 +138,12 @@ O detalhe mostra metadados e até 100 consumidores. A revisão aprovada torna a
 listagem indisponível no vhost de nome exato `detailed`; as rotas recusam os
 segmentos exatos `.` e `..`. FR-009–011 seguem para os contratos de escrita.
 Ver [M03](../04-modules/03-queue-management.md) e [evidências](../07-testing/queues-5a.md).
+
+## Entrega 5B verificada
+
+FR-009 tem implementação de declaração de filas classic e quorum com flags
+fixas e catálogo fechado, seguida de conferência das propriedades. O main
+distingue recusa, divergência, confirmação e resultado incerto. O recorte
+usa o vhost atual, incluindo seleção temporária. FR-010/011 permanecem
+pendentes. Ver [M03](../04-modules/03-queue-management.md) e
+[evidências](../07-testing/queues-5b.md).

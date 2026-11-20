@@ -27,7 +27,10 @@ const managementGateA = process.argv.includes("--management-gate-a");
 const revisedVhostGate = process.argv.includes("--vhost-gate-revised");
 const vhostGate = process.argv.includes("--vhost-gate") || revisedVhostGate;
 const queuesGate = process.argv.includes("--queues-gate");
-const queuesMatrix = process.argv.includes("--queues-matrix");
+const declarationGate = process.argv.includes("--declaration-gate");
+const declarationMatrix = process.argv.includes("--declaration-matrix");
+const queuesMatrix =
+  declarationMatrix || process.argv.includes("--queues-matrix");
 assert.ok(
   process.argv.slice(2).length <= 1 &&
     process.argv
@@ -39,24 +42,30 @@ assert.ok(
           "--vhost-gate",
           "--vhost-gate-revised",
           "--queues-gate",
+          "--declaration-gate",
+          "--declaration-matrix",
           "--queues-matrix",
         ].includes(arg),
       ),
 );
 const managementFixture = managementGate || managementGateA || vhostGate;
-const reportPrefix = queuesGate
-  ? "queues-gate-revised-5a"
-  : vhostGate
-    ? revisedVhostGate
-      ? "vhost-gate-revised-4b2"
-      : "vhost-gate-4b2"
-    : managementGateA
-      ? "management-gate-A-4b1"
-      : managementGate
-        ? "management-gate-4b1"
-        : queuesMatrix
-          ? "rabbitmq-real-5a"
-          : "rabbitmq-real-4b2";
+const reportPrefix = declarationGate
+  ? "queues-declaration-gate-5b"
+  : queuesGate
+    ? "queues-gate-revised-5a"
+    : vhostGate
+      ? revisedVhostGate
+        ? "vhost-gate-revised-4b2"
+        : "vhost-gate-4b2"
+      : managementGateA
+        ? "management-gate-A-4b1"
+        : managementGate
+          ? "management-gate-4b1"
+          : declarationMatrix
+            ? "rabbitmq-real-5b"
+            : queuesMatrix
+              ? "rabbitmq-real-5a"
+              : "rabbitmq-real-4b2";
 let managementAdapter;
 let amqpsAdapter;
 let switchAdapter;
@@ -83,7 +92,11 @@ async function runVersion({ version, digest }) {
   const username = "bunnies-test";
   const queueFixture =
     queuesGate || queuesMatrix ? require("./queues-gate.cjs") : undefined;
-  const managementPrefix = queueFixture ? "/bunnies-test" : "";
+  const declarationFixture = declarationGate
+    ? require("./queue-declaration-gate.cjs")
+    : undefined;
+  const managementPrefix =
+    queueFixture || declarationFixture ? "/bunnies-test" : "";
   const vhosts = [
     "/",
     "equipe/pedidos",
@@ -91,7 +104,7 @@ async function runVersion({ version, digest }) {
     "área pedidos",
     ".",
     "negado",
-    ...(queueFixture ? ["detailed"] : []),
+    ...(queueFixture || declarationFixture ? ["detailed"] : []),
     ...(managementFixture
       ? [
           "..",
@@ -196,6 +209,13 @@ async function runVersion({ version, digest }) {
         password_hash: passwordHash(observerPassword),
         tags: ["administrator"],
       },
+      ...(declarationFixture
+        ? declarationFixture.accounts.map(name => ({
+            name,
+            password_hash: passwordHash(password),
+            tags: ["management"],
+          }))
+        : []),
       ...(managementFixture || queueFixture
         ? [
             {
@@ -224,7 +244,7 @@ async function runVersion({ version, digest }) {
           .map(vhost => ({
             user: username,
             vhost,
-            configure: "^$",
+            configure: declarationMatrix ? "^bunnies-new-" : "^$",
             write: "^$",
             read: "^$",
           }))
@@ -260,7 +280,14 @@ async function runVersion({ version, digest }) {
                   },
                 ]
               : [],
-          ),
+          )
+          .concat(declarationFixture?.permissions(vhosts) ?? []),
+        ...(declarationFixture
+          ? {
+              exchanges: declarationFixture.exchanges,
+              queues: declarationFixture.queues,
+            }
+          : {}),
         ...(queueFixture ? { queues: queueFixture.queues } : {}),
       }),
       { mode: 0o644 },
@@ -372,6 +399,38 @@ async function runVersion({ version, digest }) {
     console.log(`RabbitMQ ${version}: TLS ready (${inspection.Architecture})`);
     checks.push("exact-broker-version-and-TLS-readiness");
     await noConnections();
+    if (declarationGate) {
+      report.failures = await declarationFixture.run({
+        adapter: managementAdapter,
+        fixture,
+        httpsPort,
+        managementPrefix,
+        password,
+        checks,
+        api,
+        noConnections,
+        relaxed: async enabled => {
+          assert.equal(
+            JSON.parse(await docker("inspect", container))[0].Config.Labels[
+              "bunnies.test"
+            ],
+            name,
+          );
+          await docker(
+            "exec",
+            container,
+            "rabbitmqctl",
+            "eval",
+            `application:set_env(rabbit, quorum_relaxed_checks_on_redeclaration, ${enabled}).`,
+          );
+        },
+      });
+      report.passed = report.failures.length === 0;
+      console.log(
+        `RabbitMQ ${version}: declaration gate ${checks.length} passed, ${report.failures.length} failed`,
+      );
+      return report;
+    }
     if (queuesGate) {
       report.failures = await queueFixture.runQueuesGate({
         adapter: managementAdapter,
@@ -683,6 +742,7 @@ async function runVersion({ version, digest }) {
         );
     }
     const initialQueues = await queueIdentity();
+    const declaredQueues = [];
     const profileId = randomUUID();
     const profileFile = path.join(userData, "profiles.json");
     const initial = JSON.stringify({
@@ -1016,6 +1076,76 @@ async function runVersion({ version, digest }) {
         await detail.getByText("6000", { exact: true }).waitFor();
         await page.keyboard.press("Escape");
         await detail.waitFor({ state: "hidden" });
+        if (declarationMatrix) {
+          const {
+            openForm,
+            submit,
+            closeForm,
+          } = require("./queue-declaration.cjs");
+          const queue = "bunnies-new-pedidos/á %2F";
+          const form = await openForm(page, {
+            name: queue,
+            type: "quorum",
+            ttl: "8000",
+          });
+          await submit(form, "Declaração confirmada");
+          await submit(form, "Declaração confirmada");
+          await form
+            .getByRole("textbox", {
+              name: "TTL de mensagens (ms)",
+              exact: true,
+            })
+            .fill("8001");
+          await submit(form, "Resultado incerto");
+          await form
+            .getByRole("button", { name: "Verificar fila", exact: true })
+            .click();
+          const verified = page.getByRole("dialog", {
+            name: queue,
+            exact: true,
+          });
+          await verified.getByText("8000", { exact: true }).waitFor();
+          await page.keyboard.press("Escape");
+          await verified.waitFor({ state: "hidden" });
+          const conflictName = "bunnies-new-strict";
+          const conflictForm = await openForm(page, {
+            name: conflictName,
+            ttl: "500",
+          });
+          await submit(conflictForm, "Declaração confirmada");
+          await conflictForm
+            .getByRole("textbox", {
+              name: "TTL de mensagens (ms)",
+              exact: true,
+            })
+            .fill("501");
+          await submit(conflictForm, "Declaração recusada");
+          await conflictForm.getByText(/propriedades incompatíveis/).waitFor();
+          await closeForm(conflictForm);
+          declaredQueues.push({
+            vhost: "literal%2F",
+            name: conflictName,
+            type: "classic",
+            arguments: { "x-queue-type": "classic", "x-message-ttl": 500 },
+          });
+          checks.push(
+            "real-unicode-conflict-server-error-preserves-original-and-manual-verification",
+          );
+          const denial = await openForm(page, { name: "fora-da-permissao" });
+          await submit(denial, "Declaração recusada");
+          await denial.getByText(/O acesso foi recusado/).waitFor();
+          await closeForm(denial);
+          declaredQueues.push({
+            vhost: "literal%2F",
+            name: queue,
+            type: "quorum",
+            arguments: { "x-queue-type": "quorum", "x-message-ttl": 8000 },
+          });
+          assert.deepEqual(await readFile(profileFile), saved);
+          checks.push(
+            "real-declaration-in-current-temporary-vhost-equivalence-conflict-and-permission",
+          );
+        }
         await openConnections();
         await page
           .getByRole("button", { name: "Listar vhosts", exact: true })
@@ -1038,6 +1168,28 @@ async function runVersion({ version, digest }) {
           });
         });
         assert.equal(unsupported.error.code, "QUEUE_LIST_ROUTE");
+        if (declarationMatrix) {
+          const { openForm, submit } = require("./queue-declaration.cjs");
+          const queue = "bunnies-new-detailed";
+          const form = await openForm(page, { name: queue });
+          await submit(form, "Declaração confirmada");
+          await form
+            .getByRole("button", { name: "Verificar fila", exact: true })
+            .click();
+          const item = page.getByRole("dialog", { name: queue, exact: true });
+          await item.getByText("classic", { exact: true }).first().waitFor();
+          await page.keyboard.press("Escape");
+          await item.waitFor({ state: "hidden" });
+          declaredQueues.push({
+            vhost: "detailed",
+            name: queue,
+            type: "classic",
+            arguments: { "x-queue-type": "classic" },
+          });
+          checks.push(
+            "real-declaration-and-exact-detail-in-detailed-without-global-list",
+          );
+        }
         await openConnections();
         checks.push(
           "real-queue-stale-generation-temporary-vhost-and-detailed-refusal",
@@ -1347,7 +1499,13 @@ async function runVersion({ version, digest }) {
       );
     assert.ok(logs.includes("closing AMQP connection"));
     checks.push("broker-log-confirms-exact-vhosts-and-connection-close");
-    assert.deepEqual(await queueIdentity(), initialQueues);
+    assert.deepEqual(
+      await queueIdentity(),
+      [...initialQueues, ...declaredQueues].sort(
+        (a, b) =>
+          a.vhost.localeCompare(b.vhost) || a.name.localeCompare(b.name),
+      ),
+    );
     assert.equal((await api("consumers")).length, 0);
     const overview = await api("overview");
     report.churn = overview.churn_rates;
@@ -1356,9 +1514,11 @@ async function runVersion({ version, digest }) {
     assert.deepEqual(errors, []);
     assert.equal(await page.url(), "bunnies://app/app_window/index.html");
     checks.push(
-      queuesMatrix
-        ? "fixture-queues-unchanged-no-consumers-channels-connections-or-renderer-network"
-        : "no-queues-consumers-live-channels-connections-or-renderer-network",
+      declarationMatrix
+        ? "only-declared-queues-changed-no-consumers-channels-connections-or-renderer-network"
+        : queuesMatrix
+          ? "fixture-queues-unchanged-no-consumers-channels-connections-or-renderer-network"
+          : "no-queues-consumers-live-channels-connections-or-renderer-network",
     );
     report.app = await app.evaluate(({ app }) => ({
       version: app.getVersion(),
@@ -1422,6 +1582,11 @@ async function runVersion({ version, digest }) {
 }
 async function run() {
   try {
+    if (declarationGate)
+      managementAdapter =
+        await require("./management-gate.cjs").prepareGateAdapter(
+          "src/main/management/queueDeclaration.ts",
+        );
     if (managementGateA || vhostGate || queuesGate)
       managementAdapter =
         await require("./management-gate.cjs").prepareManagementGate();

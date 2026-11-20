@@ -2,7 +2,9 @@ import {
   closedObject,
   isManagementSnapshot,
   isQueueSnapshot,
-  type ManagementReadSnapshot,
+  isQueueDeclarationSnapshot,
+  type QueueDeclarationSnapshot,
+  type ManagementResponse,
   type QueueSnapshot,
   managementErrors,
   managementId,
@@ -45,7 +47,7 @@ export function createDesktopApi(
 ): DesktopApi {
   async function managementCall(
     request: ManagementRequest,
-  ): Promise<ManagementResult<ManagementReadSnapshot | undefined>> {
+  ): Promise<ManagementResult<ManagementResponse>> {
     try {
       const result = await invokeManagement(request);
       if (
@@ -59,23 +61,34 @@ export function createDesktopApi(
       ) {
         const { input } = request;
         const value = result.value;
-        if (request.command === "cancelManagementRead" && value === undefined)
+        if (
+          (request.command === "cancelManagementRead" ||
+            request.command === "cancelQueueDeclaration") &&
+          value === undefined
+        )
           return { ok: true, requestId: result.requestId, value };
-        if (!isQueueSnapshot(value) && !isManagementSnapshot(value))
+        if (
+          !isQueueSnapshot(value) &&
+          !isManagementSnapshot(value) &&
+          !isQueueDeclarationSnapshot(value)
+        )
           throw new Error();
         const matches =
-          request.command === "listSessionQueues"
-            ? value.kind === "queuePage" &&
-              value.page === request.input.page &&
-              (request.input.search !== undefined ||
-                value.totalCount === value.filteredCount)
-            : request.command === "getSessionQueue"
-              ? value.kind === "queueDetail" &&
-                value.queue.name === request.input.name
-              : request.command === "getBrokerInfo"
-                ? value.kind === "broker"
-                : request.command === "listSessionVhosts" &&
-                  value.kind === "vhosts";
+          request.command === "declareSessionQueue"
+            ? value.kind === "queueDeclaration" &&
+              value.name === request.input.declaration.name
+            : request.command === "listSessionQueues"
+              ? value.kind === "queuePage" &&
+                value.page === request.input.page &&
+                (request.input.search !== undefined ||
+                  value.totalCount === value.filteredCount)
+              : request.command === "getSessionQueue"
+                ? value.kind === "queueDetail" &&
+                  value.queue.name === request.input.name
+                : request.command === "getBrokerInfo"
+                  ? value.kind === "broker"
+                  : request.command === "listSessionVhosts" &&
+                    value.kind === "vhosts";
         if (
           matches &&
           value.sessionId === input.sessionId &&
@@ -100,10 +113,14 @@ export function createDesktopApi(
       }
       throw new Error();
     } catch {
+      const code =
+        request.command === "declareSessionQueue"
+          ? "QUEUE_DECLARATION_UNCERTAIN"
+          : "UNAVAILABLE";
       return {
         ok: false,
         requestId: "transport",
-        error: { code: "UNAVAILABLE", message: managementErrors.UNAVAILABLE },
+        error: { code, message: managementErrors[code] },
       };
     }
   }
@@ -182,6 +199,14 @@ export function createDesktopApi(
     getSessionQueue: input =>
       managementCall({ command: "getSessionQueue", input }) as Promise<
         ManagementResult<QueueSnapshot<QueueDetail>>
+      >,
+    declareSessionQueue: input =>
+      managementCall({ command: "declareSessionQueue", input }) as Promise<
+        ManagementResult<QueueDeclarationSnapshot>
+      >,
+    cancelQueueDeclaration: input =>
+      managementCall({ command: "cancelQueueDeclaration", input }) as Promise<
+        ManagementResult<undefined>
       >,
     cancelManagementRead: input =>
       managementCall({ command: "cancelManagementRead", input }) as Promise<

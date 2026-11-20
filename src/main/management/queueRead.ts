@@ -50,19 +50,29 @@ export function queueRouteError(query: QueueQuery) {
     return "QUEUE_LIST_ROUTE";
 }
 
+export function queueItemPath(vhost: string, name: string): string | undefined {
+  if (
+    !boundedManagementText(vhost, 255) ||
+    !boundedManagementText(name, 255) ||
+    queueSegmentUnsupported(vhost) ||
+    queueSegmentUnsupported(name)
+  )
+    return undefined;
+  return (
+    "/api/queues/" + encodeURIComponent(vhost) + "/" + encodeURIComponent(name)
+  );
+}
+
 export function queuePath(query: QueueQuery): string | undefined {
-  if (!boundedManagementText(query.vhost, 255)) return undefined;
-  const path = "/api/queues/" + encodeURIComponent(query.vhost);
   if (query.kind === "queueDetail") {
-    if (!boundedManagementText(query.name, 255)) return undefined;
+    const path = queueItemPath(query.vhost, query.name);
     return (
-      path +
-      "/" +
-      encodeURIComponent(query.name) +
-      "?" +
-      new URLSearchParams({ columns: detailColumns.join(",") })
+      path &&
+      path + "?" + new URLSearchParams({ columns: detailColumns.join(",") })
     );
   }
+  if (!boundedManagementText(query.vhost, 255)) return undefined;
+  const path = "/api/queues/" + encodeURIComponent(query.vhost);
   if (
     !isQueuePageNumber(query.page) ||
     (query.search !== undefined && !boundedManagementText(query.search, 255))

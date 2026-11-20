@@ -1,12 +1,12 @@
 # Roadmap e contratos de execução
 
-Atualizado em: 2026-11-19. Etapas 0–3B, 4A.1, DOC.1, 4A.2A/B/C e 4B.1/4B.2
+Atualizado em: 2026-11-20. Etapas 0–3B, 4A.1, DOC.1, 4A.2A/B/C e 4B.1/4B.2
 concluídas e aprovadas. Nove ADRs e D3A-01–08 aceitos. O gate 4B.2 inicial
 falhou nas duas versões e o gate revisto passou após o aceite do fechamento
 confirmado. “Aprovado” aceitou a conclusão e o commit da 4B.2.
 A revisão da 5A foi aceita por “Aprovo”. O gate revisado, os smokes e a
 matriz do pacote passaram, e o proprietário aprovou a conclusão e o
-registro local da 5A.
+registro local da 5A. “Aprovado” aceitou a conclusão e o registro local da 5B.
 
 ## Sequência proposta
 
@@ -24,7 +24,7 @@ registro local da 5A.
 | 4A.2 | Testes HTTPS/AMQPS, CA customizada e ciclo de sessão | A/B/C concluídas/aprovadas; última entrega aba792d |
 | 4B.1 | Contexto administrativo: versão, vhosts visíveis e leitura do vhost atual | Concluída/aprovada; commit `4a35424` |
 | 4B.2 | Seleção de vhost e transição de contexto | Concluída e aprovada em 2026-11-18 |
-| 5 | Filas e proteção das operações destrutivas | 5A concluída, aprovada e registrada. 5B e 5C aguardam contratos próprios |
+| 5 | Filas e proteção das operações destrutivas | 5A concluída e registrada. 5B concluída, aprovada e registrada. 5C aguarda contrato próprio |
 | 6 | Exchanges e bindings | Proposta |
 | 7 | Publicação AMQP, confirmações e falhas de rede | Proposta |
 | 8 | Dashboard e monitoramento básico | Proposta |
@@ -1838,3 +1838,200 @@ a 200% foram revisadas. Ver [evidências](../07-testing/queues-5a.md).
 Em 2026-11-19, “Aprovo a conclusao da 5A” aceitou a entrega verificada.
 A resposta “Autorizado, pode prosseguir” aprovou em seguida o commit
 `feat(queues): add scoped queue reads`.
+
+## Contrato proposto — 5B: declaração de filas classic e quorum
+
+Proposto em 2026-11-19. Status: **execução aprovada por “Autorizo” em
+2026-11-20**, condicionando a integração ao gate.
+“Continue” iniciou a preparação. Base: `main` em `cd1c2bf`, entrega 5A.
+
+| Campo | Proposta para aprovação |
+| --- | --- |
+| Objetivo | Criar filas classic/quorum no vhost ativo e explicar aceites, recusas, divergências e resultados incertos |
+| Escopo | Formulário em Filas, um PUT pontual via HTTPS Management e uma leitura pontual para conferir propriedades após o aceite HTTP |
+| Dependências | 5A, contexto de sessão 4B.2, transporte aprovado na ADR-0002, TLS e credenciais do perfil ativo; versões e dependências já instaladas |
+| Módulos | M03, com autorização de sessão M01 e transporte administrativo M06 |
+| Riscos | Permissão por recurso, parâmetros imutáveis, equivalência de tipo relaxada, policies, efeito após perda da resposta e troca de contexto |
+| Verificação | Gate pré-UI em RabbitMQ 4.4.0 e 4.3.6 fixados por digest, testes de ciclo de vida e fronteira, package, smokes e matriz no pacote |
+| Aceitação | 5B-01–09 abaixo, FR-009, FR-025–030, MVP-Q02 e NFR-006–009/012–017 aplicáveis |
+| Branch | `main` existente em `cd1c2bf` na retomada |
+| Resultado | Declaração explícita com destino visível, confirmação verificável e ação de consulta em caso de incerteza |
+| Documentação | M03, arquitetura, segurança, NFRs, evidências, guia canônico, Ajuda e estado atual acompanham o comportamento entregue |
+
+### Decisões propostas
+
+1. **5B-D01 — Autoridade e destino.** Usar o contexto da 5A: janela em
+   foreground, sessão desejada, HTTPS disponível e AMQPS estabelecido no vhost
+   atual, inclusive com fluxo bloqueado enquanto conectado. O main resolve
+   owner, sessão, geração, perfil, revisão, vhost exato, credenciais e prefixo
+   HTTPS. Troca de vhost, recuperação AMQPS e encerramento tornam a operação
+   indisponível. A escrita acontece no endpoint HTTPS do perfil. A sessão
+   AMQPS fixa o contexto e os dois endpoints podem apontar para brokers
+   diferentes. A resposta do endpoint decide a autorização da operação.
+   Lista de vhosts, tag e versão declarada, por si sós, não comprovam
+   permissão ou capacidade de recurso. A matriz de referência é 4.4.0/4.3.6.
+2. **5B-D02 — Rota e formato fechados.** Fazer um
+   `PUT /api/queues/{vhost}/{name}` com `application/json`. Codificar os dois
+   segmentos uma vez. Nome e vhost não vazios, até 255 bytes UTF-8, sem C0/DEL
+   ou Unicode inválido. Preservar barra, espaços, caixa, Unicode e percentuais
+   literais. Recusar segmentos exatos `.` e `..`, e nomes de fila iniciados
+   por `amq.`. O main monta `durable: true`, `exclusive: false`,
+   `auto_delete: false` e `arguments` com o tipo explícito e o catálogo abaixo.
+   A entrada IPC admite referência de sessão, operação, nome, tipo e esses
+   argumentos tipados. Flags, destino, método, cabeçalhos, parâmetros livres e
+   seleção de nó ficam fora da entrada. A rota de item em `detailed` entra no
+   gate próprio. A guarda da listagem 5A continua ativa nesse vhost.
+3. **5B-D03 — Catálogo candidato, sujeito ao gate real.** Aceitar `classic`
+   ou `quorum`. Os campos opcionais `x-message-ttl` em ms e `x-max-length`
+   em mensagens aceitam inteiros de 0 a 2.147.483.647 como limite da UI e
+   do main, com ausência distinta de zero. A UI aceita somente dígitos
+   decimais nos campos numéricos e mostra unidade e efeito. Para
+   `x-dead-letter-exchange` e `x-dead-letter-routing-key`, aceitar texto
+   exato de até 255 bytes UTF-8, com as validações de caracteres da 5B-D02,
+   sem aplicar as restrições de segmento a textos do corpo. A UI distingue
+   argumento ausente de texto vazio explícito. Exchange vazia representa a
+   exchange padrão. Routing key explícita exige DLX explícita nesta
+   declaração. Quando DLX estiver presente, explicar a exigência de leitura
+   na fila e escrita na exchange, além da permissão de configuração na fila.
+   A operação referencia a exchange no mesmo vhost. Policies podem influir
+   nos limites efetivos, e o formulário mostra o que será declarado.
+4. **5B-D04 — Equivalência e confirmação.** Executar diretamente o PUT,
+   com a equivalência aferida pelo broker. Após uma resposta de aceite
+   comprovada pelo gate, fazer no máximo um GET de item no mesmo endpoint,
+   com projeção de nome, vhost, tipo, flags e argumentos. Validar identidade,
+   tipo real, flags e igualdade dos argumentos do catálogo, inclusive presença
+   ou ausência. Se `x-queue-type` estiver presente nos argumentos, deve
+   coincidir com o campo de tipo. Argumentos externos ao catálogo não são
+   enviados ao renderer. Confirmar somente a declaração e os metadados
+   observados naquele horário. Uma fila equivalente preexistente pode
+   receber o mesmo aceite. Se o broker aceitar a escrita e o GET mostrar
+   propriedades divergentes, apresentar a divergência. Se o GET falhar,
+   mostrar “Declaração aceita, conferência indisponível”. O produto não
+   resolve conflitos com sobreposição, exclusão, alteração de policy ou
+   nova declaração automática. O mesmo GET de item serve à verificação
+   mesmo quando a listagem estiver indisponível.
+5. **5B-D05 — Erros, cancelamento e concorrência.** Distinguir falha ou
+   cancelamento com envio comprovadamente ausente, negativa explícita do
+   broker, conflito de propriedades, aceite conferido, aceite com
+   conferência incompleta e resultado incerto após possível envio.
+   Reconhecer status/envelopes de recusa somente conforme evidência das
+   duas versões. Erros ambíguos, incluindo perda de resposta, prazo e
+   cancelamento após possível envio e antes de aceite válido, ficam como
+   resultado incerto. Cancelar interrompe a espera e libera recursos
+   locais. Exibir diagnóstico sanitizado e permitir verificação manual
+   de leitura antes de uma nova ação explícita de escrita. Uma operação
+   administrativa em voo, compartilhada com as leituras 4B.1/5A, com
+   `whoami` independente. A vaga permanece ocupada até concluir o
+   cancelamento local. Prazo total de 30 s, incluindo validações
+   assíncronas e verificação. A leitura pós-aceite tem, além disso, limite
+   de 10 s dentro do saldo total. Limites propostos de 2 KiB no corpo da
+   declaração, 256 KiB na resposta, 16 KiB nos headers e profundidade JSON
+   16 para respostas, com encoding identity. Reusar TLS, CA, verificação do
+   hostname e bloqueio de redirect/proxy herdado.
+6. **5B-D06 — IPC, ciclo de vida e interface.** Propor
+   `declareSessionQueue` e `cancelQueueDeclaration` em
+   `bunnies:management` (28 → 30 métodos). Validar origem, frame, owner,
+   entradas e respostas. Cancelamento verifica sessão, geração e ID da
+   operação e afeta somente a declaração correspondente. Revalidar
+   autoridade, contexto e revisão antes do PUT, antes do GET e antes de
+   publicar o resultado. Perda de elegibilidade, suspensão, reload e
+   encerramento interrompem o fluxo local. Resultados do contexto antigo
+   não atualizam o novo. Em Filas, abrir **Nova fila**, preencher nome,
+   tipo e opções e confirmar **Declarar fila** com perfil, ambiente,
+   vhost, operação e argumentos visíveis. Identificar produção com texto
+   e símbolo. Bloquear submissões concorrentes e mostrar progresso.
+   Quando houver envio possível, avisar que parar de aguardar não desfaz
+   a escrita. Oferecer **Verificar fila** por consulta existente de item
+   quando o alvo ainda estiver no contexto. Marcar a lista desatualizada
+   após possível escrita e atualizar por ação explícita. Validar teclado,
+   retorno de foco, temas claro/escuro e zoom de 200%. Rascunho e resultado
+   transitórios, sem persistência.
+7. **5B-D07 — Gate inicial e verificação multiplataforma.** Provar o
+   mesmo adapter de produto nas imagens fixadas nas versões 4.4.0/4.3.6,
+   com TLS, prefixo, vhosts sintéticos, usuários mínimos e observador do
+   harness. O observador confere os objetos antes/depois. Fixtures HTTPS
+   permitem medir requisições, atrasos e cortes antes/depois do envio.
+   Integrar IPC/UI e documentar a função como disponível após passar o
+   gate. Divergência que exija mudar semântica/escopo exige decisão antes
+   dos dependentes. Executar check, package, oito smokes existentes em
+   sequência, incluindo Filas, e smoke de declaração no pacote. Repetir
+   matriz real no mesmo executável. Registrar plataforma, arquitetura e
+   hash por execução. A CI atual configura jobs de package em Ubuntu,
+   Windows Server e macOS, com smoke base automatizado em macOS. Testes
+   nativos em Windows 11 x64, Ubuntu 24.04 x64 e demais alvos da ADR-0005
+   exigem executores disponíveis e evidência por alvo. Um build por si só
+   não verifica uso do aplicativo.
+
+### Critérios de aceitação
+
+1. **5B-01.** O gate cria classic e quorum com as flags fixas nas duas versões,
+   confirma tipo e argumentos projetados e cobre ausência, zero, limites
+   aprovados, DLX nomeada/padrão, routing key vazia e vínculo DLX–routing key.
+   Resultados e limpeza registrados por versão.
+2. **5B-02.** O destino usa somente o vhost vigente, inclusive temporário.
+   Casos com `/`, espaços, Unicode, percentuais e vhost `detailed` demonstram
+   a rota exata. Nomes reservados, controles, tamanho inválido e DTO com
+   campos extras não geram chamada. Homônimos em outro vhost são preservados.
+3. **5B-03.** O broker deixa intacta uma fila equivalente e rejeita
+   incompatibilidades de flags/tipo/argumentos com equivalência estrita.
+   A conferência detecta tipo divergente se houver aceite com equivalência
+   relaxada. A interface não afirma que criou um recurso preexistente.
+4. **5B-04.** Gate usa conta Management sem configuração do recurso, conta
+   mínima apta a declarar e negativas específicas de DLX. Testes demonstram
+   que o produto não eleva privilégios, não cria canais AMQP do cliente e
+   não altera filas alheias, exchanges, bindings ou mensagens.
+5. **5B-05.** Fixture com contagem de PUTs prova zero envio para cancelamento
+   anterior à transmissão, um envio para queda posterior, nenhum replay
+   após reconectar e nenhuma atualização de um contexto antigo. Cobrir
+   aceite seguido de queda na conferência, orçamento de tempo, TLS, corpo
+   excedido, redirect e concorrência com leitura.
+6. **5B-06.** IPC/preload rejeitam frame, operação ou geração divergentes e
+   projetam somente valores do contrato e diagnóstico local. Segredos,
+   detalhes brutos do broker e argumentos extras não cruzam a ponte.
+7. **5B-07.** Formulário e resultado funcionam por teclado com foco visível,
+   contexto de produção identificado e ambos os temas a 200%. Após
+   resultado incerto, verificar abre só leitura do alvo autorizado.
+8. **5B-08.** Check, package, smokes aplicáveis e matriz real no pacote passam,
+   com regressão de listagem, detalhes e troca de vhost confirmada. Os
+   testes em broker usam somente recursos isolados do harness. Evidências
+   distinguem validação de macOS, builds em CI e smokes nativos por SO.
+9. **5B-09.** Guia e Ajuda continuam com a mesma fonte. M03, requisitos,
+   segurança, arquitetura, evidências e histórico registram o recorte
+   verificado. Conclusão e commit passam por aceite próprio.
+
+### Estrutura e referências
+
+- Contratos fechados em `src/shared/management.ts` e `src/shared/queues.ts`.
+  Guardas de sessão em `src/main/sessions/sessionService.ts`, coordenação e
+  transporte em `src/main/management/`, com o adapter de declaração no
+  mesmo diretório. Reusar o transporte TLS limitado, com rotas definidas no
+  main. Ligar operações específicas em `src/main/ipc/management.ts` e
+  `src/preload/desktopApi.ts`.
+- Acrescentar o formulário em `src/renderer/pages/Queues.tsx` e componente
+  de formulário no mesmo diretório. Atualizar `docs/10-user-guide/guide.json`
+  e gerar o Markdown. Registrar evidências em `docs/07-testing/queues-5b.md`
+  durante a execução. Acrescentar cenários ao harness
+  `tools/testing/rabbitmq-real.cjs` e aos smokes locais.
+- O HTTP de declaração encaminha a operação à lógica de declaração do
+  broker nas versões de referência. Status HTTP, conflito, permissões e
+  equivalência permanecem hipóteses de comportamento até o gate. A
+  criação de exchange, edição de policy, declaração stream, exclusão e
+  purge não compõem a 5B. Manter dependências, patch, ADRs e schema local.
+
+[PUT na Management API](https://www.rabbitmq.com/docs/http-api-reference#put-apiqueuesvhostname),
+[propriedades e equivalência](https://www.rabbitmq.com/docs/queues#declaration-and-property-equivalence),
+[comparação classic/quorum](https://www.rabbitmq.com/docs/quorum-queues#feature-matrix),
+[TTL](https://www.rabbitmq.com/docs/ttl#per-queue-message-ttl-in-queues),
+[limites de comprimento](https://www.rabbitmq.com/docs/maxlength),
+[DLX e permissões](https://www.rabbitmq.com/docs/dlx#how-dead-lettering-is-configured),
+[handler 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_wm_queue.erl#L61-L71)
+e [handler 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_wm_queue.erl#L61-L71).
+
+O gate final passou dez verificações por versão. Check, package, nove
+smokes e 76 verificações no executável passaram em macOS arm64. As
+capturas nos dois temas a 200% foram revisadas.
+Ver [evidências da 5B](../07-testing/queues-5b.md).
+
+“Aprovado” aceitou a conclusão da 5B e autorizou o commit local
+`feat(queues): add verified queue declarations`. O contrato da 5C
+será preparado após solicitação própria.

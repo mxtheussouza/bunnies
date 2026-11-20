@@ -106,12 +106,12 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **5A — concluída, aprovada e registrada**.
-- Última etapa concluída e aprovada: **5A — listagem e detalhe de filas**.
-- Última entrega registrada: `feat(queues): add scoped queue reads` em
-  `main`, com pai `2f1f6cc`.
+- Etapa atual: **5B — concluída, aprovada e registrada**.
+- Última etapa concluída e aprovada: **5B — declaração de filas classic e quorum**.
+- Última entrega registrada: `feat(queues): add verified queue declarations`
+  em `main`, com pai `cd1c2bf`.
 - Mudança da barra macOS em `9401448` preservada.
-- Próxima ação: aguardar solicitação para preparar o contrato da 5B.
+- Próxima ação: aguardar solicitação para preparar o contrato da 5C.
 
 Ao retomar, ler este arquivo, [PROJECTS_STATUS.md](PROJECTS_STATUS.md), a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -569,3 +569,41 @@ Em 2026-11-19, “Autorizado, pode prosseguir” aceitou o registro local
 `feat(queues): add scoped queue reads`. A entrega, os documentos de
 aceite e o ASAR foram conferidos antes do registro. O próximo contrato
 depende de solicitação própria.
+
+## Preparação vigente — 5B
+
+Após `cd1c2bf`, “Continue” pediu preparar o contrato da 5B. A proposta
+está Proposed e cobre declaração classic/quorum via Management HTTPS,
+conferência da fila após aceite e tratamento de resultado incerto.
+Aprovar 5B-D01–07 e 5B-01–09 antes do adapter e do gate isolado.
+A preparação é documental. A 5C tem contrato próprio.
+
+## Execução autorizada — 5B
+
+“Autorizo” aceitou 5B-D01–07 e 5B-01–09 em 2026-11-20. Começar pelo
+adapter e gate real em brokers isolados. A integração depende do
+resultado. Conclusão, commit e 5C requerem aceites próprios.
+
+## Validação parcial — 5B
+
+Gate final passou 18 verificações nas versões 4.4.0/4.3.6. Ponte com
+30 métodos e Guia/Ajuda sincronizados. Check (291 + seis Node), package
+e smokes de Perfis, HTTPS e AMQPS passaram em macOS arm64. A sessão
+gráfica bloqueada impede concluir as verificações de foco e a matriz
+empacotada. Ver [evidências](docs/07-testing/queues-5b.md) na retomada.
+
+## 5B pronta para revisão
+
+Check 291 + seis Node, gate final 20, package, nove smokes e 76
+verificações reais no mesmo ASAR passaram. Revisadas as capturas a
+200%. O cenário 5xx em conflito com nome Unicode tem resultado
+incerto e consulta manual. Conclusão e commit aguardam aceite
+próprio. Ver [evidências](docs/07-testing/queues-5b.md).
+
+## Conclusão e commit da 5B aprovados
+
+Em 2026-11-20, “Aprovado” aceitou a conclusão e autorizou o commit local
+`feat(queues): add verified queue declarations`. Os 36 arquivos
+apresentados, o ASAR e a matriz foram conferidos antes do registro.
+O aceite mantém as limitações documentadas. A 5C exige solicitação e
+contrato próprios. Ver [evidências](docs/07-testing/queues-5b.md).

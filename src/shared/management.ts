@@ -2,6 +2,9 @@ import type { SessionRef } from "./session";
 import {
   MAX_QUEUE_CONSUMERS,
   MAX_QUEUE_PAGE,
+  MAX_QUEUE_ARGUMENT_INTEGER,
+  QUEUE_OPTION_KEYS,
+  type QueueDeclaration,
   QUEUE_PAGE_SIZE,
   queueListRouteConflict,
   queueSegmentUnsupported,
@@ -40,6 +43,11 @@ export const managementErrors = {
     "A listagem no vhost detailed está indisponível porque o RabbitMQ reserva esse caminho para uma consulta global.",
   QUEUE_PAGE:
     "A página de filas solicitada deixou de existir. Volte à primeira página.",
+  QUEUE_DECLARATION_CONFLICT:
+    "A fila existente tem propriedades incompatíveis com a declaração.",
+  QUEUE_DECLARATION_UNCERTAIN:
+    "O resultado da declaração é incerto. Verifique a fila no broker antes de reenviar.",
+  QUEUE_DECLARATION_REFUSED: "O RabbitMQ recusou os parâmetros da declaração.",
   CREDENTIALS:
     "Revise usuário e senha disponíveis nesta execução; use texto UTF-8 e usuário sem dois-pontos.",
   INTERNAL: "Não foi possível concluir a consulta administrativa.",
@@ -80,13 +88,32 @@ export type QueueListInput = ManagementInput & {
   search?: string;
 };
 export type QueueDetailInput = ManagementInput & { name: string };
+export type QueueDeclarationInput = ManagementInput & {
+  declaration: QueueDeclaration;
+};
+export type QueueDeclarationSnapshot = ManagementSnapshotHeader & {
+  kind: "queueDeclaration";
+  vhost: string;
+  name: string;
+} & (
+    | { status: "confirmed" | "divergent" }
+    | { status: "unverified" | "uncertain"; reason: ManagementError }
+  );
+export type ManagementResponse =
+  ManagementReadSnapshot | QueueDeclarationSnapshot | undefined;
+
 export type ManagementRequest =
   | {
-      command: "getBrokerInfo" | "listSessionVhosts" | "cancelManagementRead";
+      command:
+        | "getBrokerInfo"
+        | "listSessionVhosts"
+        | "cancelManagementRead"
+        | "cancelQueueDeclaration";
       input: ManagementInput;
     }
   | { command: "listSessionQueues"; input: QueueListInput }
-  | { command: "getSessionQueue"; input: QueueDetailInput };
+  | { command: "getSessionQueue"; input: QueueDetailInput }
+  | { command: "declareSessionQueue"; input: QueueDeclarationInput };
 export interface ManagementApi {
   getBrokerInfo(
     input: ManagementInput,
@@ -100,6 +127,12 @@ export interface ManagementApi {
   getSessionQueue(
     input: QueueDetailInput,
   ): Promise<ManagementResult<QueueSnapshot<QueueDetail>>>;
+  declareSessionQueue(
+    input: QueueDeclarationInput,
+  ): Promise<ManagementResult<QueueDeclarationSnapshot>>;
+  cancelQueueDeclaration(
+    input: ManagementInput,
+  ): Promise<ManagementResult<undefined>>;
   cancelManagementRead(
     input: ManagementInput,
   ): Promise<ManagementResult<undefined>>;
@@ -180,6 +213,67 @@ export function isQueueDetailInput(v: unknown): v is QueueDetailInput {
     isManagementRef(v) &&
     boundedManagementText(v.name, 255)
   );
+}
+
+export function isQueueDeclarationInput(
+  value: unknown,
+): value is QueueDeclarationInput {
+  return (
+    closedObject(value, [...inputKeys, "declaration"]) &&
+    isManagementRef(value) &&
+    isQueueDeclaration(value.declaration)
+  );
+}
+
+export function isQueueDeclarationSnapshot(
+  value: unknown,
+): value is QueueDeclarationSnapshot {
+  const keys = [...snapshotKeys, "name", "vhost", "status"];
+  if (
+    !closedObject(value, keys, ["reason"]) ||
+    value.kind !== "queueDeclaration" ||
+    !isSnapshotHeader(value) ||
+    !boundedManagementText(value.name, 255) ||
+    queueSegmentUnsupported(value.name) ||
+    value.name.startsWith("amq.") ||
+    !boundedManagementText(value.vhost, 255) ||
+    queueSegmentUnsupported(value.vhost)
+  )
+    return false;
+  if (value.status === "confirmed" || value.status === "divergent")
+    return !Object.hasOwn(value, "reason");
+  return (
+    (value.status === "unverified" || value.status === "uncertain") &&
+    typeof value.reason === "string" &&
+    Object.hasOwn(managementErrors, value.reason)
+  );
+}
+
+export function isQueueDeclaration(value: unknown): value is QueueDeclaration {
+  if (
+    !closedObject(value, ["name", "type", "arguments"]) ||
+    !boundedManagementText(value.name, 255) ||
+    queueSegmentUnsupported(value.name) ||
+    value.name.startsWith("amq.") ||
+    (value.type !== "classic" && value.type !== "quorum") ||
+    !closedObject(value.arguments, [], [...QUEUE_OPTION_KEYS])
+  )
+    return false;
+  const args = value.arguments;
+  if (
+    Object.hasOwn(args, "x-dead-letter-routing-key") &&
+    !Object.hasOwn(args, "x-dead-letter-exchange")
+  )
+    return false;
+  for (const key of QUEUE_OPTION_KEYS) {
+    if (!Object.hasOwn(args, key)) continue;
+    const field = args[key];
+    if (key === "x-message-ttl" || key === "x-max-length") {
+      if (!nonnegativeInteger(field) || field > MAX_QUEUE_ARGUMENT_INTEGER)
+        return false;
+    } else if (field !== "" && !boundedManagementText(field, 255)) return false;
+  }
+  return true;
 }
 
 function isSnapshotHeader(v: Record<string, unknown>) {

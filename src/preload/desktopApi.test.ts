@@ -63,6 +63,8 @@ describe("preload API", () => {
         "listSessionVhosts",
         "listSessionQueues",
         "getSessionQueue",
+        "declareSessionQueue",
+        "cancelQueueDeclaration",
         "selectSessionVhost",
         "cancelManagementRead",
         "openLink",
@@ -232,5 +234,64 @@ it("accepts the exact queue projection and rejects extra fields or a mismatched 
     const result = await api.getSessionQueue(input);
     expect(result.ok).toBe(false);
     expect(JSON.stringify(result)).not.toContain("private-fixture");
+  }
+});
+
+it("rejects mismatched declaration responses conservatively after an IPC call", async () => {
+  const call = vi.fn(),
+    management = vi.fn();
+  const api = createDesktopApi(
+    call,
+    call,
+    call,
+    undefined,
+    undefined,
+    management,
+  );
+  const ref = {
+    sessionId: "00000000-0000-4000-8000-000000000001",
+    operationId: "00000000-0000-4000-8000-000000000002",
+    generation: 1,
+  };
+  const input = {
+    ...ref,
+    declaration: {
+      name: "literal%2F",
+      type: "classic" as const,
+      arguments: {},
+    },
+  };
+  const value = {
+    ...ref,
+    kind: "queueDeclaration",
+    source: "https-management",
+    checkedAt: "2026-11-20T12:00:00.000Z",
+    vhost: "/",
+    name: input.declaration.name,
+    status: "uncertain",
+    reason: "CANCELLED",
+  };
+  management.mockResolvedValueOnce({
+    ok: true,
+    requestId: ref.operationId,
+    value,
+  });
+  expect((await api.declareSessionQueue(input)).ok).toBe(true);
+  for (const changed of [
+    { name: "different" },
+    { generation: 2 },
+    { private: "SENTINEL" },
+  ]) {
+    management.mockResolvedValueOnce({
+      ok: true,
+      requestId: ref.operationId,
+      value: { ...value, ...changed },
+    });
+    const result = await api.declareSessionQueue(input);
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "QUEUE_DECLARATION_UNCERTAIN" },
+    });
+    expect(JSON.stringify(result)).not.toContain("SENTINEL");
   }
 });

@@ -41,5 +41,26 @@ aparecem como indisponíveis, e zero e lista vazia têm representações própri
 Ver [guia](../10-user-guide/README.md), [contrato](../05-roadmap/roadmap.md#contrato-proposto--5a-listagem-e-detalhe-de-filas)
 e [evidências da 5A](../07-testing/queues-5a.md).
 
-Criação de filas pertence à 5B. Exclusão e limpeza de mensagens prontas
-pertencem à 5C. Esses incrementos aguardam contratos próprios.
+## Declaração de filas — 5B
+
+A tela Filas apresenta **Nova fila**. A declaração usa o vhost exato da
+sessão, o endpoint HTTPS Management e flags fixas: durável, não exclusiva
+e sem exclusão automática. Os tipos são classic e quorum. O formulário
+aceita TTL de mensagens, limite de mensagens, DLX e routing key, conforme
+o [catálogo e limites](../05-roadmap/roadmap.md#contrato-proposto--5b-declaração-de-filas-classic-e-quorum).
+
+O main aceita a declaração explícita e monta um PUT de item. O aceite
+HTTP é seguido de uma leitura pontual das propriedades. Uma fila
+equivalente preexistente pode receber confirmação. O resultado distingue
+conflito, divergência após aceite, falta de conferência após aceite e
+perda de resposta após possível envio. A pausa local não desfaz a escrita.
+O usuário pode conferir o item exato, inclusive no vhost `detailed`.
+Nos brokers de referência, um conflito exercitado com nome Unicode
+retornou 5xx e manteve o TTL original. A interface indica resultado
+incerto e oferece a leitura manual do item.
+
+A declaração compartilha a vaga administrativa das consultas. Resultados
+ficam em memória no contexto autorizado. O [guia](../10-user-guide/README.md#declarar-fila)
+explica permissões, cancelamento e próximos passos. Ver
+[evidências](../07-testing/queues-5b.md) para o recorte verificado.
+Exclusão e purge permanecem na 5C.

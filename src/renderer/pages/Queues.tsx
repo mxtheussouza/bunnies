@@ -14,13 +14,13 @@ import {
   queueSegmentUnsupported,
   type QueueDetail,
   type QueuePage,
-  type QueueSummary,
 } from "../../shared/queues";
 import type { SessionSnapshot } from "../../shared/session";
 import { environmentLabels } from "../../shared/profiles";
 import { useSession } from "../shell/SessionProvider";
 import Button from "../components/Button";
 import StatusMessage from "../components/StatusMessage";
+import QueueDeclarationForm from "./QueueDeclarationForm";
 import "./queues.scss";
 
 type ReadError = { code: ManagementError; requestId: string };
@@ -171,6 +171,8 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
   const [stale, setStale] = React.useState(false);
   const [running, setRunning] = React.useState<"page" | "detail">();
   const [detail, setDetail] = React.useState<DetailView>();
+  const [declarationOpen, setDeclarationOpen] = React.useState(false);
+  const declarationButton = React.useRef<HTMLButtonElement>(null);
   const active = React.useRef<ManagementInput | null>(null);
   const returnFocus = React.useRef<HTMLButtonElement | null>(null);
   const dialog = React.useRef<HTMLDialogElement>(null);
@@ -179,7 +181,9 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
   const summary = React.useRef<HTMLParagraphElement>(null);
   const focusSummary = React.useRef(false);
   const detailOpen = !!detail;
-  const canRead = !reason && !routeError && !!state.sessionId;
+  const sessionId = state.sessionId;
+  const canInspect = !reason && routeError !== "QUEUE_SEGMENT" && !!sessionId;
+  const canRead = canInspect && !routeError;
   const invalidDraft = draft !== "" && !boundedManagementText(draft, 255);
 
   const requestCancellation = React.useCallback(() => {
@@ -190,7 +194,7 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
   }, []);
 
   React.useLayoutEffect(() => {
-    if (!canRead) {
+    if (!canInspect) {
       setRunning(undefined);
       setStale(true);
       setDetail(undefined);
@@ -199,7 +203,7 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
       requestCancellation();
       active.current = null;
     };
-  }, [canRead, requestCancellation]);
+  }, [canInspect, requestCancellation]);
 
   React.useLayoutEffect(() => {
     const modal = dialog.current;
@@ -223,9 +227,16 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
   }, [data]);
 
   async function execute(query: QueueRequest, fromPagination = false) {
-    if (!canRead || !profile || !state.sessionId || active.current) return;
+    if (
+      !canInspect ||
+      ("page" in query && !canRead) ||
+      !profile ||
+      !sessionId ||
+      active.current
+    )
+      return;
     const input: ManagementInput = {
-      sessionId: state.sessionId,
+      sessionId,
       generation: state.generation,
       operationId: crypto.randomUUID(),
     };
@@ -283,11 +294,11 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
     }
   }
 
-  function openDetail(row: QueueSummary, trigger: HTMLButtonElement) {
-    if (!canRead || active.current || queueSegmentUnsupported(row.name)) return;
+  function openDetail(name: string, trigger: HTMLButtonElement | null) {
+    if (!canInspect || active.current || queueSegmentUnsupported(name)) return;
     returnFocus.current = trigger;
-    setDetail({ name: row.name });
-    void execute({ name: row.name });
+    setDetail({ name });
+    void execute({ name });
   }
 
   function closeDetail() {
@@ -327,6 +338,33 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
             " (temporário)"}
           {" · HTTPS Management"}
         </p>
+      )}
+      {profile && sessionId && (
+        <div>
+          <Button
+            ref={declarationButton}
+            aria-haspopup="dialog"
+            disabled={!canInspect || !!running}
+            onClick={() => {
+              if (!active.current) setDeclarationOpen(true);
+            }}
+          >
+            Nova fila
+          </Button>
+        </div>
+      )}
+      {declarationOpen && profile && sessionId && (
+        <QueueDeclarationForm
+          session={{ sessionId, generation: state.generation }}
+          profile={profile}
+          available={canInspect}
+          onClose={() => setDeclarationOpen(false)}
+          onPossibleWrite={() => setStale(true)}
+          onVerify={name => {
+            setDeclarationOpen(false);
+            openDetail(name, declarationButton.current);
+          }}
+        />
       )}
       {routeError ? (
         <StatusMessage tone="warning" title="Listagem indisponível">
@@ -458,7 +496,7 @@ function QueueWorkspace({ state }: { state: SessionSnapshot }) {
                                 aria-haspopup="dialog"
                                 aria-disabled={controlsDisabled}
                                 onClick={event =>
-                                  openDetail(row, event.currentTarget)
+                                  openDetail(row.name, event.currentTarget)
                                 }
                               >
                                 {row.name}

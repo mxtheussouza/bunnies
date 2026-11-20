@@ -191,3 +191,15 @@ Nenhuma nova rota HTTP é necessária.
 O limite local de resposta protege o cliente. O broker pode preparar uma
 resposta maior antes da interrupção. As medições e cenários de referência
 constam nas [evidências](../07-testing/queues-5a.md).
+
+## Sublimites aprovados — 5B
+
+| Referência | Recorte de declaração de filas |
+| --- | --- |
+| NFR-009/012 | Um PUT por ação explícita. Cancelamento após possível envio mantém resultado incerto na ausência de aceite comprovado |
+| NFR-013 | 30 s totais, incluindo autorização e conferência; leitura pós-aceite limitada também a 10 s |
+| NFR-015/016 | 2 KiB no corpo JSON de saída, 256 KiB no corpo de entrada, 16 KiB de cabeçalhos e profundidade de resposta 16 |
+| NFR-016 | Nome e textos de até 255 bytes UTF-8. TTL em ms e limite de mensagens de 0 a 2.147.483.647 |
+| NFR-017 | Uma operação manual administrativa em voo, compartilhada com as leituras; `whoami` independente |
+
+Ver [evidências da 5B](../07-testing/queues-5b.md) para resultados e plataformas.

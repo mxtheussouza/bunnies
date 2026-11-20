@@ -1,17 +1,18 @@
 # Bunnies — histórico vivo do projeto
 
-Atualizado em: 2026-11-19.
+Atualizado em: 2026-11-20.
 
 ## Estado atual
 
 - Branch: `main`.
-- Última entrega aprovada: **5A — listagem e detalhe de filas no vhost ativo**.
-- Aprovação atual: “Aprovo a conclusao da 5A” aceitou a conclusão.
-  “Autorizado, pode prosseguir” aceitou o registro local da entrega.
-- Última entrega registrada: `feat(queues): add scoped queue reads` em
-  `main`, com pai `2f1f6cc`. O registro inclui este histórico.
-- Task atual: **5A — concluída, aprovada e registrada**.
-- Próxima ação: aguardar solicitação para preparar o contrato 5B.
+- Última entrega aprovada: **5B — declaração de filas classic e quorum**.
+- Aprovação atual: “Aprovado” aceitou a conclusão e o commit da 5B
+  em 2026-11-20.
+- Última entrega registrada: `feat(queues): add verified queue declarations`
+  em `main`, com pai `cd1c2bf`. O registro inclui este histórico.
+- Task atual: **5B — concluída, aprovada e registrada**.
+- Próxima ação: aguardar solicitação para preparar o contrato 5C.
+  [Evidências 5B](docs/07-testing/queues-5b.md).
 
 ## Tarefas concluídas
 
@@ -32,6 +33,7 @@ Atualizado em: 2026-11-19.
 | 4B.1 | Versões informadas, vhosts visíveis limitados, cancelamento e ADR-0009 A | Concluída/aprovada em `4a35424` |
 | 4B.2 | Seleção temporária de vhost com fechamento confirmado e bloqueio em estado remoto incerto | Concluída/aprovada em `43113eb`, integrada à `main` em `2f1f6cc` |
 | 5A | Listagem paginada, busca literal e detalhe de filas no vhost ativo | Concluída, aprovada e registrada em 2026-11-19 |
+| 5B | Declaração de filas classic e quorum e conferência das propriedades | Concluída, aprovada e registrada em 2026-11-20 |
 
 ## Entrega DOC.1 aprovada
 
@@ -96,6 +98,120 @@ Guia/Ajuda sincronizados e artefato final revisado; conclusão/commit aprovados.
 [Evidências finais](docs/07-testing/sessions-4a2c.md).
 
 ## Histórico de atividades
+
+### 2026-11-20 — Conclusão e commit da 5B aprovados
+
+- “Aprovado” aceitou a conclusão e autorizou o commit
+  `feat(queues): add verified queue declarations`. Retomada em
+  `main` na base `cd1c2bf`, com index vazio.
+- Os 36 arquivos da apresentação, o SHA-256 do ASAR e os resultados
+  da matriz com 38 verificações por versão foram conferidos. O
+  registro documental integra a entrega aprovada.
+- O aceite mantém os resultados e limites apresentados, inclusive
+  a validação em macOS arm64 e RabbitMQ de nó único. Windows e Linux
+  aguardam validação nativa. A preparação da 5C depende de solicitação própria.
+- `npm run docs:check` e `git diff --check` passaram no registro. Os
+  testes funcionais referem-se ao pacote já apresentado e conferido.
+
+### 2026-11-20 — 5B verificada e pronta para revisão
+
+- Check final passou 291 testes em 39 arquivos e seis Node. Package
+  em macOS 27.0.1 arm64 e nove smokes passaram no ASAR apresentado.
+  Guia/Ajuda incluem 17 tópicos, com 12 campos do perfil preservados.
+- Gate final ampliado passou 20 verificações, dez por versão. Matriz
+  no mesmo ASAR passou 76 verificações em RabbitMQ 4.4.0 e 4.3.6,
+  38 por versão. Confirmadas criação, equivalência, conflitos,
+  recusa por permissão, cancelamento, leitura pós-aceite e preservação
+  das filas preexistentes. O cenário 5xx com Unicode manteve o TTL
+  original e permitiu conferir o item manualmente.
+- Capturas do formulário a 200% nos dois temas revisadas. Zero
+  containers ou redes do harness restantes. Builds e smokes em Windows
+  e Linux e cluster/HA permanecem pendentes. [Evidências](docs/07-testing/queues-5b.md).
+- Próxima ação: obter aprovação da conclusão e do commit
+  `feat(queues): add verified queue declarations`.
+
+### 2026-11-20 — Validação empacotada da 5B retomada
+
+- A sessão gráfica voltou a ficar ativa. A sequência de smokes
+  pendentes e a matriz real foram retomadas no ASAR verificado.
+
+- Os nove smokes passaram no mesmo ASAR. O smoke de declaração
+  confirmou foco, teclado, recusa sanitizada, zero explícito, DLX
+  e routing key vazias, cancelamento após envio, resultado incerto
+  e verificação por leitura. Capturas dos dois temas a 200% revisadas.
+  Matriz real no pacote em andamento.
+
+- A primeira matriz atingiu o prazo esperando o conflito de
+  redeclaração no vhost `literal%2F` em 4.4.0. Os 19 grupos
+  anteriores passaram e os recursos próprios foram removidos.
+  Gate diagnóstico passa a repetir o mesmo nome e vhost; o smoke
+  passa a registrar o estado sanitizado em caso de prazo.
+
+- O gate diagnóstico mostrou resposta 5xx nas duas versões ao
+  redeclarar um nome com Unicode e percentuais no vhost literal.
+  A conferência pelo observador encontrou o TTL original.
+  O contrato já classifica resposta ambígua como resultado incerto.
+  A matriz passa a exercitar esse resultado e a consulta manual em
+  separado da recusa explícita com nome ASCII. O pacote é o mesmo.
+
+### 2026-11-20 — 5B integrada e empacotada em validação
+
+- Declaração e cancelamento entraram na ponte, agora com 30 métodos.
+  O main revalida o contexto imediatamente antes do envio no socket TLS.
+  A confirmação usa leitura projetada e o cancelamento classifica a fase
+  local, enviada ou aceita. Formulário, Guia e Ajuda sincronizados.
+- Check passou 291 testes em 39 arquivos e seis Node. O gate final
+  repetiu 18 verificações aprovadas. Package macOS arm64 passou.
+- Smokes de Perfis, HTTPS e AMQPS passaram no ASAR final. Conferidos
+  o pacote e os dois comandos específicos. Docker confirmou zero
+  containers ou redes do harness.
+- Sessão gráfica bloqueada. Aguardam desbloqueio base/Ajuda, Sessão,
+  Management, troca de vhost, Filas, declaração, capturas e matriz
+  no executável. [Evidências 5B](docs/07-testing/queues-5b.md).
+
+### 2026-11-20 — Gate 5B aprovado
+
+- O gate inicial passou oito verificações por versão e falhou na
+  asserção de churn de canais. O RabbitMQ omitiu a métrica quando
+  nenhum canal havia sido aberto. A repetição conferiu os canais
+  atuais e ausência de eventos de criação.
+- `--declaration-gate` passou nove verificações em cada versão,
+  18 no total, com limpeza. Confirmadas declaração, catálogo com DLX
+  padrão/nomeada, identidades especiais, vhost `detailed`, conflitos,
+  equivalência relaxada, permissões e cortes da fixture.
+- Check antes da integração passou com 283 testes em 38 arquivos e
+  seis testes Node. IPC, formulário e guia entraram em execução.
+
+### 2026-11-20 — Execução da 5B autorizada
+
+- “Autorizo” aceitou 5B-D01–07 e 5B-01–09, incluindo as verificações
+  locais e isoladas previstas. Retomada em `main`, base `cd1c2bf`, com
+  os cinco documentos da proposta e index vazio. Docker 29.8.0 e Node
+  24.22.1 disponíveis.
+- Início pelo adapter e pelo gate nas duas versões fixadas. A integração
+  IPC/UI e a atualização do guia dependem do gate. Conclusão, commit e
+  5C têm aceites próprios.
+
+### 2026-11-19 — Preparação da 5B iniciada
+
+- “Continue” iniciou a preparação do contrato 5B. Retomada em
+  `main` a partir de `cd1c2bf`, com working tree e index limpos. A
+  referência local `origin/main` também apontava para essa base.
+- O escopo desta retomada é documental. A 5B cobre declaração de filas
+  classic/quorum, argumentos e conflitos. A execução depende da aprovação
+  do contrato. Exclusão e purge pertencem à 5C.
+- Consultados o estado da 5A, FR-009, MVP-Q02, limites NFR, ADRs, código
+  do serviço administrativo e referências oficiais do RabbitMQ.
+
+- Proposta registrada com 5B-D01–07 e 5B-01–09. O PUT de item e a
+  conferência pós-aceite incluem catálogo fechado, permissões e
+  classificação de resultados incertos. O gate isolado antecede
+  a integração IPC/UI e a atualização do guia de uso.
+- `npm run docs:check` e `git diff --check` passaram. Conferidos 423
+  links locais em 47 arquivos Markdown. O diff abrange cinco documentos
+  de planejamento e estado, com index vazio. Testes funcionais, broker,
+  package e smokes ficam para a execução autorizada.
+- Próxima ação: obter aprovação do contrato detalhado.
 
 ### 2026-11-19 — Registro autorizado da 5A
 

@@ -37,12 +37,21 @@ function fixture() {
     kind: "broker" as const,
     matrix: "unknown" as const,
   }));
+  const declaration = vi.fn<typeof import("./queueDeclaration").declareQueue>();
   const service = new ManagementService(
     session as unknown as SessionService,
     profiles as unknown as ProfileService,
     read,
+    declaration,
   );
-  return { service, session, profiles, read, notify: () => notify() };
+  return {
+    service,
+    session,
+    profiles,
+    read,
+    declaration,
+    notify: () => notify(),
+  };
 }
 afterEach(() => vi.useRealTimers());
 describe("manual management operations under session authority", () => {
@@ -179,5 +188,98 @@ it("rejects the conflicting list route before reading credentials or using the t
   });
   expect(f.profiles.connectionSnapshot).not.toHaveBeenCalled();
   expect(f.read).not.toHaveBeenCalled();
+  f.service.dispose();
+});
+
+const declarationInput = () => ({
+  ...input(),
+  declaration: { name: "synthetic", type: "quorum" as const, arguments: {} },
+});
+
+it.each(["unsent", "sent", "accepted"] as const)(
+  "cancels declaration in phase %s, keeps the shared slot and classifies the outcome",
+  async phase => {
+    const f = fixture();
+    const request = declarationInput();
+    f.declaration.mockImplementation(
+      async (_profile, _vhost, _input, signal, progress, check) => {
+        await check();
+        progress(phase);
+        await new Promise<void>((_resolve, reject) => {
+          signal.addEventListener("abort", () => reject(signal.reason), {
+            once: true,
+          });
+        });
+        return "confirmed";
+      },
+    );
+    const result = f.service.declareQueue(1, request, () => true);
+    const verified =
+      phase === "unsent"
+        ? expect(result).rejects.toMatchObject({ code: "CANCELLED" })
+        : expect(result).resolves.toMatchObject({
+            status: phase === "sent" ? "uncertain" : "unverified",
+            reason: "CANCELLED",
+          });
+    await expect(f.service.execute(1, input(), "broker")).rejects.toMatchObject(
+      { code: "BUSY" },
+    );
+    const abortSignal = f.declaration.mock.calls[0][3];
+    f.service.cancel(1, request);
+    f.service.cancel(2, request, "declaration");
+    expect(abortSignal.aborted).toBe(false);
+    f.service.cancel(1, request, "declaration");
+    await verified;
+    await expect(
+      f.service.execute(1, input(), "broker"),
+    ).resolves.toMatchObject({ kind: "broker" });
+    f.service.dispose();
+  },
+);
+
+it("times out declaration after possible dispatch and rejects a new owner before delivery", async () => {
+  vi.useFakeTimers();
+  const f = fixture();
+  f.declaration.mockImplementation(
+    async (_profile, _vhost, _input, _signal, progress, check) => {
+      await check();
+      progress("sent");
+      return new Promise(() => undefined);
+    },
+  );
+  const result = f.service.declareQueue(1, declarationInput(), () => true);
+  const pending = expect(result).resolves.toMatchObject({
+    status: "uncertain",
+    reason: "TIMEOUT",
+  });
+  await vi.advanceTimersByTimeAsync(30_000);
+  await pending;
+  await expect(
+    f.service.declareQueue(1, declarationInput(), () => false),
+  ).rejects.toMatchObject({
+    code: "FORBIDDEN",
+  });
+  f.service.dispose();
+});
+
+it("treats changed profile revision after the declared write as unverified", async () => {
+  const f = fixture();
+  f.declaration.mockImplementation(
+    async (_profile, _vhost, _input, _signal, progress, check) => {
+      await check();
+      progress("sent");
+      progress("accepted");
+      f.profiles.assertRevision.mockRejectedValueOnce(
+        new ProfileFailure("CONFLICT"),
+      );
+      return "confirmed";
+    },
+  );
+  await expect(
+    f.service.declareQueue(1, declarationInput(), () => true),
+  ).resolves.toMatchObject({
+    status: "unverified",
+    reason: "CONFLICT",
+  });
   f.service.dispose();
 });

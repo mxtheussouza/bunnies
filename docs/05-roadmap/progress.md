@@ -1035,3 +1035,49 @@ A conferência cobriu os 42 caminhos, os documentos de aceite, a base
 `2f1f6cc` e o SHA-256 do ASAR. O registro documental acompanha
 `feat(queues): add scoped queue reads`. O próximo contrato depende de
 solicitação própria.
+
+## 2026-11-19 — Contrato 5B proposto
+
+“Continue” iniciou a preparação após `cd1c2bf` em `main`. O
+[contrato 5B](roadmap.md#contrato-proposto--5b-declaração-de-filas-classic-e-quorum)
+propõe criação classic/quorum via HTTPS no vhost ativo, flags fixas,
+catálogo de argumentos, conferência pós-aceite e distinção de resultados
+incertos. Gate real nas duas versões antecede IPC/UI e guia de uso.
+Package e smokes por alvo serão registrados conforme as evidências
+obtidas. A proposta aguarda autorização de execução.
+
+## 2026-11-20 — Execução da 5B autorizada
+
+“Autorizo” aceitou a execução de 5B-D01–07 e 5B-01–09. O primeiro
+bloco inclui o adapter e o gate isolado nas duas versões fixadas.
+A integração e o guia aguardam o resultado.
+
+O gate passou 18 verificações em 4.4.0/4.3.6, com limpeza. Adapter
+validado e integração da 5B retomada.
+
+## 2026-11-20 — 5B empacotada, verificação parcial
+
+Check 291 + seis Node, gate final 18, package em macOS arm64 e smokes
+de Perfis, HTTPS e AMQPS passaram. Formulário, projeção de resultados,
+Guia e Ajuda no ASAR final. A sessão gráfica está bloqueada. Smokes
+com foco nativo, capturas e a matriz do executável ficam pendentes.
+[Resultados e escopo](../07-testing/queues-5b.md).
+
+## 2026-11-20 — 5B pronta para revisão
+
+Após retomar a sessão gráfica, passaram nove smokes no mesmo ASAR.
+Gate final: dez verificações por versão. Matriz do produto: 38 por
+versão em 4.4.0 e 4.3.6, com limpeza nas duas. Capturas dos temas
+claro e escuro a 200% revisadas e Guia/Ajuda sincronizados.
+O check final passou 291 testes, seis Node e as demais verificações
+locais. Aguarda aceite de conclusão e commit.
+[Evidências](../07-testing/queues-5b.md).
+
+## 2026-11-20 — Conclusão e commit da 5B aprovados
+
+“Aprovado” aceitou a entrega apresentada e o registro local
+`feat(queues): add verified queue declarations`. Os 36 arquivos,
+o ASAR e os relatórios da matriz foram conferidos. As evidências
+e limitações do recorte aprovado permanecem registradas.
+O contrato da 5C depende de solicitação própria.
+[Evidências](../07-testing/queues-5b.md).

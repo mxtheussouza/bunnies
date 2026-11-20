@@ -137,3 +137,40 @@
 .queue-consumers li span {
   display: block;
 }
+
+.queue-declaration form,
+.queue-declaration fieldset {
+  display: grid;
+  gap: var(--bn-space-3, 12px);
+}
+
+.queue-declaration fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.queue-declaration label {
+  display: grid;
+  gap: var(--bn-space-1, 4px);
+}
+
+.queue-declaration input:not([type="checkbox"]),
+.queue-declaration select {
+  min-width: 0;
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid var(--bn-border);
+  border-radius: var(--bn-radius-sm, 6px);
+  background: var(--bn-surface);
+  color: var(--bn-text);
+  font: inherit;
+  padding: 6px 10px;
+}
+
+.queue-declaration .queue-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--bn-space-2, 8px);
+}

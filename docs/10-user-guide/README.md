@@ -21,13 +21,14 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 - [Menus e teclado](#menus-e-teclado)
 - [Resolver problemas](#resolver-problemas)
 - [Listar, pesquisar e detalhar filas](#consultar-filas)
+- [Criar uma fila classic ou quorum](#declarar-fila)
 - [Funções de broker ainda indisponíveis](#funcoes-de-broker)
 
 <a id="disponibilidade"></a>
 
 ## O que está disponível nesta versão
 
-Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, consultar versões informadas e vhosts visíveis por HTTPS, listar e detalhar filas no vhost ativo, usar temas e consultar a Ajuda.
+Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, consultar versões informadas e vhosts visíveis por HTTPS, listar, detalhar e declarar filas no vhost ativo, usar temas e consultar a Ajuda.
 
 Salvar ou selecionar um perfil não conecta ao broker. Testar HTTPS e Testar AMQPS usam conexões transitórias. Conectar mantém uma conexão AMQPS e verifica a autenticação HTTPS periodicamente. Os dois endereços são independentes: o aplicativo não comprova que apontam ao mesmo broker.
 
@@ -85,7 +86,7 @@ O nome exato do vhost atual é procurado na lista recebida. Visível no snapshot
 
 As consultas são apenas leitura, mas geram requisições/logs no servidor. O servidor pode construir uma lista maior antes da interrupção do cliente; o limite local não garante baixo custo para ambientes grandes. Para esses ambientes, o aplicativo pode recusar a listagem nesta versão.
 
-Somente uma consulta administrativa ocorre por vez, com prazo total de 10 segundos; não há repetição automática. A verificação whoami da sessão continua independente. Cancelar consulta interrompe apenas a consulta manual, mantendo a sessão e suas cotas de recuperação.
+Somente uma operação administrativa ocorre por vez. O prazo das consultas manuais é de 10 segundos, e uma declaração de fila pode ocupar a vaga por até 30 segundos. A verificação whoami da sessão continua independente. Cancelar consulta interrompe apenas a consulta manual, mantendo a sessão e suas cotas de recuperação.
 
 O horário do último sucesso permanece visível. Se uma nova consulta falhar, seu horário de falha aparece separado, e o resultado anterior fica marcado Desatualizado. Não trate um resultado antigo como disponibilidade atual.
 
@@ -292,6 +293,26 @@ Cancelar consulta, sair de Filas, fechar um detalhe pendente, perder elegibilida
 2. Clique em Carregar filas. Para pesquisar, preencha Buscar trecho do nome e clique em Buscar filas ou pressione Enter. Use Página anterior ou Próxima página para percorrer a mesma busca.
 3. Ative o nome da fila para abrir o detalhe. Use Fechar detalhe ou Esc para voltar à linha.
 
+<a id="declarar-fila"></a>
+
+## Criar uma fila classic ou quorum
+
+Em Filas, use Nova fila com janela ativa, HTTPS disponível e AMQPS estabelecido. A declaração usa HTTPS Management, o perfil e o vhost exato exibidos no formulário. Produção tem texto e símbolo de alerta. O endpoint decide as permissões da operação.
+
+As filas são duráveis, não exclusivas e sem exclusão automática. Nome é obrigatório, limitado a 255 bytes UTF-8. O prefixo amq. e os nomes exatos . e .. são reservados neste fluxo. Em detailed, a declaração e a consulta de item estão disponíveis quando autorizadas pelo endpoint. A listagem permanece indisponível.
+
+Para TTL de mensagens (ms) e Limite de mensagens, informe um inteiro decimal de 0 a 2.147.483.647. Campo vazio omite o argumento. Zero é um limite explícito que pode afetar a retenção das mensagens. Policies do broker podem alterar o limite efetivo.
+
+Para configurar dead-letter exchange, ative a opção de DLX. Nome vazio escolhe a exchange padrão. Definir routing key permite informar um valor explícito, inclusive vazio. São necessárias permissão de configuração e leitura na fila e escrita na exchange do mesmo vhost. A ação usa uma exchange existente ou uma referência configurada no broker.
+
+Declaração confirmada significa que o broker aceitou a operação e as propriedades conferem. Uma fila equivalente já existente também pode receber esse resultado. Uma fila incompatível pode gerar recusa ou propriedades divergentes. Use Verificar fila para consultar o item exato.
+
+Parar de aguardar interrompe o trabalho local. Se o envio pode ter ocorrido e a resposta se perdeu, a operação mostra Resultado incerto. Se o broker aceitou e faltou a leitura, a operação mostra Declaração aceita, conferência indisponível. Consulte a fila antes de decidir se envia de novo. A operação tem prazo de 30 segundos e o aplicativo não reenvia automaticamente.
+
+1. Abra Filas, acione Nova fila e informe o nome e o tipo classic ou quorum.
+2. Preencha os argumentos desejados, confira perfil, ambiente e vhost e acione Declarar fila. Depois de uma possível escrita, carregue a lista novamente para atualizar o snapshot.
+3. Feche o formulário ou use Verificar fila para inspecionar os metadados no mesmo contexto.
+
 <a id="funcoes-de-broker"></a>
 
 ## Funções de broker ainda indisponíveis
@@ -301,7 +322,7 @@ Os itens a seguir descrevem o propósito planejado das funções, não instruç�
 | Campo ou função | Como usar / para que serve | Exemplo fictício |
 | --- | --- | --- |
 | Visão geral e monitoramento | Apresentar informações e métricas do broker com estado e atualidade claros. Ainda não há métricas reais, gráficos ou histórico no aplicativo. | — |
-| Alterações em filas | Criação, exclusão e limpeza de mensagens prontas dependem de entregas posteriores. | — |
+| Operações destrutivas em filas | Exclusão e limpeza de mensagens prontas dependem de entregas posteriores. | — |
 | Exchanges e bindings | Organizar exchanges, relacionamentos de roteamento e routing keys. Ainda não existem formulários ou operações implementados. | — |
 | Publicar mensagens | Preparar payloads e propriedades para publicação com resultado explícito. Publicação, consumo e inspeção de mensagens não estão disponíveis; inspeção/consumo ficam fora do MVP aprovado. | — |
 | Administração avançada e produtividade | Usuários, permissões, policies, operações em lote, favoritos e ferramentas avançadas dependem de planejamento e entregas posteriores. Não estão disponíveis nesta versão. | — |

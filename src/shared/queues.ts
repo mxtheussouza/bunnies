@@ -27,6 +27,22 @@ export type QueueArguments = {
   "x-dead-letter-routing-key"?: string;
 };
 
+export const QUEUE_DECLARATION_TIMEOUT_MS = 30_000;
+export const MAX_QUEUE_DECLARATION_BODY = 2 * 1024;
+export const MAX_QUEUE_ARGUMENT_INTEGER = 2_147_483_647;
+export const QUEUE_OPTION_KEYS = [
+  "x-message-ttl",
+  "x-max-length",
+  "x-dead-letter-exchange",
+  "x-dead-letter-routing-key",
+] as const;
+
+export type QueueDeclaration = {
+  name: string;
+  type: "classic" | "quorum";
+  arguments: Omit<QueueArguments, "x-queue-type">;
+};
+
 export type QueueConsumer = {
   tag: string;
   active?: boolean;

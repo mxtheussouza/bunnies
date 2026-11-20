@@ -59,7 +59,11 @@ async function selectVhost(page, target) {
   await button.focus();
   await page.keyboard.press("Enter");
 }
-async function run(transitionSmoke, queuesSmoke) {
+async function run(transitionSmoke, queuesSmoke, declarationSmoke) {
+  const declaration = declarationSmoke
+    ? require("./queue-declaration.cjs")
+    : undefined;
+  const declarations = declaration?.fixture();
   const fixture = await createTlsFixture(),
     root = await mkdtemp(path.join(tmpdir(), "bunnies-management-smoke-"));
   const file = path.join(root, "profiles.json"),
@@ -90,12 +94,19 @@ async function run(transitionSmoke, queuesSmoke) {
     server = https.createServer(
       { key: fixture.key, cert: fixture.cert },
       (req, res) => {
-        assert.equal(req.method, "GET");
         assert.equal(
           req.headers.authorization,
           "Basic " + Buffer.from("synthetic:" + sentinel).toString("base64"),
         );
         res.setHeader("Content-Type", "application/json");
+        if (declarations && req.url.startsWith("/api/queues/")) {
+          void declarations.serve(req, res).catch(error => {
+            errors.push(error.message);
+            res.destroy();
+          });
+          return;
+        }
+        assert.equal(req.method, "GET");
         if (req.url === "/api/whoami") {
           res.end('{"name":"synthetic"}');
           return;
@@ -253,19 +264,29 @@ async function run(transitionSmoke, queuesSmoke) {
     }
     assert.equal(adminRequests, 0);
     const before = await readFile(file, "utf8");
-    if (queuesSmoke) {
-      checks.push(
-        ...(await require("./queues.cjs").verifyQueueSmoke(page, win, {
-          count: () => queueRequests,
-          started: () => queueStalls,
-          aborted: () => queueAborts,
-          setMode: value => {
-            mode = value;
-          },
-          state,
-          until,
-        })),
-      );
+    if (queuesSmoke || declarationSmoke) {
+      if (declarations)
+        checks.push(
+          ...(await declaration.verifyDeclarationSmoke(
+            page,
+            win,
+            declarations,
+            until,
+          )),
+        );
+      else
+        checks.push(
+          ...(await require("./queues.cjs").verifyQueueSmoke(page, win, {
+            count: () => queueRequests,
+            started: () => queueStalls,
+            aborted: () => queueAborts,
+            setMode: value => {
+              mode = value;
+            },
+            state,
+            until,
+          })),
+        );
       const updated = await readFile(file, "utf8");
       assert.equal(updated, before);
       assert.ok(!updated.includes(sentinel));
@@ -281,7 +302,9 @@ async function run(transitionSmoke, queuesSmoke) {
       );
       checks.push("no-profile-write-credentials-renderer-network-or-reconnect");
       await writeFile(
-        "out/queues-5a-smoke-results.json",
+        declarationSmoke
+          ? "out/queue-declaration-5b-smoke-results.json"
+          : "out/queues-5a-smoke-results.json",
         JSON.stringify(
           {
             passed: true,
@@ -293,7 +316,9 @@ async function run(transitionSmoke, queuesSmoke) {
           2,
         ) + "\n",
       );
-      console.log(`Queues smoke: ${checks.length} groups passed`);
+      console.log(
+        `${declarationSmoke ? "Declaration" : "Queues"} smoke: ${checks.length} groups passed`,
+      );
       return;
     }
     checks.push(...(await verifyManagement(page, "4.4.0", names)));
@@ -633,6 +658,7 @@ if (require.main === module)
   run(
     process.argv.includes("--vhost-transition"),
     process.argv.includes("--queues"),
+    process.argv.includes("--declare-queue"),
   ).catch(error => {
     console.error(error);
     process.exitCode = 1;

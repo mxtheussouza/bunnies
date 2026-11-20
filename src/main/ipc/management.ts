@@ -5,7 +5,8 @@ import {
   managementErrors,
   type ManagementResult,
   isQueueSnapshot,
-  type ManagementReadSnapshot,
+  isQueueDeclarationSnapshot,
+  type ManagementResponse,
 } from "../../shared/management";
 import { isTrustedSender } from "./desktop";
 import { parseManagementRequest } from "../management/validation";
@@ -21,7 +22,7 @@ export function registerManagementIpc(
     async (
       event,
       input: unknown,
-    ): Promise<ManagementResult<ManagementReadSnapshot | undefined>> => {
+    ): Promise<ManagementResult<ManagementResponse>> => {
       const requestId = randomUUID();
       try {
         const window = getWindow();
@@ -30,10 +31,19 @@ export function registerManagementIpc(
         const request = parseManagementRequest(input);
         if (!request) throw new ManagementFailure("VALIDATION");
         const owner = window.webContents.id;
-        let value: ManagementReadSnapshot | undefined;
+        let value: ManagementResponse;
+        const trusted = () => isTrustedSender(event, getWindow(), entry);
         switch (request.command) {
           case "cancelManagementRead":
             service.cancel(owner, request.input);
+            break;
+          case "cancelQueueDeclaration":
+            service.cancel(owner, request.input, "declaration");
+            break;
+          case "declareSessionQueue":
+            value = await service.declareQueue(owner, request.input, trusted);
+            if (!isQueueDeclarationSnapshot(value))
+              throw new ManagementFailure("QUEUE_DECLARATION_UNCERTAIN");
             break;
           case "listSessionQueues":
             value = await service.execute(owner, request.input, {
@@ -59,8 +69,7 @@ export function registerManagementIpc(
               request.command === "getBrokerInfo" ? "broker" : "vhosts",
             );
         }
-        if (!isTrustedSender(event, getWindow(), entry))
-          throw new ManagementFailure("FORBIDDEN");
+        if (!trusted()) throw new ManagementFailure("FORBIDDEN");
         return { ok: true, requestId, value };
       } catch (error) {
         const code =

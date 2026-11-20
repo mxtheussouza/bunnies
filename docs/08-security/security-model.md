@@ -334,3 +334,17 @@ endpoint ficam fora da ponte. Erros locais possuem código sanitizado e
 identificador de diagnóstico. A navegação, o ciclo de vida e a troca de
 contexto cancelam a leitura, e o snapshot de Filas existe apenas em memória.
 Ver [M03](../04-modules/03-queue-management.md) e [evidências](../07-testing/queues-5a.md).
+
+### Declaração de filas 5B
+
+O renderer informa somente pedido tipado e referência de sessão. O main
+verifica owner, frame, revisão do perfil e geração, inclusive antes da
+transmissão. O endpoint e o vhost vêm da sessão. O transporte rejeita
+redirects, valida TLS e limita headers, corpo e prazo. O endpoint
+decide a permissão. O resultado é uma projeção sanitizada com ID de
+diagnóstico, sem valores brutos da resposta ou credenciais.
+
+A declaração faz um PUT por operação. Perder a resposta após possível
+envio gera resultado incerto. Cancelar interrompe o trabalho local e
+uma nova tentativa depende de ação explícita. A conferência consulta
+somente o item declarado. Ver [evidências](../07-testing/queues-5b.md).

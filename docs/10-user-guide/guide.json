@@ -6,7 +6,7 @@
       "id": "disponibilidade",
       "title": "O que está disponível nesta versão",
       "paragraphs": [
-        "Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, consultar versões informadas e vhosts visíveis por HTTPS, listar e detalhar filas no vhost ativo, usar temas e consultar a Ajuda.",
+        "Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, consultar versões informadas e vhosts visíveis por HTTPS, listar, detalhar e declarar filas no vhost ativo, usar temas e consultar a Ajuda.",
         "Salvar ou selecionar um perfil não conecta ao broker. Testar HTTPS e Testar AMQPS usam conexões transitórias. Conectar mantém uma conexão AMQPS e verifica a autenticação HTTPS periodicamente. Os dois endereços são independentes: o aplicativo não comprova que apontam ao mesmo broker.",
         "Visão geral, Exchanges e Publicar permanecem indisponíveis. A sessão atual não abre canais nem publica ou consome mensagens. Senhas protegidas salvas no dispositivo continuam indisponíveis; use senha somente nesta execução."
       ]
@@ -56,7 +56,7 @@
         "Listar vhosts mostra uma lista completa limitada a 200 nomes e 256 KiB de resposta. Quando algum limite é ultrapassado, o painel recusa a lista inteira. Os metadados extras são descartados. A lista fica disponível para selecionar um vhost durante cinco minutos, enquanto a sessão e a janela permanecem no mesmo contexto.",
         "O nome exato do vhost atual é procurado na lista recebida. Visível no snapshot HTTPS não comprova acesso AMQP, direito de criar filas ou publicar. Não listado não comprova inexistência e não encerra a sessão. Monitoring e administrator podem visualizar vhosts sem acesso AMQP. Os dois endpoints do perfil podem apontar para brokers diferentes.",
         "As consultas são apenas leitura, mas geram requisições/logs no servidor. O servidor pode construir uma lista maior antes da interrupção do cliente; o limite local não garante baixo custo para ambientes grandes. Para esses ambientes, o aplicativo pode recusar a listagem nesta versão.",
-        "Somente uma consulta administrativa ocorre por vez, com prazo total de 10 segundos; não há repetição automática. A verificação whoami da sessão continua independente. Cancelar consulta interrompe apenas a consulta manual, mantendo a sessão e suas cotas de recuperação.",
+        "Somente uma operação administrativa ocorre por vez. O prazo das consultas manuais é de 10 segundos, e uma declaração de fila pode ocupar a vaga por até 30 segundos. A verificação whoami da sessão continua independente. Cancelar consulta interrompe apenas a consulta manual, mantendo a sessão e suas cotas de recuperação.",
         "O horário do último sucesso permanece visível. Se uma nova consulta falhar, seu horário de falha aparece separado, e o resultado anterior fica marcado Desatualizado. Não trate um resultado antigo como disponibilidade atual.",
         "Sair de Conexões, selecionar outro perfil, salvar/remover perfil, desconectar, recarregar/fechar a janela, sair, perder foco/minimizar ou suspender cancela a consulta pendente e limpa seu contexto. Ao voltar, consulte novamente. Nenhum resultado é persistido em disco.",
         "Uma recusa HTTP pode decorrer de permissão ou tag mesmo com senha válida. O aplicativo distingue motivos conhecidos de negação sem mostrar a mensagem bruta do broker. Não aumente privilégios nem desabilite TLS para contornar falhas; confirme URL, CA e direitos com o responsável pelo ambiente."
@@ -343,6 +343,23 @@
       ]
     },
     {
+      "id": "declarar-fila",
+      "title": "Criar uma fila classic ou quorum",
+      "paragraphs": [
+        "Em Filas, use Nova fila com janela ativa, HTTPS disponível e AMQPS estabelecido. A declaração usa HTTPS Management, o perfil e o vhost exato exibidos no formulário. Produção tem texto e símbolo de alerta. O endpoint decide as permissões da operação.",
+        "As filas são duráveis, não exclusivas e sem exclusão automática. Nome é obrigatório, limitado a 255 bytes UTF-8. O prefixo amq. e os nomes exatos . e .. são reservados neste fluxo. Em detailed, a declaração e a consulta de item estão disponíveis quando autorizadas pelo endpoint. A listagem permanece indisponível.",
+        "Para TTL de mensagens (ms) e Limite de mensagens, informe um inteiro decimal de 0 a 2.147.483.647. Campo vazio omite o argumento. Zero é um limite explícito que pode afetar a retenção das mensagens. Policies do broker podem alterar o limite efetivo.",
+        "Para configurar dead-letter exchange, ative a opção de DLX. Nome vazio escolhe a exchange padrão. Definir routing key permite informar um valor explícito, inclusive vazio. São necessárias permissão de configuração e leitura na fila e escrita na exchange do mesmo vhost. A ação usa uma exchange existente ou uma referência configurada no broker.",
+        "Declaração confirmada significa que o broker aceitou a operação e as propriedades conferem. Uma fila equivalente já existente também pode receber esse resultado. Uma fila incompatível pode gerar recusa ou propriedades divergentes. Use Verificar fila para consultar o item exato.",
+        "Parar de aguardar interrompe o trabalho local. Se o envio pode ter ocorrido e a resposta se perdeu, a operação mostra Resultado incerto. Se o broker aceitou e faltou a leitura, a operação mostra Declaração aceita, conferência indisponível. Consulte a fila antes de decidir se envia de novo. A operação tem prazo de 30 segundos e o aplicativo não reenvia automaticamente."
+      ],
+      "steps": [
+        "Abra Filas, acione Nova fila e informe o nome e o tipo classic ou quorum.",
+        "Preencha os argumentos desejados, confira perfil, ambiente e vhost e acione Declarar fila. Depois de uma possível escrita, carregue a lista novamente para atualizar o snapshot.",
+        "Feche o formulário ou use Verificar fila para inspecionar os metadados no mesmo contexto."
+      ]
+    },
+    {
       "id": "funcoes-de-broker",
       "title": "Funções de broker ainda indisponíveis",
       "paragraphs": [
@@ -354,8 +371,8 @@
           "description": "Apresentar informações e métricas do broker com estado e atualidade claros. Ainda não há métricas reais, gráficos ou histórico no aplicativo."
         },
         {
-          "name": "Alterações em filas",
-          "description": "Criação, exclusão e limpeza de mensagens prontas dependem de entregas posteriores."
+          "name": "Operações destrutivas em filas",
+          "description": "Exclusão e limpeza de mensagens prontas dependem de entregas posteriores."
         },
         {
           "name": "Exchanges e bindings",

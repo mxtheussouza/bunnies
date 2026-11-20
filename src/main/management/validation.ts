@@ -2,6 +2,7 @@ import {
   closedObject,
   isManagementInput,
   isQueueDetailInput,
+  isQueueDeclarationInput,
   isQueueListInput,
   type ManagementRequest,
 } from "../../shared/management";
@@ -16,9 +17,14 @@ export function parseManagementRequest(v: unknown): ManagementRequest | null {
       return isQueueDetailInput(v.input)
         ? { command: v.command, input: v.input }
         : null;
+    case "declareSessionQueue":
+      return isQueueDeclarationInput(v.input)
+        ? { command: v.command, input: v.input }
+        : null;
     case "getBrokerInfo":
     case "listSessionVhosts":
     case "cancelManagementRead":
+    case "cancelQueueDeclaration":
       return isManagementInput(v.input)
         ? { command: v.command, input: v.input }
         : null;

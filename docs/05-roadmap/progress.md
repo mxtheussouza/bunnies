@@ -1258,3 +1258,21 @@ macOS arm64. Conclusão e commit aguardam aceite. [Evidências da 6D](../07-test
 O proprietário aprovou a entrega e o commit local `feat(bindings): add verified binding creation`.
 Os 37 caminhos e o pacote conferiram com a revisão apresentada.
 [Evidências](../07-testing/binding-create-6d.md).
+
+## 2026-11-21 — Gate 6E proposto
+
+Após `8ca3aa6`, o [contrato 6E](roadmap.md#contrato-6e--validação-da-remoção-de-bindings) propõe verificar
+identidade, remoção exata, efeitos de auto-delete e concorrência em
+RabbitMQ 4.4.0 e 4.3.6. O gate aguarda aprovação.
+
+## 2026-11-21 — Gate 6E concluído
+
+“Aprovo” autorizou o gate e o relatório. Passaram 36 verificações na
+remoção, 36 na regressão da criação e check 320 mais seis Node. A
+decisão sobre preservar exchanges e identidade confirmada está pendente.
+[Evidências da 6E](../07-testing/binding-delete-6e.md).
+
+## 2026-11-21 — Conclusão do gate 6E aprovada
+
+“Aprovo” aceitou manter a remoção indisponível e autorizou
+o commit local `test(bindings): verify binding removal behavior`. [Evidências](../07-testing/binding-delete-6e.md).

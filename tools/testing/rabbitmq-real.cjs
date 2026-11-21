@@ -28,6 +28,7 @@ const revisedVhostGate = process.argv.includes("--vhost-gate-revised");
 const vhostGate = process.argv.includes("--vhost-gate") || revisedVhostGate;
 const queuesGate = process.argv.includes("--queues-gate");
 const bindingCreateMatrix = process.argv.includes("--binding-create-matrix");
+const bindingDeleteGate = process.argv.includes("--binding-delete-gate");
 const bindingCreateGate = process.argv.includes("--binding-create-gate");
 const exchangeDeleteGate = process.argv.includes("--exchange-delete-gate");
 const exchangesGate = process.argv.includes("--exchanges-gate");
@@ -61,6 +62,7 @@ assert.ok(
           "--exchange-declaration-matrix",
           "--exchange-declaration-gate",
           "--binding-create-matrix",
+          "--binding-delete-gate",
           "--binding-create-gate",
           "--exchange-delete-gate",
           "--exchanges-gate",
@@ -74,41 +76,43 @@ assert.ok(
       ),
 );
 const managementFixture = managementGate || managementGateA || vhostGate;
-const reportPrefix = bindingCreateMatrix
-  ? "rabbitmq-real-6d"
-  : bindingCreateGate
-    ? "binding-create-gate-6d"
-    : exchangeDeleteGate
-      ? "exchange-delete-gate-6c"
-      : exchangeDeclarationMatrix
-        ? "rabbitmq-real-6b"
-        : exchangeDeclarationGate
-          ? "exchange-declaration-gate-6b"
-          : exchangesGate
-            ? "exchanges-gate-6a"
-            : exchangesMatrix
-              ? "rabbitmq-real-6a"
-              : purgeMatrix
-                ? "rabbitmq-real-5c1"
-                : purgeGate
-                  ? "queues-purge-gate-5c1"
-                  : declarationGate
-                    ? "queues-declaration-gate-5b"
-                    : queuesGate
-                      ? "queues-gate-revised-5a"
-                      : vhostGate
-                        ? revisedVhostGate
-                          ? "vhost-gate-revised-4b2"
-                          : "vhost-gate-4b2"
-                        : managementGateA
-                          ? "management-gate-A-4b1"
-                          : managementGate
-                            ? "management-gate-4b1"
-                            : declarationMatrix
-                              ? "rabbitmq-real-5b"
-                              : queuesMatrix
-                                ? "rabbitmq-real-5a"
-                                : "rabbitmq-real-4b2";
+const reportPrefix = bindingDeleteGate
+  ? "binding-delete-gate-6e"
+  : bindingCreateMatrix
+    ? "rabbitmq-real-6d"
+    : bindingCreateGate
+      ? "binding-create-gate-6d"
+      : exchangeDeleteGate
+        ? "exchange-delete-gate-6c"
+        : exchangeDeclarationMatrix
+          ? "rabbitmq-real-6b"
+          : exchangeDeclarationGate
+            ? "exchange-declaration-gate-6b"
+            : exchangesGate
+              ? "exchanges-gate-6a"
+              : exchangesMatrix
+                ? "rabbitmq-real-6a"
+                : purgeMatrix
+                  ? "rabbitmq-real-5c1"
+                  : purgeGate
+                    ? "queues-purge-gate-5c1"
+                    : declarationGate
+                      ? "queues-declaration-gate-5b"
+                      : queuesGate
+                        ? "queues-gate-revised-5a"
+                        : vhostGate
+                          ? revisedVhostGate
+                            ? "vhost-gate-revised-4b2"
+                            : "vhost-gate-4b2"
+                          : managementGateA
+                            ? "management-gate-A-4b1"
+                            : managementGate
+                              ? "management-gate-4b1"
+                              : declarationMatrix
+                                ? "rabbitmq-real-5b"
+                                : queuesMatrix
+                                  ? "rabbitmq-real-5a"
+                                  : "rabbitmq-real-4b2";
 let managementAdapter;
 let amqpsAdapter;
 let switchAdapter;
@@ -140,15 +144,17 @@ async function runVersion({ version, digest }) {
     : undefined;
   const purgeFixture =
     purgeGate || purgeMatrix ? require("./queue-purge-gate.cjs") : undefined;
-  const exchangeFixture = bindingCreateGate
-    ? require("./binding-create-gate.cjs")
-    : exchangeDeleteGate
-      ? require("./exchange-delete-gate.cjs")
-      : exchangeDeclarationGate
-        ? require("./exchange-declaration-gate.cjs")
-        : exchangesGate || exchangesMatrix
-          ? require("./exchanges-gate.cjs")
-          : undefined;
+  const exchangeFixture = bindingDeleteGate
+    ? require("./binding-delete-gate.cjs")
+    : bindingCreateGate
+      ? require("./binding-create-gate.cjs")
+      : exchangeDeleteGate
+        ? require("./exchange-delete-gate.cjs")
+        : exchangeDeclarationGate
+          ? require("./exchange-declaration-gate.cjs")
+          : exchangesGate || exchangesMatrix
+            ? require("./exchanges-gate.cjs")
+            : undefined;
   const bindingFixture = bindingCreateMatrix
     ? require("./binding-create-gate.cjs")
     : undefined;
@@ -312,14 +318,16 @@ async function runVersion({ version, digest }) {
                   exchangeDeclarationMatrix
                 ? "^bunnies-new-"
                 : "^$",
-            write:
-              bindingCreateGate || bindingCreateMatrix
+            write: bindingDeleteGate
+              ? "^bunnies-unbind-"
+              : bindingCreateGate || bindingCreateMatrix
                 ? "^bunnies-bind-destination"
                 : exchangeDeleteGate
                   ? "^bunnies-delete-"
                   : "^$",
-            read:
-              bindingCreateGate || bindingCreateMatrix
+            read: bindingDeleteGate
+              ? "^bunnies-unbind-"
+              : bindingCreateGate || bindingCreateMatrix
                 ? "^bunnies-bind-source"
                 : exchangeDeleteGate
                   ? "^bunnies-delete-"
@@ -496,7 +504,8 @@ async function runVersion({ version, digest }) {
       exchangesGate ||
       exchangeDeclarationGate ||
       exchangeDeleteGate ||
-      bindingCreateGate
+      bindingCreateGate ||
+      bindingDeleteGate
     ) {
       report.failures = await exchangeFixture.run({
         observations: (report.exchangeObservations = []),
@@ -504,6 +513,7 @@ async function runVersion({ version, digest }) {
         fixture,
         managementPrefix,
         httpsPort,
+        amqpsPort,
         username,
         password,
         checks,

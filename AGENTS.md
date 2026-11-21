@@ -106,11 +106,11 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **6D — concluída, aprovada e registrada**.
-- Última etapa concluída e aprovada: **6D — criação de bindings**.
-- Última entrega registrada: `feat(bindings): add verified binding creation` em `main`, com pai `d42b7da`.
+- Etapa atual: **6E — gate concluído, aprovado e registrado**.
+- Última etapa concluída e aprovada: **6E — gate de remoção de bindings**.
+- Última entrega registrada: `test(bindings): verify binding removal behavior` em `main`, com pai `8ca3aa6`.
 - Mudança da barra macOS em `9401448` preservada.
-- Próxima ação: preparar o próximo contrato, conforme solicitado.
+- Próxima ação: aguardar solicitação para preparar o próximo contrato.
 
 Ao retomar, ler este arquivo, [PROJECTS_STATUS.md](PROJECTS_STATUS.md), a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -766,3 +766,25 @@ Guia/Ajuda tem 21 tópicos. Conclusão e commit aguardam aceite.
 Em 2026-11-21, “Aprovo e pode seguir para proxima etapa” aceitou a
 conclusão da 6D e o commit local `feat(bindings): add verified binding creation`. O pedido seguinte autoriza
 preparar o próximo contrato. A validação por plataforma segue nas evidências.
+
+## Preparação vigente — 6E
+
+“Pode seguir para proxima etapa” iniciou a preparação do
+[contrato 6E](docs/05-roadmap/roadmap.md#contrato-6e--validação-da-remoção-de-bindings) após `8ca3aa6`.
+O contrato propõe validar a remoção de bindings, identidade e efeitos
+de auto-delete usando brokers isolados. Execução e relatório aguardam aceite.
+
+## Resultado vigente — gate 6E concluído
+
+“Aprovo” autorizou o gate e relatório em 2026-11-21. Passaram 18 verificações
+por versão. A remoção exata preservou outros vínculos nos casos comuns.
+A corrida de último vínculo removeu duas exchanges em cascata, e a
+recriação equivalente manteve a identidade e foi atingida pelo DELETE.
+A decisão de produto e o commit aguardam aceite.
+[Evidências](docs/07-testing/binding-delete-6e.md).
+
+## Conclusão 6E aprovada
+
+Em 2026-11-21, “Aprovo” aceitou manter a remoção de bindings indisponível
+até ser possível preservar as exchanges e garantir o vínculo confirmado.
+O aceite abrange o commit local `test(bindings): verify binding removal behavior`.

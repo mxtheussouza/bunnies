@@ -5,12 +5,12 @@ Atualizado em: 2026-11-21.
 ## Estado atual
 
 - Branch: `main`.
-- Última entrega aprovada: **6D — criação e conferência de bindings**.
-- Aprovação mais recente: “Aprovo e pode seguir para proxima etapa” aceitou a conclusão e o commit local da 6D em 2026-11-21.
-- Última entrega registrada: `feat(bindings): add verified binding creation` em `main`, com pai `d42b7da`.
-- Task atual: **6D — concluída e aprovada**.
-- Próxima ação: preparar o contrato da etapa seguinte, conforme solicitado.
-  [Evidências da 6D](docs/07-testing/binding-create-6d.md).
+- Última entrega aprovada: **6E — gate e decisão sobre remoção de bindings**.
+- Aprovação mais recente: “Aprovo” aceitou a decisão sobre remoção e o commit local do gate da 6E em 2026-11-21.
+- Última entrega registrada: `test(bindings): verify binding removal behavior` em `main`, com pai `8ca3aa6`.
+- Task atual: **6E — gate aprovado, remoção de bindings permanece indisponível**.
+- Próxima ação: aguardar solicitação para preparar o próximo contrato.
+  [Evidências da 6E](docs/07-testing/binding-delete-6e.md).
 
 ## Tarefas concluídas
 
@@ -37,6 +37,7 @@ Atualizado em: 2026-11-21.
 | 6B | Declaração e conferência dos quatro tipos básicos de exchange | Concluída, aprovada e registrada em 2026-11-20 |
 | 6C | Gate isolado e decisão de manter exclusão de exchanges indisponível | Aprovados e registrados em 2026-11-20 |
 | 6D | Criação e conferência de bindings para fila ou exchange | Aprovada e registrada em 2026-11-21 |
+| 6E | Gate isolado e decisão de manter remoção de bindings indisponível | Aprovados e registrados em 2026-11-21 |
 
 ## Entrega DOC.1 aprovada
 
@@ -101,6 +102,41 @@ Guia/Ajuda sincronizados e artefato final revisado; conclusão/commit aprovados.
 [Evidências finais](docs/07-testing/sessions-4a2c.md).
 
 ## Histórico de atividades
+
+### 2026-11-21 — T-6E-CONCLUSAO
+
+- “Aprovo” aceitou manter a remoção indisponível e registrar o gate
+  e o relatório em `test(bindings): verify binding removal behavior`. Os hashes dos oito arquivos
+  conferiram com a revisão, na base `8ca3aa6`.
+- No encerramento passaram `npm run docs:check` e `git diff --check`.
+  Os resultados funcionais referem-se à execução anterior do gate.
+
+### 2026-11-21 — T-6E-GATE
+
+- “Aprovo” autorizou o gate e o relatório 6E-D01–04 e 6E-01–05. Retomada
+  após `8ca3aa6` com os cinco documentos da proposta. Docker 29.8.0.
+  Execução restrita ao harness e à documentação.
+- As rodadas iniciais passaram 16 grupos por versão e falharam na recriação.
+  O helper HTTP esperava `body` nas opções e o harness passou os campos
+  diretamente. O HTTP 201 correspondia a uma chamada sem o corpo planejado.
+  A execução com recriação via AMQPS passou 17 grupos por versão. Corrigida
+  a chamada HTTP para testar também essa via em uma fixture separada.
+- Gate final passou 36 verificações, incluindo recriação via HTTP e AMQPS,
+  efeito de auto-delete em cadeia e bloqueio dos tokens especiais. A
+  regressão da 6D passou outras 36. Check passou 320 testes e seis Node.
+  Lint/formatação do harness final, links e limpeza conferidos. Recomenda-se
+  manter remoção indisponível até haver garantia da preservação das
+  exchanges e da identidade confirmada.
+
+### 2026-11-21 — T-6E-PREPARACAO
+
+- “Pode seguir para proxima etapa” autorizou preparar o contrato seguinte.
+  Retomada em `main` limpa após `8ca3aa6`. Revisados FR-014, NFR-010,
+  a identidade de binding da 6D e os handlers oficiais de remoção.
+- O contrato propõe medir remoção exata, identidade ambígua e pontual,
+  auto-delete, concorrência e perda de resposta. Conferidos quatro links,
+  quatro decisões e cinco critérios. Passaram `npm run docs:check` e
+  `git diff --check`. Próxima ação: aceitar o gate em brokers isolados.
 
 ### 2026-11-21 — T-6D-CONCLUSAO
 

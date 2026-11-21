@@ -1,6 +1,6 @@
 # Roadmap e contratos de execução
 
-Atualizado em: 2026-11-20. Etapas 0–3B, 4A.1, DOC.1, 4A.2A/B/C e 4B.1/4B.2
+Atualizado em: 2026-11-21. Etapas 0–3B, 4A.1, DOC.1, 4A.2A/B/C e 4B.1/4B.2
 concluídas e aprovadas. Nove ADRs e D3A-01–08 aceitos. O gate 4B.2 inicial
 falhou nas duas versões e o gate revisto passou após o aceite do fechamento
 confirmado. “Aprovado” aceitou a conclusão e o commit da 4B.2.
@@ -27,7 +27,7 @@ A 5C.1 foi concluída e aprovada após o gate, os smokes e a matriz do pacote.
 | 4B.1 | Contexto administrativo: versão, vhosts visíveis e leitura do vhost atual | Concluída/aprovada; commit `4a35424` |
 | 4B.2 | Seleção de vhost e transição de contexto | Concluída e aprovada em 2026-11-18 |
 | 5 | Filas e proteção das operações destrutivas | 5A, 5B e 5C.1 concluídas, aprovadas e registradas. Exclusão condicional aguarda solução no broker |
-| 6 | Exchanges e bindings | 6A concluída e aprovada. 6B concluída e aprovada após validação em macOS arm64. Gate 6C aprovado. Exclusão de exchanges permanece indisponível. 6D concluída e aprovada após validação em macOS arm64 |
+| 6 | Exchanges e bindings | 6A concluída e aprovada. 6B concluída e aprovada após validação em macOS arm64. Gate 6C aprovado. Exclusão de exchanges permanece indisponível. 6D concluída e aprovada após validação em macOS arm64. Gate 6E aprovado. Remoção de bindings permanece indisponível |
 | 7 | Publicação AMQP, confirmações e falhas de rede | Proposta |
 | 8 | Dashboard e monitoramento básico | Proposta |
 | 9 | Homologação integrada, segurança e compatibilidade do MVP | Proposta |
@@ -2721,3 +2721,86 @@ propriedades. O gate revisado passou 18 verificações por versão.
 
 O check, package, 13 smokes e 76 verificações no executável passaram em
 macOS arm64. O proprietário aprovou a conclusão e o commit local em 2026-11-21. [Evidências da 6D](../07-testing/binding-create-6d.md).
+
+## Contrato 6E — Validação da remoção de bindings
+
+**Gate autorizado em 2026-11-21**, com base em `8ca3aa6` na branch `main`.
+O gate mede a remoção prevista em FR-014/MVP-E01 e informa a decisão
+sobre o recorte de produto. A 6C mantém a exclusão de exchanges
+indisponível. Uma eventual ação de remoção no aplicativo exigirá a
+confirmação contextual de FR-025/NFR-010.
+
+O Management usa `properties_key` para endereçar um binding dentro do par.
+Nos handlers das versões fixadas, a rota resolve origem, destino, routing
+key e argumentos e chama `queue.unbind` ou `exchange.unbind`. A identidade
+HTTP pode conter um componente derivado dos argumentos. A fonte também tem
+tratamento específico para tokens `null` e `undefined`. Esses formatos
+precisam ser confrontados com as propriedades observadas. As identidades
+`.` e `..` já impediram a leitura individual no gate da 6D. O executor
+de uma futura remoção não deve transformar uma identidade ambígua em
+segmento de escrita.
+
+A remoção pode acionar o auto-delete da exchange que perder seu último
+binding de saída. Uma leitura de contexto e uma confirmação não oferecem,
+por si sós, uma condição aplicada no broker para impedir essa consequência
+ou distinguir uma recriação idêntica. Esses limites devem constar do
+relatório antes da decisão sobre o fluxo do produto.
+
+[API de bindings](https://www.rabbitmq.com/docs/http-api-reference#delete-apibindingsvhosteexchangeqqueueprops),
+[handler 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_wm_binding.erl#L47-L120),
+[handler 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_wm_binding.erl#L47-L120)
+e [auto-delete de exchanges](https://www.rabbitmq.com/docs/exchanges#auto-deletion).
+
+### Decisões propostas
+
+1. **6E-D01 — Ambiente.** Rodar em 4.4.0 e 4.3.6 de nó único, imagens oficiais
+   já fixadas por digest. O harness provisiona e remove broker, rede,
+   certificados, portas e dados próprios. Usar TLS e observador separado.
+   Medir o inventário de exchanges, filas e bindings antes e depois.
+2. **6E-D02 — Identidade.** Testar os DELETEs de item para exchange→fila
+   e exchange→exchange. Derivar a rota do vhost, origem, tipo e destino
+   exatos e da identidade opaca retornada pelo broker. Na execução candidata,
+   usar somente identidade única e conferida na mesma coleção e no item,
+   incluindo chave e argumentos. Recusar antes do DELETE a exchange padrão,
+   nomes reservados, identidade inexistente ou ambígua e segmentos `.`
+   ou `..`. Nenhum fallback por chave bruta, busca ou rota de coleção.
+3. **6E-D03 — Efeitos e concorrência.** Testar retirada de um binding
+   entre pares com outras chaves e argumentos. Em fixtures dedicadas,
+   observar a remoção do último binding de uma origem auto-delete,
+   possível cascata e o efeito quando outro ator retira o penúltimo
+   vínculo após a leitura. Recriar um binding equivalente após a
+   leitura e registrar se o DELETE atinge a recriação. Essas mutações
+   pertencem apenas aos brokers do harness.
+4. **6E-D04 — Decisão de produto.** Relatar quais casos admitem identidade
+   inequívoca, quais efeitos dependem do estado concorrente e quais
+   cenários preservam recursos. Registrar status, erro e efeito observado
+   com perda de resposta após um único envio. Apresentar política
+   recomendada e riscos residuais antes de autorizar qualquer ação do
+   aplicativo. O escopo solicitado cobre harness e relatório.
+
+### Critérios de aceitação
+
+1. **6E-01.** Em ambas as versões, comprovar remoção do vínculo exato para
+   fila e exchange nos vhosts `/`, `detailed` e `literal%2F`. Usar nomes
+   especiais, identificador com percentual literal, chave vazia e pares
+   homônimos. O inventário confirma o efeito de cada pedido.
+2. **6E-02.** Medir a remoção com routing key idêntica e argumentos
+   distintos, com outras chaves no mesmo par e com tokens literais
+   `null` e `undefined`. Demonstrar a recusa de objeto ambíguo e dos
+   identificadores pontuais antes da escrita candidata. Incluir binding
+   implícito da exchange padrão nas guardas.
+3. **6E-03.** Medir o efeito em último e penúltimo binding de origem
+   auto-delete, possíveis efeitos em cadeia e recriação por identidade
+   entre leitura e envio.
+4. **6E-04.** Testar vínculo ausente, contas com permissões distintas,
+   TLS inválido e perda da resposta após envio. Registrar o resultado
+   observado e a contagem de DELETEs. Conferir que não houve repetição.
+5. **6E-05.** Confirmar limpeza da matriz e fornecer recomendação
+   documentada para confirmação nativa e decisão de produto. A
+   validação GUI e a atualização do Guia/Ajuda pertencem à eventual
+   implementação aprovada.
+
+O gate passou 18 verificações por versão. A remoção sem ambiguidade
+preservou os demais vínculos nos cenários comuns. A corrida de auto-delete
+removeu duas exchanges, e a recriação equivalente recebeu o DELETE.
+O proprietário aceitou manter a remoção indisponível em 2026-11-21. [Evidências da 6E](../07-testing/binding-delete-6e.md).

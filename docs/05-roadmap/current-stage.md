@@ -5,16 +5,16 @@ de cada Task; atualizá-lo em cada bloco/fase/alteração.
 
 | Campo | Estado |
 | --- | --- |
-| Etapa atual | 6D — criação de bindings |
-| Status | Concluída, aprovada e registrada em 2026-11-21 |
-| Última etapa concluída | 6D — criação de bindings |
-| Última entrega registrada | `feat(bindings): add verified binding creation` em `main`, com pai `d42b7da` |
-| Decisões aprovadas | ADRs 0001–0009, MVP/requisitos/design e decisão da 6C de manter a exclusão indisponível e conclusão da 6D |
-| Decisões pendentes | Proteção para bindings de entrada e identidade da exchange confirmada, além de garantia no broker para exclusão condicional de filas (FR-010) |
-| Tarefas concluídas | 6D implementada. Gate revisado com 36, check 320 + seis Node, package, 13 smokes e 76 verificações no executável macOS arm64 |
+| Etapa atual | 6E — validação da remoção de bindings |
+| Status | Gate concluído e aprovado. Remoção de bindings indisponível |
+| Última etapa concluída | 6E — gate de remoção de bindings |
+| Última entrega registrada | `test(bindings): verify binding removal behavior` em `main`, com pai `8ca3aa6` |
+| Decisões aprovadas | ADRs 0001–0009, MVP/requisitos/design e decisão da 6C de manter a exclusão indisponível e 6E de manter a remoção indisponível |
+| Decisões pendentes | Preservação das exchanges e identidade do binding confirmado. Proteção para bindings de entrada e identidade da exchange confirmada, além de garantia no broker para exclusão condicional de filas (FR-010) |
+| Tarefas concluídas | 6E com 36 verificações, 36 na regressão da 6D e check 320 + seis Node |
 | Tarefas pendentes | Exclusões de exchanges e filas, remoção de bindings e validação nativa em Windows e Linux |
 | Problemas conhecidos | Quorum rejeita condições de exclusão e stream as ignora no código das versões de referência. Vhost `detailed` colide com a rota global de listagem de filas. Paginação HTTP de vhosts retorna 500 na matriz e GET individual exige admin |
-| Próxima ação | Preparar o próximo contrato, conforme solicitado. [Evidências da 6D](../07-testing/binding-create-6d.md) |
+| Próxima ação | Aguardar solicitação para preparar o próximo contrato. [Evidências da 6E](../07-testing/binding-delete-6e.md) |
 
 “Autorizado” aceitou o [contrato 4A.2C](roadmap.md). O gate inicial reprovou e
 interrompeu trabalho dependente; o proprietário então autorizou explicitamente

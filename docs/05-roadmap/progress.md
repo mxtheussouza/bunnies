@@ -1212,3 +1212,23 @@ em macOS arm64. Conclusão e commit aguardam aceite. [Evidências da 6B](../07-t
 “Aprovo” aceitou a entrega e o commit local `feat(exchanges): add verified exchange declarations`.
 Os 35 arquivos e o ASAR conferiram com a revisão apresentada.
 [Evidências](../07-testing/exchange-declaration-6b.md).
+
+## 2026-11-20 — Gate 6C proposto
+
+O [contrato 6C](roadmap.md#contrato-6c--validação-da-exclusão-de-exchanges) propõe medir exclusão condicional,
+bindings de entrada e saída e concorrência nas duas versões de referência.
+O efeito em cascata e a identidade por nome entram no relatório para embasar
+a decisão de produto. O gate aguarda aprovação.
+
+## 2026-11-20 — Gate 6C concluído
+
+“Aprovo” autorizou o gate e o relatório. Passaram 36 verificações nas
+duas versões e 22 na regressão da 6A. Check passou 314 testes e seis Node.
+A decisão sobre bindings de entrada e identidade por nome está pendente.
+[Evidências da 6C](../07-testing/exchange-delete-6c.md).
+
+## 2026-11-20 — Conclusão do gate 6C aprovada
+
+“Aprovo” aceitou manter a exclusão de exchanges indisponível e autorizou
+o commit local `test(exchanges): verify conditional deletion behavior`.
+[Evidências](../07-testing/exchange-delete-6c.md).

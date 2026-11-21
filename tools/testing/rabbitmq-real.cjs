@@ -27,6 +27,7 @@ const managementGateA = process.argv.includes("--management-gate-a");
 const revisedVhostGate = process.argv.includes("--vhost-gate-revised");
 const vhostGate = process.argv.includes("--vhost-gate") || revisedVhostGate;
 const queuesGate = process.argv.includes("--queues-gate");
+const exchangeDeleteGate = process.argv.includes("--exchange-delete-gate");
 const exchangesGate = process.argv.includes("--exchanges-gate");
 const exchangeDeclarationMatrix = process.argv.includes(
   "--exchange-declaration-matrix",
@@ -55,6 +56,7 @@ assert.ok(
           "--queues-gate",
           "--exchange-declaration-matrix",
           "--exchange-declaration-gate",
+          "--exchange-delete-gate",
           "--exchanges-gate",
           "--exchanges-matrix",
           "--purge-gate",
@@ -66,35 +68,37 @@ assert.ok(
       ),
 );
 const managementFixture = managementGate || managementGateA || vhostGate;
-const reportPrefix = exchangeDeclarationMatrix
-  ? "rabbitmq-real-6b"
-  : exchangeDeclarationGate
-    ? "exchange-declaration-gate-6b"
-    : exchangesGate
-      ? "exchanges-gate-6a"
-      : exchangesMatrix
-        ? "rabbitmq-real-6a"
-        : purgeMatrix
-          ? "rabbitmq-real-5c1"
-          : purgeGate
-            ? "queues-purge-gate-5c1"
-            : declarationGate
-              ? "queues-declaration-gate-5b"
-              : queuesGate
-                ? "queues-gate-revised-5a"
-                : vhostGate
-                  ? revisedVhostGate
-                    ? "vhost-gate-revised-4b2"
-                    : "vhost-gate-4b2"
-                  : managementGateA
-                    ? "management-gate-A-4b1"
-                    : managementGate
-                      ? "management-gate-4b1"
-                      : declarationMatrix
-                        ? "rabbitmq-real-5b"
-                        : queuesMatrix
-                          ? "rabbitmq-real-5a"
-                          : "rabbitmq-real-4b2";
+const reportPrefix = exchangeDeleteGate
+  ? "exchange-delete-gate-6c"
+  : exchangeDeclarationMatrix
+    ? "rabbitmq-real-6b"
+    : exchangeDeclarationGate
+      ? "exchange-declaration-gate-6b"
+      : exchangesGate
+        ? "exchanges-gate-6a"
+        : exchangesMatrix
+          ? "rabbitmq-real-6a"
+          : purgeMatrix
+            ? "rabbitmq-real-5c1"
+            : purgeGate
+              ? "queues-purge-gate-5c1"
+              : declarationGate
+                ? "queues-declaration-gate-5b"
+                : queuesGate
+                  ? "queues-gate-revised-5a"
+                  : vhostGate
+                    ? revisedVhostGate
+                      ? "vhost-gate-revised-4b2"
+                      : "vhost-gate-4b2"
+                    : managementGateA
+                      ? "management-gate-A-4b1"
+                      : managementGate
+                        ? "management-gate-4b1"
+                        : declarationMatrix
+                          ? "rabbitmq-real-5b"
+                          : queuesMatrix
+                            ? "rabbitmq-real-5a"
+                            : "rabbitmq-real-4b2";
 let managementAdapter;
 let amqpsAdapter;
 let switchAdapter;
@@ -126,11 +130,13 @@ async function runVersion({ version, digest }) {
     : undefined;
   const purgeFixture =
     purgeGate || purgeMatrix ? require("./queue-purge-gate.cjs") : undefined;
-  const exchangeFixture = exchangeDeclarationGate
-    ? require("./exchange-declaration-gate.cjs")
-    : exchangesGate || exchangesMatrix
-      ? require("./exchanges-gate.cjs")
-      : undefined;
+  const exchangeFixture = exchangeDeleteGate
+    ? require("./exchange-delete-gate.cjs")
+    : exchangeDeclarationGate
+      ? require("./exchange-declaration-gate.cjs")
+      : exchangesGate || exchangesMatrix
+        ? require("./exchanges-gate.cjs")
+        : undefined;
   const managementPrefix =
     queueFixture || declarationFixture || purgeFixture || exchangeFixture
       ? "/bunnies-test"
@@ -284,14 +290,19 @@ async function runVersion({ version, digest }) {
           .map(vhost => ({
             user: username,
             vhost,
-            configure:
-              declarationMatrix ||
-              exchangeDeclarationGate ||
-              exchangeDeclarationMatrix
+            configure: exchangeDeleteGate
+              ? "^bunnies-delete-"
+              : declarationMatrix ||
+                  exchangeDeclarationGate ||
+                  exchangeDeclarationMatrix
                 ? "^bunnies-new-"
                 : "^$",
-            write: "^$",
-            read: purgeFixture ? "^bunnies-purge-" : "^$",
+            write: exchangeDeleteGate ? "^bunnies-delete-" : "^$",
+            read: exchangeDeleteGate
+              ? "^bunnies-delete-"
+              : purgeFixture
+                ? "^bunnies-purge-"
+                : "^$",
           }))
           .concat(
             managementFixture || queueFixture
@@ -446,7 +457,7 @@ async function runVersion({ version, digest }) {
     console.log(`RabbitMQ ${version}: TLS ready (${inspection.Architecture})`);
     checks.push("exact-broker-version-and-TLS-readiness");
     await noConnections();
-    if (exchangesGate || exchangeDeclarationGate) {
+    if (exchangesGate || exchangeDeclarationGate || exchangeDeleteGate) {
       report.failures = await exchangeFixture.run({
         observations: (report.exchangeObservations = []),
         adapter: managementAdapter,
@@ -1850,7 +1861,13 @@ async function run() {
         await require("./management-gate.cjs").prepareGateAdapter(
           "src/main/management/queueDeclaration.ts",
         );
-    if (managementGateA || vhostGate || queuesGate || exchangesGate)
+    if (
+      managementGateA ||
+      vhostGate ||
+      queuesGate ||
+      exchangesGate ||
+      exchangeDeleteGate
+    )
       managementAdapter =
         await require("./management-gate.cjs").prepareManagementGate();
     if (vhostGate)

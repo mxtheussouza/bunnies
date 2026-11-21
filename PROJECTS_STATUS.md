@@ -5,12 +5,12 @@ Atualizado em: 2026-11-20.
 ## Estado atual
 
 - Branch: `main`.
-- Última entrega aprovada: **6B — declaração de exchanges no vhost ativo**.
-- Aprovação mais recente: “Aprovo” aceitou a conclusão e o commit local da 6B em 2026-11-20.
-- Última entrega registrada: `feat(exchanges): add verified exchange declarations` em `main`, com pai `80ad6f2`.
-- Task atual: **6B — concluída e aprovada**.
+- Última entrega aprovada: **6C — gate e decisão de exclusão de exchanges**.
+- Aprovação mais recente: “Aprovo” aceitou o gate, o commit local e a decisão sobre exclusão em 2026-11-20.
+- Última entrega registrada: `test(exchanges): verify conditional deletion behavior` em `main`, com pai `2138fd6`.
+- Task atual: **6C — gate aprovado, exclusão de exchanges permanece indisponível**.
 - Próxima ação: aguardar solicitação para preparar o próximo contrato.
-  [Evidências da 6B](docs/07-testing/exchange-declaration-6b.md).
+  [Evidências da 6C](docs/07-testing/exchange-delete-6c.md).
 
 ## Tarefas concluídas
 
@@ -35,6 +35,7 @@ Atualizado em: 2026-11-20.
 | 5C.1 | Purge de filas classic/quorum com confirmação nativa e revalidação | Concluída, aprovada e registrada em 2026-11-20 |
 | 6A | Listagem, detalhe de exchanges e bindings por direção no vhost ativo | Concluída, aprovada e registrada em 2026-11-20 |
 | 6B | Declaração e conferência dos quatro tipos básicos de exchange | Concluída, aprovada e registrada em 2026-11-20 |
+| 6C | Gate isolado e decisão de manter exclusão de exchanges indisponível | Aprovados e registrados em 2026-11-20 |
 
 ## Entrega DOC.1 aprovada
 
@@ -99,6 +100,38 @@ Guia/Ajuda sincronizados e artefato final revisado; conclusão/commit aprovados.
 [Evidências finais](docs/07-testing/sessions-4a2c.md).
 
 ## Histórico de atividades
+
+### 2026-11-20 — T-6C-CONCLUSAO
+
+- “Aprovo” aceitou manter a exclusão de exchanges indisponível e registrar
+  o gate e o relatório em `test(exchanges): verify conditional deletion behavior`, com base em `2138fd6`.
+- Conferidos os oito caminhos da entrega, relatórios das duas matrizes e
+  resultados do check. Passaram `npm run docs:check` e `git diff --check`
+  no encerramento. As verificações funcionais permanecem as da execução do
+  gate. FR-013 conserva a declaração aprovada e a exclusão pendente.
+
+### 2026-11-20 — T-6C-GATE
+
+- “Aprovo” aceitou 6C-D01–04 e 6C-01–05 para o gate e relatório, com base
+  em `2138fd6` e os cinco documentos da proposta. Docker 29.8.0 disponível.
+  As mudanças de execução ficam no harness e na documentação.
+- Gate final passou 18 verificações em cada versão. A proteção de saída
+  preservou o alvo, mas bindings de entrada foram removidos e houve
+  auto-delete em cadeia. A recriação por nome removeu o recurso substituto.
+  O proxy confirmou aceite pelo broker com perda de resposta para o cliente
+  e uma tentativa. Regressão 6A passou 22 verificações. Check passou 314
+  testes e seis Node. Limpeza completa. Decisão de produto pendente.
+
+### 2026-11-20 — T-6C-PREPARACAO
+
+- “Continue” iniciou a preparação do contrato de exclusão de exchanges após
+  a 6B, com a árvore limpa em `2138fd6` na branch `main`. Revisadas as
+  condições de exclusão nas fontes oficiais da matriz.
+- O código verifica bindings de saída. O gate proposto mede bindings de
+  entrada, efeitos em cadeia, recriação por nome e respostas ambíguas antes
+  da decisão sobre o fluxo de produto. Passaram `npm run docs:check` e
+  `git diff --check`. Conferidos quatro links, quatro decisões e cinco
+  critérios. Próxima ação: obter aprovação para executar a matriz isolada.
 
 ### 2026-11-20 — T-6B-CONCLUSAO
 

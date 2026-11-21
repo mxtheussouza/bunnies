@@ -106,9 +106,9 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **6B — concluída, aprovada e registrada**.
-- Última etapa concluída e aprovada: **6B — declaração de exchanges**.
-- Última entrega registrada: `feat(exchanges): add verified exchange declarations` em `main`, com pai `80ad6f2`.
+- Etapa atual: **6C — gate concluído, aprovado e registrado**.
+- Última etapa concluída e aprovada: **6C — gate de exclusão de exchanges**.
+- Última entrega registrada: `test(exchanges): verify conditional deletion behavior` em `main`, com pai `2138fd6`.
 - Mudança da barra macOS em `9401448` preservada.
 - Próxima ação: aguardar solicitação para preparar o próximo contrato.
 
@@ -705,3 +705,27 @@ Guia/Ajuda tem 20 tópicos. Conclusão e commit local aguardam aceite.
 
 Em 2026-11-20, “Aprovo” aceitou a conclusão da 6B e o commit local
 `feat(exchanges): add verified exchange declarations`. A validação nativa dos demais alvos continua pendente.
+
+## Preparação vigente — 6C
+
+“Continue” iniciou a preparação após `2138fd6`. O
+[contrato 6C](docs/05-roadmap/roadmap.md#contrato-6c--validação-da-exclusão-de-exchanges) está Proposed.
+A próxima autorização solicitada abrange a matriz isolada da exclusão
+condicional de exchanges e o relatório. Uma decisão posterior define a
+política e a integração de produto.
+
+## Resultado vigente — gate 6C concluído
+
+“Aprovo” autorizou a matriz isolada e o relatório em 2026-11-20. Passaram
+18 verificações por versão. A exclusão condicional protege a origem dos
+bindings. Foram observados perda de bindings de entrada, auto-delete em
+cadeia e exclusão de uma exchange recriada pelo mesmo nome. A decisão de
+produto e o commit têm autorizações próprias.
+[Evidências](docs/07-testing/exchange-delete-6c.md).
+
+## Conclusão 6C aprovada
+
+Em 2026-11-20, “Aprovo” aceitou manter a exclusão indisponível e registrar
+o gate e o relatório no commit local `test(exchanges): verify conditional deletion behavior`. Uma futura operação de
+exclusão depende de proteção para bindings de entrada e para a instância
+confirmada. Escritas de bindings terão contrato próprio.

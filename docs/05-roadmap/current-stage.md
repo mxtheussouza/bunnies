@@ -5,16 +5,16 @@ de cada Task; atualizá-lo em cada bloco/fase/alteração.
 
 | Campo | Estado |
 | --- | --- |
-| Etapa atual | 6B — declaração de exchanges |
-| Status | Concluída, aprovada e registrada em 2026-11-20 |
-| Última etapa concluída | 6B — declaração de exchanges |
-| Última entrega registrada | `feat(exchanges): add verified exchange declarations` em `main`, com pai `80ad6f2` |
-| Decisões aprovadas | ADRs 0001–0009, MVP/requisitos/design e conclusão da 6B |
-| Decisões pendentes | Garantia no broker para exclusão condicional de filas (FR-010) |
-| Tarefas concluídas | 6B implementada. Gate de 52, check 314 + seis Node, package, 12 smokes e matriz de 80 verificações no executável macOS arm64 |
+| Etapa atual | 6C — validação da exclusão de exchanges |
+| Status | Gate concluído e aprovado. Exclusão de exchanges indisponível |
+| Última etapa concluída | 6C — gate de exclusão de exchanges |
+| Última entrega registrada | `test(exchanges): verify conditional deletion behavior` em `main`, com pai `2138fd6` |
+| Decisões aprovadas | ADRs 0001–0009, MVP/requisitos/design e decisão da 6C de manter a exclusão indisponível |
+| Decisões pendentes | Proteção para bindings de entrada e identidade da exchange confirmada, além de garantia no broker para exclusão condicional de filas (FR-010) |
+| Tarefas concluídas | 6C com 36 verificações no gate, 22 na regressão da 6A e check 314 + seis Node |
 | Tarefas pendentes | Exclusões de exchanges e de filas, escrita de bindings e validação nativa em Windows e Linux |
 | Problemas conhecidos | Quorum rejeita condições de exclusão e stream as ignora no código das versões de referência. Vhost `detailed` colide com a rota global de listagem de filas. Paginação HTTP de vhosts retorna 500 na matriz e GET individual exige admin |
-| Próxima ação | Aguardar solicitação para preparar o próximo contrato. [Evidências da 6B](../07-testing/exchange-declaration-6b.md) |
+| Próxima ação | Aguardar solicitação para preparar o próximo contrato. [Evidências da 6C](../07-testing/exchange-delete-6c.md) |
 
 “Autorizado” aceitou o [contrato 4A.2C](roadmap.md). O gate inicial reprovou e
 interrompeu trabalho dependente; o proprietário então autorizou explicitamente

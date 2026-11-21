@@ -27,7 +27,7 @@ A 5C.1 foi concluída e aprovada após o gate, os smokes e a matriz do pacote.
 | 4B.1 | Contexto administrativo: versão, vhosts visíveis e leitura do vhost atual | Concluída/aprovada; commit `4a35424` |
 | 4B.2 | Seleção de vhost e transição de contexto | Concluída e aprovada em 2026-11-18 |
 | 5 | Filas e proteção das operações destrutivas | 5A, 5B e 5C.1 concluídas, aprovadas e registradas. Exclusão condicional aguarda solução no broker |
-| 6 | Exchanges e bindings | 6A concluída e aprovada. 6B concluída e aprovada após validação em macOS arm64. Exclusão e escritas de bindings terão contratos próprios |
+| 6 | Exchanges e bindings | 6A concluída e aprovada. 6B concluída e aprovada após validação em macOS arm64. Gate 6C aprovado. Exclusão de exchanges permanece indisponível. Escritas de bindings terão contrato próprio |
 | 7 | Publicação AMQP, confirmações e falhas de rede | Proposta |
 | 8 | Dashboard e monitoramento básico | Proposta |
 | 9 | Homologação integrada, segurança e compatibilidade do MVP | Proposta |
@@ -2515,3 +2515,85 @@ e [handler 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/r
 O gate final passou 26 grupos por versão. O check, package, 12 smokes e 80
 verificações no executável passaram em macOS arm64. O proprietário aprovou a conclusão
 e o commit local em 2026-11-20. [Evidências da 6B](../07-testing/exchange-declaration-6b.md).
+
+## Contrato 6C — Validação da exclusão de exchanges
+
+**Gate autorizado em 2026-11-20**, com base em `2138fd6` na branch `main`.
+A autorização solicitada cobre um gate real e o relatório de seus resultados.
+O gate investiga o recorte de exclusão em FR-013 e MVP-E01, considerando a
+confirmação contextual de FR-025 e NFR-010. A decisão sobre quais efeitos o
+produto poderá autorizar depende das evidências do gate.
+
+Nas duas versões de referência, o handler HTTP encaminha `if-unused=true`
+à operação `exchange.delete`. No código Khepri, a transação consulta
+bindings cuja **origem** é a exchange. Dessa leitura decorrem duas hipóteses
+a validar. Um binding de entrada pode ser removido junto com sua exchange de
+destino, e a perda desse binding pode acionar o auto-delete da exchange de
+origem. Um GET seguido de DELETE usa a identidade por vhost e nome e não
+oferece comparação atômica da instância observada. Uma leitura prévia ajuda
+a mostrar o alvo no diálogo, com uma janela de concorrência entre leitura
+e exclusão.
+
+[Referência HTTP](https://www.rabbitmq.com/docs/http-api-reference#delete-apiexchangesvhostname),
+[handler 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_wm_exchange.erl#L56-L65),
+[handler 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_wm_exchange.erl#L56-L65),
+[transação 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/src/rabbit_db_exchange.erl#L400-L442)
+e [transação 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/src/rabbit_db_exchange.erl#L397-L439).
+
+### Decisões propostas
+
+1. **6C-D01 — Ambiente.** Usar apenas brokers de nó único provisionados pelo
+   harness em 4.4.0 e 4.3.6, com digests já fixados, rede e portas próprias,
+   TLS obrigatório, contas sintéticas e observador separado. A execução
+   registra versão, arquitetura, inventário e limpeza. O harness rejeita
+   endpoints fornecidos externamente.
+2. **6C-D02 — Operação em teste.** Usar a rota Management
+   `DELETE /api/exchanges/{vhost}/{name}?if-unused=true`. Codificar cada
+   segmento uma vez. Reaproveitar a projeção de detalhe da 6A e a conexão
+   HTTPS existente nos testes aplicáveis. Exercitar apenas alvos sintéticos
+   previamente declarados. As guardas candidatas excluem exchange padrão,
+   prefixo `amq.`, recursos internos, tipos fora de direct/topic/fanout/headers
+   e nomes incompatíveis com as rotas locais. Verificar que as guardas locais
+   resultam em zero DELETEs.
+3. **6C-D03 — Efeitos e concorrência.** Medir saída para fila e exchange,
+   entrada comum e entrada originada em exchange auto-delete. Criar
+   deterministicamente um binding de saída entre o GET preparatório e o
+   DELETE, acrescentar um binding de entrada no mesmo intervalo e substituir
+   por fixture o nome observado por outro recurso de mesmo nome. Usar
+   barreiras no harness e inventário antes/depois, incluindo dependências
+   afetadas. Usar chamadas de setup e limpeza somente no broker do teste.
+4. **6C-D04 — Resposta e decisão posterior.** Registrar o código e a
+   categoria da resposta junto do estado observado pelo observador. Incluir
+   alvo ausente, permissão insuficiente, nomes especiais e perda de resposta
+   após envio sem repetição. Ao apresentar o relatório, indicar quais
+   garantias cabem no diálogo e quais políticas exigiriam suporte adicional
+   do broker. A implementação de produto, a interface, o Guia/Ajuda e o
+   commit terão autorizações próprias conforme a decisão.
+
+### Critérios de aceitação
+
+1. **6C-01.** Medir exclusão sem bindings para os quatro tipos, inclusive
+   no vhost `detailed` e em um vhost com percentual literal. Identificar
+   resposta de aceite, efeito e preservação de homônimos em outro vhost.
+2. **6C-02.** Medir preservação do alvo e dos bindings quando for origem
+   para fila ou exchange, incluindo o binding inserido após a leitura.
+3. **6C-03.** Medir o efeito quando o alvo é somente destino, com e sem
+   auto-delete na origem e com inserção concorrente após a leitura.
+   Conferir toda a topologia sintética, inclusive possíveis remoções
+   indiretas em cadeia.
+4. **6C-04.** Demonstrar o efeito da recriação entre leitura e exclusão,
+   do alvo ausente, da conta sem configure, de TLS inválido e de perda
+   de resposta sem replay. Registrar resposta e efeito por cenário.
+5. **6C-05.** Conferir isolamento e limpeza nas duas versões. Separar
+   observações da matriz das hipóteses e registrar recomendação para a
+   operação de produto, com riscos residuais e proteção de produção.
+
+FR-010 e as escritas de bindings permanecem em escopos próprios.
+
+A matriz passou 18 verificações por versão. O broker protege bindings de
+saída, com remoção de bindings de entrada e auto-delete em cadeia observados.
+A recriação por nome atingiu o recurso substituto. [Evidências da 6C](../07-testing/exchange-delete-6c.md).
+
+Em 2026-11-20, “Aprovo” aceitou registrar a matriz e manter a exclusão
+indisponível até haver proteção para os bindings de entrada e a instância
+confirmada.

@@ -24,6 +24,7 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 - [Criar uma fila classic ou quorum](#declarar-fila)
 - [Limpar mensagens de uma fila](#limpar-mensagens)
 - [Consultar exchanges e bindings](#consultar-exchanges)
+- [Declarar uma exchange](#declarar-exchange)
 - [Funções de broker ainda indisponíveis](#funcoes-de-broker)
 
 <a id="disponibilidade"></a>
@@ -34,7 +35,7 @@ Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, conf
 
 Salvar ou selecionar um perfil não conecta ao broker. Testar HTTPS e Testar AMQPS usam conexões transitórias. Conectar mantém uma conexão AMQPS e verifica a autenticação HTTPS periodicamente. Os dois endereços são independentes: o aplicativo não comprova que apontam ao mesmo broker.
 
-Visão geral, Exchanges e Publicar permanecem indisponíveis. A sessão atual não abre canais nem publica ou consome mensagens. Senhas protegidas salvas no dispositivo continuam indisponíveis; use senha somente nesta execução.
+Exchanges permite consultar e declarar exchanges no vhost ativo. Visão geral e Publicar permanecem indisponíveis. A sessão atual não abre canais nem publica ou consome mensagens. Senhas protegidas salvas no dispositivo continuam indisponíveis; use senha somente nesta execução.
 
 <a id="primeiros-passos"></a>
 
@@ -347,6 +348,23 @@ A consulta pode ser cancelada. Navegar para outra tela, trocar de vhost ou perde
 2. Abra o detalhe pelo nome da exchange. Para consultar os vínculos, acione Consultar bindings de entrada ou Consultar bindings de saída.
 3. Use Voltar à lista para retornar à exchange selecionada. Se uma página ficar fora da faixa, use Voltar à primeira página.
 
+<a id="declarar-exchange"></a>
+
+## Declarar uma exchange
+
+Em Exchanges, Nova exchange abre o formulário para o vhost da sessão. Confira perfil, ambiente, endpoint HTTPS e vhost, especialmente em produção. O usuário precisa de permissão de configuração sobre o nome da exchange. A declaração envia argumentos vazios e desativa a propriedade interna.
+
+1. Acione Declarar exchange para enviar um pedido. O aplicativo consulta o detalhe depois do aceite e informa se as propriedades conferem. Uma exchange equivalente pode já existir.
+2. Se o broker aceitar o pedido e a leitura falhar ou encontrar diferenças, use Verificar exchange para consultar o estado atual.
+3. Parar de aguardar interrompe a espera local. Uma perda de resposta após o envio deixa o resultado incerto. Consulte a exchange antes de enviar outro pedido.
+
+| Campo ou função | Como usar / para que serve | Exemplo fictício |
+| --- | --- | --- |
+| Nome da exchange | Use o nome exato, até 255 bytes UTF-8. O nome vazio, nomes com prefixo amq., os segmentos . e .. e caracteres de controle são indisponíveis. | — |
+| Tipo da exchange | direct usa a routing key exata, topic usa padrões, fanout distribui a todos os destinos vinculados e headers usa critérios de cabeçalhos nos bindings. O formulário inicia em direct. | — |
+| Durável | Ativado inicialmente. Uma exchange durável conserva sua declaração após reinicialização do broker. | — |
+| Exclusão automática | Desativada inicialmente. Quando ativada, o broker pode remover a exchange após a remoção do último binding de saída. | — |
+
 <a id="funcoes-de-broker"></a>
 
 ## Funções de broker ainda indisponíveis
@@ -357,6 +375,6 @@ Os itens a seguir descrevem o propósito planejado das funções, não instruç�
 | --- | --- | --- |
 | Visão geral e monitoramento | Apresentar informações e métricas do broker com estado e atualidade claros. Ainda não há métricas reais, gráficos ou histórico no aplicativo. | — |
 | Exclusão condicional de filas | A exclusão de filas permanece pendente de uma forma verificável de aplicar as condições no broker. | — |
-| Alterações em exchanges e bindings | Criar ou excluir exchanges e criar ou remover bindings depende de entregas próprias. Consulte os vínculos pela tela Exchanges. | — |
+| Alterações em exchanges e bindings | Excluir exchanges e criar ou remover bindings depende de entregas próprias. Consulte os vínculos pela tela Exchanges. | — |
 | Publicar mensagens | Preparar payloads e propriedades para publicação com resultado explícito. Publicação, consumo e inspeção de mensagens não estão disponíveis; inspeção/consumo ficam fora do MVP aprovado. | — |
 | Administração avançada e produtividade | Usuários, permissões, policies, operações em lote, favoritos e ferramentas avançadas dependem de planejamento e entregas posteriores. Não estão disponíveis nesta versão. | — |

@@ -1189,3 +1189,26 @@ do commit `feat(exchanges): add scoped exchange and binding reads`.
 “Aprovo” aceitou a entrega e o commit local `feat(exchanges): add scoped exchange and binding reads`.
 Os 45 arquivos e o pacote coincidiram com a revisão apresentada.
 [Evidências](../07-testing/exchanges-6a.md).
+
+## 2026-11-20 — Contrato 6B proposto
+
+Após `80ad6f2`, “Continue” iniciou a preparação da declaração de exchanges
+no vhost ativo. O [contrato](roadmap.md#contrato-6b--declaração-de-exchanges) propõe quatro tipos, uma declaração por
+ação e conferência por leitura. Execução e gate real aguardam aprovação.
+
+## 2026-11-20 — Execução 6B autorizada
+
+“Aprovo” aceitou as seis decisões e os sete critérios. Gate inicial em andamento.
+
+## 2026-11-20 — 6B pronta para revisão
+
+A declaração dos quatro tipos está integrada com conferência por GET.
+O gate passou 26 grupos em cada versão. Check com 314 testes e seis Node,
+package, 12 smokes e 80 verificações na matriz do mesmo pacote passaram
+em macOS arm64. Conclusão e commit aguardam aceite. [Evidências da 6B](../07-testing/exchange-declaration-6b.md).
+
+## 2026-11-20 — Conclusão da 6B aprovada
+
+“Aprovo” aceitou a entrega e o commit local `feat(exchanges): add verified exchange declarations`.
+Os 35 arquivos e o ASAR conferiram com a revisão apresentada.
+[Evidências](../07-testing/exchange-declaration-6b.md).

@@ -41,10 +41,21 @@ A ponte expõe `listSessionExchanges`, `getSessionExchange` e
 `cancelManagementRead`. Os DTOs passam por validação na origem e no preload.
 O renderer usa o mesmo componente e transporte lógico nos três sistemas.
 
-FR-012 e a leitura de FR-014 compõem a 6A. Escritas de exchanges e bindings e
+FR-012 e a leitura de FR-014 compõem a 6A. A exclusão de exchanges, as escritas de bindings e
 o restante de MVP-E01 dependem de contratos próprios. As evidências registram
 as plataformas executadas e as limitações de validação.
 
 [Guia do usuário](../10-user-guide/README.md#consultar-exchanges) ·
 [Contrato 6A](../05-roadmap/roadmap.md#contrato-proposto--6a-leitura-de-exchanges-e-bindings) ·
 [Evidências](../07-testing/exchanges-6a.md).
+
+## Declaração de exchanges
+
+O main valida o nome e o vhost antes de buscar credenciais. A ponte tem 37
+métodos, incluindo `declareSessionExchange` e `cancelExchangeDeclaration`.
+Cada ação da janela ativa usa a vaga administrativa para um PUT e, após
+aceite, no máximo um GET do mesmo detalhe da 6A. Um resultado confirmado
+inclui conferência de tipo, durabilidade, auto-delete, internal falso e
+argumentos vazios. O cancelamento distingue as fases anterior ao envio,
+possível envio e aceite do pedido. A tela oferece consulta manual do alvo.
+[Guia](../10-user-guide/README.md#declarar-exchange).

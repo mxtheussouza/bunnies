@@ -192,5 +192,6 @@ o purge confirmado de MVP-Q03. A exclusão condicional permanece
 pendente. Ver [M03](../04-modules/03-queue-management.md).
 
 A 6A implementa a parte de leitura de MVP-E01, com exchanges, propriedades e
-bindings de entrada e saída no vhost da sessão. Declaração, exclusão e
-alterações de bindings continuam pendentes. [M04](../04-modules/04-exchange-management.md).
+bindings de entrada e saída no vhost da sessão. A 6B acrescenta a declaração
+e a conferência dos quatro tipos básicos. Exclusão e alterações de bindings
+continuam pendentes. [M04](../04-modules/04-exchange-management.md).

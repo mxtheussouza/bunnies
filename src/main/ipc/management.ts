@@ -6,6 +6,7 @@ import {
   type ManagementResult,
   isQueueSnapshot,
   isQueueDeclarationSnapshot,
+  isExchangeDeclarationSnapshot,
   isQueuePurgeSnapshot,
   isExchangeSnapshot,
   type ManagementResponse,
@@ -83,6 +84,9 @@ export function registerManagementIpc(
           case "cancelManagementRead":
             service.cancel(owner, request.input);
             break;
+          case "cancelExchangeDeclaration":
+            service.cancel(owner, request.input, "exchangeDeclaration");
+            break;
           case "cancelQueueDeclaration":
             service.cancel(owner, request.input, "declaration");
             break;
@@ -113,6 +117,15 @@ export function registerManagementIpc(
               throw new ManagementFailure("QUEUE_PURGE_UNCERTAIN");
             break;
           }
+          case "declareSessionExchange":
+            value = await service.declareExchange(
+              owner,
+              request.input,
+              trusted,
+            );
+            if (!isExchangeDeclarationSnapshot(value))
+              throw new ManagementFailure("EXCHANGE_DECLARATION_UNCERTAIN");
+            break;
           case "declareSessionQueue":
             value = await service.declareQueue(owner, request.input, trusted);
             if (!isQueueDeclarationSnapshot(value))

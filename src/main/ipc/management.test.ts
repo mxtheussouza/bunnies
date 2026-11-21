@@ -37,6 +37,7 @@ function fixture() {
     execute: vi.fn(async () => undefined),
     cancel: vi.fn(() => undefined),
     purgeQueue: vi.fn<ManagementService["purgeQueue"]>(),
+    declareExchange: vi.fn<ManagementService["declareExchange"]>(),
   };
   const dispose = registerManagementIpc(
     () => window as unknown as BrowserWindow,
@@ -253,5 +254,63 @@ it("restricts exchange binding IPC to the exact input shape and trusted frame", 
     name: "x",
     direction: "incoming",
   });
+  f.dispose();
+});
+
+it("rejects extra destination and declaration fields before exchange writes and scopes cancellation", async () => {
+  const f = fixture();
+  const declaration = {
+    name: "pedidos/á",
+    type: "topic" as const,
+    durable: true,
+    autoDelete: false,
+  };
+  const request = {
+    command: "declareSessionExchange",
+    input: { ...f.input, declaration },
+  };
+  for (const extra of [
+    { vhost: "other" },
+    { url: "https://localhost" },
+    { method: "PUT" },
+  ]) {
+    expect(
+      (await f.call({ ...request, input: { ...request.input, ...extra } }))
+        .error?.code,
+    ).toBe("VALIDATION");
+  }
+  for (const extra of [
+    { internal: true },
+    { arguments: {} },
+    { durable: "true" },
+    { type: "custom" },
+  ]) {
+    expect(
+      (
+        await f.call({
+          ...request,
+          input: {
+            ...request.input,
+            declaration: { ...declaration, ...extra },
+          },
+        })
+      ).error?.code,
+    ).toBe("VALIDATION");
+  }
+  expect(
+    (
+      await f.call(request, {
+        ...f.event,
+        senderFrame: null,
+      } as IpcMainInvokeEvent)
+    ).error?.code,
+  ).toBe("FORBIDDEN");
+  expect(f.service.declareExchange).not.toHaveBeenCalled();
+  await f.call({ command: "cancelExchangeDeclaration", input: f.input });
+  expect(f.service.cancel).toHaveBeenCalledWith(
+    42,
+    f.input,
+    "exchangeDeclaration",
+  );
   f.dispose();
 });

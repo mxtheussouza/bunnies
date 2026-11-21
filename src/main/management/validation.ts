@@ -2,6 +2,7 @@ import {
   closedObject,
   isManagementInput,
   isQueueDetailInput,
+  isExchangeDeclarationInput,
   isQueueDeclarationInput,
   isQueueListInput,
   isExchangeListInput,
@@ -33,6 +34,10 @@ export function parseManagementRequest(v: unknown): ManagementRequest | null {
       return isQueueDetailInput(v.input)
         ? { command: v.command, input: v.input }
         : null;
+    case "declareSessionExchange":
+      return isExchangeDeclarationInput(v.input)
+        ? { command: v.command, input: v.input }
+        : null;
     case "declareSessionQueue":
       return isQueueDeclarationInput(v.input)
         ? { command: v.command, input: v.input }
@@ -40,6 +45,7 @@ export function parseManagementRequest(v: unknown): ManagementRequest | null {
     case "getBrokerInfo":
     case "listSessionVhosts":
     case "cancelManagementRead":
+    case "cancelExchangeDeclaration":
     case "cancelQueueDeclaration":
     case "cancelQueuePurge":
       return isManagementInput(v.input)

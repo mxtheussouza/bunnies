@@ -2,6 +2,8 @@ import type {
   ManagementInput,
   ManagementReadSnapshot,
   QueueDetailInput,
+  ExchangeDeclarationInput,
+  DeclarationSnapshot,
   QueueDeclarationInput,
   QueueDeclarationSnapshot,
   QueuePurgeSnapshot,
@@ -11,6 +13,8 @@ import {
   QUEUE_DECLARATION_TIMEOUT_MS,
   queueSegmentUnsupported,
 } from "../../shared/queues";
+import { declareExchange } from "./exchangeDeclaration";
+import { isExchangeDeclaration } from "../../shared/management";
 import { declareQueue, type DeclarationPhase } from "./queueDeclaration";
 import {
   inspectPurgeQueue,
@@ -44,7 +48,7 @@ type Active = {
   owner: number;
   input: ManagementInput;
   requireAmqps: boolean;
-  kind: "read" | "declaration" | "purge";
+  kind: "read" | "declaration" | "exchangeDeclaration" | "purge";
   controller: AbortController;
   confirmation?: Promise<boolean>;
 };
@@ -70,6 +74,7 @@ export class ManagementService {
     private readonly declare = declareQueue,
     private readonly inspectPurge = inspectPurgeQueue,
     private readonly purge = purgeQueue,
+    private readonly exchangeDeclare = declareExchange,
   ) {
     this.unsubscribe = sessions.onChange(() => {
       this.catalog.validateCurrent(
@@ -169,9 +174,51 @@ export class ManagementService {
     input: QueueDeclarationInput,
     trusted: () => boolean,
   ): Promise<QueueDeclarationSnapshot> {
+    return this.runDeclaration(
+      owner,
+      input,
+      trusted,
+      "queueDeclaration",
+      this.declare,
+    );
+  }
+
+  async declareExchange(
+    owner: number,
+    input: ExchangeDeclarationInput,
+    trusted: () => boolean,
+  ) {
+    if (!isExchangeDeclaration(input.declaration))
+      throw new ManagementFailure("VALIDATION");
+    return this.runDeclaration(
+      owner,
+      input,
+      trusted,
+      "exchangeDeclaration",
+      this.exchangeDeclare,
+    );
+  }
+
+  private async runDeclaration<
+    K extends "queueDeclaration" | "exchangeDeclaration",
+    D,
+  >(
+    owner: number,
+    input: ManagementInput & { declaration: D & { name: string } },
+    trusted: () => boolean,
+    kind: K,
+    declare: (
+      profile: Parameters<typeof declareQueue>[0],
+      vhost: string,
+      declaration: D,
+      signal: AbortSignal,
+      onPhase: (phase: DeclarationPhase) => void,
+      assertContext: () => Promise<void>,
+    ) => Promise<"confirmed" | "divergent">,
+  ): Promise<DeclarationSnapshot<K>> {
     const progress = { phase: "unsent" as DeclarationPhase, vhost: "" };
     const snapshot = () => ({
-      kind: "queueDeclaration" as const,
+      kind,
       sessionId: input.sessionId,
       generation: input.generation,
       operationId: input.operationId,
@@ -181,38 +228,50 @@ export class ManagementService {
       name: input.declaration.name,
     });
     try {
-      return await this.run(owner, input, "declaration", true, async active => {
-        const context = this.context(active);
-        progress.vhost = context.vhost;
-        if (queueSegmentUnsupported(context.vhost))
-          throw new ManagementFailure("QUEUE_SEGMENT");
-        const profile = await this.profiles.connectionSnapshot(
-          context.profileId,
-          context.revision,
-        );
-        const { signal } = active.controller;
-        const assertContext = async () => {
-          signal.throwIfAborted();
-          if (!trusted()) throw new ManagementFailure("FORBIDDEN");
-          this.context(active);
-          await this.profiles.assertRevision(context.revision);
-          signal.throwIfAborted();
-          if (!trusted()) throw new ManagementFailure("FORBIDDEN");
-          this.context(active);
-        };
-        const status = await this.declare(
-          profile,
-          context.vhost,
-          input.declaration,
-          signal,
-          phase => {
-            progress.phase = phase;
-          },
-          assertContext,
-        );
-        await assertContext();
-        return { ...snapshot(), status };
-      });
+      return await this.run(
+        owner,
+        input,
+        kind === "queueDeclaration" ? "declaration" : kind,
+        true,
+        async active => {
+          const context = this.context(active);
+          progress.vhost = context.vhost;
+          if (kind === "exchangeDeclaration")
+            assertExchangeRoute({
+              kind: "exchangeDetail",
+              vhost: context.vhost,
+              name: input.declaration.name,
+            });
+          else if (queueSegmentUnsupported(context.vhost))
+            throw new ManagementFailure("QUEUE_SEGMENT");
+          const profile = await this.profiles.connectionSnapshot(
+            context.profileId,
+            context.revision,
+          );
+          const { signal } = active.controller;
+          const assertContext = async () => {
+            signal.throwIfAborted();
+            if (!trusted()) throw new ManagementFailure("FORBIDDEN");
+            this.context(active);
+            await this.profiles.assertRevision(context.revision);
+            signal.throwIfAborted();
+            if (!trusted()) throw new ManagementFailure("FORBIDDEN");
+            this.context(active);
+          };
+          const status = await declare(
+            profile,
+            context.vhost,
+            input.declaration,
+            signal,
+            phase => {
+              progress.phase = phase;
+            },
+            assertContext,
+          );
+          await assertContext();
+          return { ...snapshot(), status };
+        },
+      );
     } catch (error) {
       const reason =
         error instanceof ManagementFailure ? error.code : "INTERNAL";
@@ -221,6 +280,8 @@ export class ManagementService {
       if (
         progress.phase === "sent" &&
         reason !== "DENIED" &&
+        reason !== "EXCHANGE_DECLARATION_REFUSED" &&
+        reason !== "EXCHANGE_DECLARATION_CONFLICT" &&
         reason !== "QUEUE_DECLARATION_REFUSED" &&
         reason !== "QUEUE_DECLARATION_CONFLICT"
       )
@@ -361,7 +422,7 @@ export class ManagementService {
       );
     };
     setDeadline(
-      kind === "declaration"
+      kind === "declaration" || kind === "exchangeDeclaration"
         ? QUEUE_DECLARATION_TIMEOUT_MS
         : MANAGEMENT_TIMEOUT_MS,
     );

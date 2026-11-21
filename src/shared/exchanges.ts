@@ -1,3 +1,10 @@
+export const exchangeTypes = ["direct", "topic", "fanout", "headers"] as const;
+export type ExchangeDeclaration = {
+  name: string;
+  type: (typeof exchangeTypes)[number];
+  durable: boolean;
+  autoDelete: boolean;
+};
 export const EXCHANGE_PAGE_SIZE = 100;
 export const MAX_EXCHANGE_BINDINGS = 200;
 export const MAX_BINDING_ID_BYTES = 1024;

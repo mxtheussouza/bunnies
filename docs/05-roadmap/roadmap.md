@@ -27,7 +27,7 @@ A 5C.1 foi concluída e aprovada após o gate, os smokes e a matriz do pacote.
 | 4B.1 | Contexto administrativo: versão, vhosts visíveis e leitura do vhost atual | Concluída/aprovada; commit `4a35424` |
 | 4B.2 | Seleção de vhost e transição de contexto | Concluída e aprovada em 2026-11-18 |
 | 5 | Filas e proteção das operações destrutivas | 5A, 5B e 5C.1 concluídas, aprovadas e registradas. Exclusão condicional aguarda solução no broker |
-| 6 | Exchanges e bindings | 6A concluída e aprovada após validação em macOS arm64. Escritas dependem de contratos próprios |
+| 6 | Exchanges e bindings | 6A concluída e aprovada. 6B concluída e aprovada após validação em macOS arm64. Exclusão e escritas de bindings terão contratos próprios |
 | 7 | Publicação AMQP, confirmações e falhas de rede | Proposta |
 | 8 | Dashboard e monitoramento básico | Proposta |
 | 9 | Homologação integrada, segurança e compatibilidade do MVP | Proposta |
@@ -2412,3 +2412,106 @@ O gate final passou 11 verificações por versão. O check, package, 11
 smokes e 70 verificações no executável passaram em macOS arm64. Guia e
 Ajuda acompanham a leitura de exchanges e bindings. O proprietário aprovou a conclusão e o
 commit local em 2026-11-20. [Evidências](../07-testing/exchanges-6a.md).
+
+## Contrato 6B — Declaração de exchanges
+
+**Execução aprovada em 2026-11-20**, com base em `80ad6f2` na branch `main`.
+Esta etapa entrega a criação prevista em FR-013/MVP-E01. A exclusão de exchanges
+e a escrita de bindings em FR-014 terão contratos próprios. FR-010 continua
+pendente na Etapa 5.
+
+| Campo | Proposta |
+| --- | --- |
+| Objetivo | Declarar uma exchange nomeada no vhost ativo e conferir suas propriedades no Management HTTPS |
+| Justificativa | A leitura da 6A já permite identificar o alvo e conferir o resultado no mesmo contexto |
+| Dependências | Sessão e troca de vhost da 4B.2, transporte de escrita da 5B, detalhe da 6A e harness isolado existente |
+| Módulos e arquivos | M04 em `src/main/management`, contratos em `src/shared`, handler de management, preload, formulário na tela Exchanges e testes em `tools/testing` |
+| Riscos | Repetição após perda de resposta, confusão com uma exchange preexistente, nomes reservados, troca de vhost durante a declaração e divergência entre aceite e leitura |
+| Entrega para revisão | Implementação compartilhada, Guia/Ajuda, requisitos e M04 atualizados, verificações por versão do broker e evidências por SO executado |
+| Aprovação solicitada | Executar 6B-D01–06 e verificar 6B-01–07 usando as dependências instaladas. Conclusão e commit terão aceite próprio |
+
+### Decisões propostas
+
+1. **6B-D01 — Contexto.** A declaração parte de uma ação explícita na janela
+   ativa. O main deriva sessão, geração, revisão de perfil, vhost AMQPS atual
+   e endpoint Management HTTPS salvo. Revalidar o contexto antes do envio e da
+   conferência. Aplicar TLS e CA do perfil. Preservar seleção temporária, vaga
+   administrativa única e independência de `whoami`.
+2. **6B-D02 — Formulário.** Nome exato, tipo entre `direct`, `topic`, `fanout`
+   e `headers`, durabilidade e auto-delete visíveis e explícitos. Valores iniciais
+   propostos: tipo direct, durável ligado e auto-delete desligado. Explicar
+   o efeito da perda do último binding de saída após a exchange ter sido usada.
+   Identificar ambiente, produção, perfil, destino HTTPS e vhost antes de enviar.
+   Enviar `internal: false` e `arguments: {}`; argumentos de bindings, inclusive
+   critérios de headers, pertencem à declaração do binding.
+3. **6B-D03 — Alvo e transporte.** Um único
+   `PUT /api/exchanges/{vhost}/{name}` por envio, com tipo e flags fechados.
+   Validar antes de obter credenciais ou iniciar I/O. Nomes e vhost até 255
+   bytes UTF-8, sem controles C0/DEL, Unicode inválido, vazio ou segmentos
+   exatos `.` e `..`. Recusar nomes de exchange com prefixo `amq.`, incluindo
+   o alias da exchange padrão. Codificar cada segmento uma vez, preservando
+   espaços, caixa, barras e percentuais literais. Aplicar os limites da 5B
+   de 30 s totais, 2 KiB de saída, 256 KiB de resposta, 16 KiB de cabeçalhos
+   e profundidade JSON 16. Recusar redirecionamentos.
+4. **6B-D04 — Resultado.** Depois de um aceite HTTP comprovado na matriz,
+   realizar no máximo um GET de detalhe da 6A no mesmo alvo, com até 10 s
+   dentro do prazo restante. Conferir vhost, nome, tipo, ambas as flags,
+   internal e objeto de argumentos vazio. Uma declaração equivalente pode
+   encontrar uma exchange preexistente. Informar o que foi observado e
+   quando. Distinguir divergência, aceite com conferência indisponível,
+   recusa comprovada, falha antes do envio e resultado incerto após possível
+   envio. Perda de resposta, prazo e cancelamento não repetem o PUT.
+   Oferecer consulta manual do detalhe. O fluxo não corrige divergências
+   removendo ou redeclarando o recurso.
+5. **6B-D05 — Fronteira desktop.** Acrescentar `declareSessionExchange` e
+   `cancelExchangeDeclaration` ao canal de management (35 → 37 métodos).
+   Validar origem, janela, entradas, identidade da operação e resposta. O
+   renderer envia campos tipados e referência de sessão. A construção da
+   rota e do corpo cabe ao main. Cancelamento só alcança a declaração do
+   mesmo dono. Invalidar ao perder contexto e descartar respostas antigas.
+6. **6B-D06 — Ordem de execução.** Primeiro provar o adapter em RabbitMQ
+   4.4.0 e 4.3.6 isolados, nas imagens já fixadas. Usar contas limitadas,
+   observador e inventário do harness. Integrar IPC, interface e Guia/Ajuda
+   após passar a matriz inicial. Se alguma combinação exigir mudar o catálogo
+   ou a semântica proposta, registrar a divergência e pedir decisão antes
+   da integração dependente. Verificar o pacote local e identificar cada SO
+   e arquitetura efetivamente executados.
+
+### Critérios de aceitação
+
+1. **6B-01.** Em ambas as versões, exercitar os quatro tipos e as combinações
+   de durabilidade e auto-delete oferecidas. Conferir o recurso no vhost
+   correto e a preservação de filas, bindings e homônimos em outro vhost.
+2. **6B-02.** Testar declaração equivalente e preexistentes divergentes em
+   tipo, flags, internal ou argumentos. Registrar status, envelope e detalhe
+   observados. Aceite seguido de propriedades diferentes nunca indica
+   equivalência completa. Comprovar ausência de substituição do alvo.
+3. **6B-03.** Conferir caminhos com prefixo HTTPS, vhosts `/`, `detailed`
+   e percentual literal, nomes Unicode e com barra. Padrão, reservados e
+   entradas inválidas devem produzir zero requisições de declaração.
+4. **6B-04.** Exercitar conta com e sem permissão de configuração, falha TLS
+   e troca de geração. Em fixtures, contar os PUTs ao cancelar antes/depois
+   do envio, perder a resposta ou falhar o GET após aceite. Testar contexto
+   antigo, duplo envio e tentativa de cancelar a operação de outra janela.
+5. **6B-05.** Validar foco, teclado, temas, zoom 200%, indicação de produção,
+   resultados incertos e consulta manual. Impedir submissão automática ao
+   abrir o formulário, recarregar a janela ou recuperar a sessão.
+6. **6B-06.** Executar check, package, os 11 smokes de regressão e o novo
+   smoke, com testes GUI sequenciais. Repetir a matriz no mesmo executável.
+   Registrar limpeza dos ambientes isolados e resultados nativos disponíveis
+   para macOS, Windows e Linux. Distinguir alvos pendentes no relatório.
+7. **6B-07.** Sincronizar fonte do Guia, Markdown e Ajuda offline com os
+   campos e resultados reais. Atualizar M04, FR-013, MVP-E01, sublimites,
+   PROJECTS e evidências. Apresentar resultados e limitações para conclusão.
+
+A API HTTP documenta o PUT de declaração e o GET individual. Nas duas versões
+fixadas, o handler de Management encaminha o PUT para `exchange.declare`.
+Os códigos de resposta, a equivalência e as combinações aceitas serão
+verificados no gate. [Referência HTTP](https://www.rabbitmq.com/docs/http-api-reference#put-apiexchangesvhostname),
+[propriedades das exchanges](https://www.rabbitmq.com/docs/exchanges#exchange-properties),
+[handler 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_wm_exchange.erl#L50-L55)
+e [handler 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_wm_exchange.erl#L50-L55).
+
+O gate final passou 26 grupos por versão. O check, package, 12 smokes e 80
+verificações no executável passaram em macOS arm64. O proprietário aprovou a conclusão
+e o commit local em 2026-11-20. [Evidências da 6B](../07-testing/exchange-declaration-6b.md).

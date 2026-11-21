@@ -44,6 +44,8 @@ function fixture() {
     async () => "classic",
   );
   const purge = vi.fn<typeof import("./queuePurge").purgeQueue>();
+  const exchangeDeclare =
+    vi.fn<typeof import("./exchangeDeclaration").declareExchange>();
   const service = new ManagementService(
     session as unknown as SessionService,
     profiles as unknown as ProfileService,
@@ -51,9 +53,11 @@ function fixture() {
     declaration,
     inspectPurge,
     purge,
+    exchangeDeclare,
   );
   return {
     service,
+    exchangeDeclare,
     session,
     profiles,
     read,
@@ -497,4 +501,78 @@ it("rejects unsafe exchange segments and default binding reads before loading cr
   expect(f.profiles.connectionSnapshot).not.toHaveBeenCalled();
   expect(f.read).not.toHaveBeenCalled();
   f.service.dispose();
+});
+
+describe("exchange declaration authority", () => {
+  const declaration = {
+    name: "tópico/a",
+    type: "topic" as const,
+    durable: true,
+    autoDelete: false,
+  };
+  it("validates resource and vhost before retrieving credentials", async () => {
+    const f = fixture();
+    for (const name of [
+      "",
+      "amq.default",
+      "amq.topic",
+      ".",
+      "..",
+      "x".repeat(256),
+    ]) {
+      await expect(
+        f.service.declareExchange(
+          1,
+          { ...input(), declaration: { ...declaration, name } },
+          () => true,
+        ),
+      ).rejects.toMatchObject({ code: "VALIDATION" });
+    }
+    f.session.managementContext.mockReturnValue({
+      profileId: "p",
+      revision: "r",
+      vhost: "..",
+    });
+    await expect(
+      f.service.declareExchange(1, { ...input(), declaration }, () => true),
+    ).rejects.toMatchObject({ code: "EXCHANGE_SEGMENT" });
+    expect(f.profiles.connectionSnapshot).not.toHaveBeenCalled();
+    expect(f.exchangeDeclare).not.toHaveBeenCalled();
+  });
+  it.each(["unsent", "sent", "accepted"] as const)(
+    "cancels only its own pending %s declaration and shares the administrative slot",
+    async phase => {
+      const f = fixture(),
+        ref = input(),
+        req = { ...ref, declaration };
+      f.exchangeDeclare.mockImplementation(
+        async (_profile, _vhost, _fields, _signal, progress, authorize) => {
+          await authorize();
+          progress(phase);
+          return new Promise(() => undefined);
+        },
+      );
+      const result = f.service.declareExchange(1, req, () => true);
+      await vi.waitFor(() =>
+        expect(f.profiles.assertRevision).toHaveBeenCalled(),
+      );
+      await expect(
+        f.service.declareExchange(1, req, () => true),
+      ).rejects.toMatchObject({ code: "BUSY" });
+      f.service.cancel(2, ref, "exchangeDeclaration");
+      f.service.cancel(1, ref, "declaration");
+      f.service.cancel(1, { ...ref, generation: 2 }, "exchangeDeclaration");
+      expect(f.exchangeDeclare.mock.calls[0][3].aborted).toBe(false);
+      f.service.cancel(1, ref, "exchangeDeclaration");
+      if (phase === "unsent")
+        await expect(result).rejects.toMatchObject({ code: "CANCELLED" });
+      else
+        await expect(result).resolves.toMatchObject({
+          kind: "exchangeDeclaration",
+          status: phase === "sent" ? "uncertain" : "unverified",
+          reason: "CANCELLED",
+        });
+      expect(f.exchangeDeclare).toHaveBeenCalledOnce();
+    },
+  );
 });

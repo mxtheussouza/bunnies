@@ -5,16 +5,16 @@ de cada Task; atualizá-lo em cada bloco/fase/alteração.
 
 | Campo | Estado |
 | --- | --- |
-| Etapa atual | 6A — leitura de exchanges e bindings |
+| Etapa atual | 6B — declaração de exchanges |
 | Status | Concluída, aprovada e registrada em 2026-11-20 |
-| Última etapa concluída | 6A — leitura de exchanges e bindings |
-| Última entrega registrada | `feat(exchanges): add scoped exchange and binding reads` em `main`, com pai `013c899` |
-| Decisões aprovadas | ADRs 0001–0009, MVP/requisitos/design e conclusão da 6A |
+| Última etapa concluída | 6B — declaração de exchanges |
+| Última entrega registrada | `feat(exchanges): add verified exchange declarations` em `main`, com pai `80ad6f2` |
+| Decisões aprovadas | ADRs 0001–0009, MVP/requisitos/design e conclusão da 6B |
 | Decisões pendentes | Garantia no broker para exclusão condicional de filas (FR-010) |
-| Tarefas concluídas | 6A implementada, gate de 22 verificações, check 308 + seis Node, package, 11 smokes e matriz de 70 verificações no executável em macOS arm64 |
-| Tarefas pendentes | Exclusão condicional, escritas do M04 e validação nativa em Windows e Linux |
+| Tarefas concluídas | 6B implementada. Gate de 52, check 314 + seis Node, package, 12 smokes e matriz de 80 verificações no executável macOS arm64 |
+| Tarefas pendentes | Exclusões de exchanges e de filas, escrita de bindings e validação nativa em Windows e Linux |
 | Problemas conhecidos | Quorum rejeita condições de exclusão e stream as ignora no código das versões de referência. Vhost `detailed` colide com a rota global de listagem de filas. Paginação HTTP de vhosts retorna 500 na matriz e GET individual exige admin |
-| Próxima ação | Aguardar solicitação para preparar o próximo contrato. [Evidências](../07-testing/exchanges-6a.md) |
+| Próxima ação | Aguardar solicitação para preparar o próximo contrato. [Evidências da 6B](../07-testing/exchange-declaration-6b.md) |
 
 “Autorizado” aceitou o [contrato 4A.2C](roadmap.md). O gate inicial reprovou e
 interrompeu trabalho dependente; o proprietário então autorizou explicitamente

@@ -8,7 +8,7 @@
       "paragraphs": [
         "Esta é uma versão em desenvolvimento. Você pode organizar perfis locais, configurar CA por perfil, testar autenticação HTTPS/AMQPS, conectar explicitamente uma sessão, consultar versões informadas e vhosts visíveis por HTTPS, listar, detalhar e declarar filas no vhost ativo, limpar mensagens de filas classic e quorum, usar temas e consultar a Ajuda.",
         "Salvar ou selecionar um perfil não conecta ao broker. Testar HTTPS e Testar AMQPS usam conexões transitórias. Conectar mantém uma conexão AMQPS e verifica a autenticação HTTPS periodicamente. Os dois endereços são independentes: o aplicativo não comprova que apontam ao mesmo broker.",
-        "Visão geral, Exchanges e Publicar permanecem indisponíveis. A sessão atual não abre canais nem publica ou consome mensagens. Senhas protegidas salvas no dispositivo continuam indisponíveis; use senha somente nesta execução."
+        "Exchanges permite consultar e declarar exchanges no vhost ativo. Visão geral e Publicar permanecem indisponíveis. A sessão atual não abre canais nem publica ou consome mensagens. Senhas protegidas salvas no dispositivo continuam indisponíveis; use senha somente nesta execução."
       ]
     },
     {
@@ -390,6 +390,36 @@
       ]
     },
     {
+      "id": "declarar-exchange",
+      "title": "Declarar uma exchange",
+      "paragraphs": [
+        "Em Exchanges, Nova exchange abre o formulário para o vhost da sessão. Confira perfil, ambiente, endpoint HTTPS e vhost, especialmente em produção. O usuário precisa de permissão de configuração sobre o nome da exchange. A declaração envia argumentos vazios e desativa a propriedade interna."
+      ],
+      "fields": [
+        {
+          "name": "Nome da exchange",
+          "description": "Use o nome exato, até 255 bytes UTF-8. O nome vazio, nomes com prefixo amq., os segmentos . e .. e caracteres de controle são indisponíveis."
+        },
+        {
+          "name": "Tipo da exchange",
+          "description": "direct usa a routing key exata, topic usa padrões, fanout distribui a todos os destinos vinculados e headers usa critérios de cabeçalhos nos bindings. O formulário inicia em direct."
+        },
+        {
+          "name": "Durável",
+          "description": "Ativado inicialmente. Uma exchange durável conserva sua declaração após reinicialização do broker."
+        },
+        {
+          "name": "Exclusão automática",
+          "description": "Desativada inicialmente. Quando ativada, o broker pode remover a exchange após a remoção do último binding de saída."
+        }
+      ],
+      "steps": [
+        "Acione Declarar exchange para enviar um pedido. O aplicativo consulta o detalhe depois do aceite e informa se as propriedades conferem. Uma exchange equivalente pode já existir.",
+        "Se o broker aceitar o pedido e a leitura falhar ou encontrar diferenças, use Verificar exchange para consultar o estado atual.",
+        "Parar de aguardar interrompe a espera local. Uma perda de resposta após o envio deixa o resultado incerto. Consulte a exchange antes de enviar outro pedido."
+      ]
+    },
+    {
       "id": "funcoes-de-broker",
       "title": "Funções de broker ainda indisponíveis",
       "paragraphs": [
@@ -406,7 +436,7 @@
         },
         {
           "name": "Alterações em exchanges e bindings",
-          "description": "Criar ou excluir exchanges e criar ou remover bindings depende de entregas próprias. Consulte os vínculos pela tela Exchanges."
+          "description": "Excluir exchanges e criar ou remover bindings depende de entregas próprias. Consulte os vínculos pela tela Exchanges."
         },
         {
           "name": "Publicar mensagens",

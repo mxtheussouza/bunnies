@@ -4,7 +4,6 @@ import {
   MANAGEMENT_TIMEOUT_MS,
 } from "../../shared/management";
 import {
-  MAX_QUEUE_DECLARATION_BODY,
   QUEUE_DECLARATION_TIMEOUT_MS,
   QUEUE_OPTION_KEYS,
   type QueueDeclaration,
@@ -18,7 +17,8 @@ import {
   requestManagement,
 } from "./httpsTransport";
 
-export type DeclarationPhase = "unsent" | "sent" | "accepted";
+import { type DeclarationPhase, sendDeclaration } from "./sendDeclaration";
+export type { DeclarationPhase } from "./sendDeclaration";
 
 export async function declareQueue(
   profile: HttpsProbeInput,
@@ -40,35 +40,17 @@ export async function declareQueue(
       arguments: { "x-queue-type": declaration.type, ...declaration.arguments },
     }),
   );
-  if (body.length > MAX_QUEUE_DECLARATION_BODY)
-    throw new ManagementFailure("LIMIT");
   const since = performance.now();
-  await assertContext();
-  const put = await requestManagement(
+  await sendDeclaration(
     profile,
-    {
-      method: "PUT",
-      route: path,
-      timeout: Math.max(
-        1,
-        QUEUE_DECLARATION_TIMEOUT_MS - (performance.now() - since),
-      ),
-      body,
-      authorizeSend: assertContext,
-      onSend: () => onPhase("sent"),
-      checkResponse(status, headers) {
-        if (status >= 300 && status < 400)
-          throw new ManagementFailure("REDIRECT");
-        if (status >= 500) throw new ManagementFailure("SERVER");
-        if (status === 201 || status === 204) return;
-        if (!isManagementJson(headers)) throw new ManagementFailure("RESPONSE");
-      },
-    },
+    "queue",
+    path,
+    body,
     signal,
+    onPhase,
+    assertContext,
+    since,
   );
-  if ((put.status !== 201 && put.status !== 204) || put.bytes.length !== 0)
-    throw declarationRejection(put);
-  onPhase("accepted");
   await assertContext();
   const remaining = QUEUE_DECLARATION_TIMEOUT_MS - (performance.now() - since);
   if (remaining <= 0) throw new ManagementFailure("TIMEOUT");
@@ -121,38 +103,4 @@ export async function declareQueue(
     QUEUE_OPTION_KEYS.every(key => args[key] === declaration.arguments[key])
     ? "confirmed"
     : "divergent";
-}
-
-function declarationRejection({
-  status,
-  bytes,
-}: {
-  status: number;
-  bytes: Buffer;
-}) {
-  const data = decodeManagementJson(bytes);
-  if (
-    managementDepthOk(data) &&
-    data &&
-    typeof data === "object" &&
-    "reason" in data &&
-    typeof data.reason === "string" &&
-    "error" in data
-  ) {
-    if (status === 400 && data.error === "bad_request") {
-      if (data.reason.startsWith("inequivalent arg "))
-        return new ManagementFailure("QUEUE_DECLARATION_CONFLICT");
-      if (data.reason.startsWith("invalid arg "))
-        return new ManagementFailure("QUEUE_DECLARATION_REFUSED");
-    }
-    if (
-      status === 401 &&
-      data.error === "not_authorised" &&
-      ["Access refused.", "Not management user", "Not authorized"].includes(
-        data.reason,
-      )
-    )
-      return new ManagementFailure("DENIED");
-  }
-  return new ManagementFailure("RESPONSE");
 }

@@ -64,6 +64,7 @@ async function run(
   declarationSmoke,
   purgeSmoke,
   exchangesSmoke,
+  exchangeDeclarationSmoke,
 ) {
   const declaration = declarationSmoke
     ? require("./queue-declaration.cjs")
@@ -71,7 +72,11 @@ async function run(
   const declarations = declaration?.fixture();
   const purge = purgeSmoke ? require("./queue-purge.cjs") : undefined;
   const purgeFixture = purge?.fixture();
-  const exchanges = exchangesSmoke ? require("./exchanges.cjs") : undefined;
+  const exchanges = exchangeDeclarationSmoke
+    ? require("./exchange-declaration.cjs")
+    : exchangesSmoke
+      ? require("./exchanges.cjs")
+      : undefined;
   const exchangeFixture = exchanges?.fixture();
   const fixture = await createTlsFixture(),
     root = await mkdtemp(path.join(tmpdir(), "bunnies-management-smoke-"));
@@ -122,18 +127,18 @@ async function run(
           });
           return;
         }
+        if (exchangeFixture && req.url.startsWith("/api/exchanges/")) {
+          Promise.resolve()
+            .then(() => exchangeFixture.serve(req, res))
+            .catch(error => {
+              errors.push(error.message);
+              res.destroy();
+            });
+          return;
+        }
         assert.equal(req.method, "GET");
         if (req.url === "/api/whoami") {
           res.end('{"name":"synthetic"}');
-          return;
-        }
-        if (exchangeFixture && req.url.startsWith("/api/exchanges/")) {
-          try {
-            exchangeFixture.serve(req, res);
-          } catch (error) {
-            errors.push(error.message);
-            res.destroy();
-          }
           return;
         }
         if (queuesSmoke && req.url.startsWith("/api/queues/")) {
@@ -289,7 +294,7 @@ async function run(
     }
     assert.equal(adminRequests, 0);
     const before = await readFile(file, "utf8");
-    if (queuesSmoke || declarationSmoke || purgeSmoke || exchangesSmoke) {
+    if (queuesSmoke || declarationSmoke || purgeSmoke || exchangeFixture) {
       if (exchangeFixture)
         checks.push(
           ...(await exchanges.verifySmoke({
@@ -340,22 +345,42 @@ async function run(
       assert.deepEqual(errors, []);
       assert.deepEqual(external, []);
       assert.equal(peer.attempts, 1);
-      await page.getByRole("button", { name: /Administração isolada/ }).click();
-      await page
-        .getByRole("button", { name: "Desconectar", exact: true })
-        .click();
-      await until(
-        async () => !(await state()).desired && !(await state()).stopping,
-      );
+      if (exchangeDeclarationSmoke) {
+        await exchanges.verifyRecoveryAndReload({
+          page,
+          peer,
+          focus,
+          until,
+          state,
+          fixture: exchangeFixture,
+        });
+        assert.deepEqual(errors, []);
+        assert.deepEqual(external, []);
+        checks.push(
+          "amqps-recovery-and-renderer-reload-discard-drafts-with-zero-replays",
+        );
+      } else {
+        await page
+          .getByRole("button", { name: /Administração isolada/ })
+          .click();
+        await page
+          .getByRole("button", { name: "Desconectar", exact: true })
+          .click();
+        await until(
+          async () => !(await state()).desired && !(await state()).stopping,
+        );
+      }
       checks.push("no-profile-write-credentials-renderer-network-or-reconnect");
       await writeFile(
-        exchangesSmoke
-          ? "out/exchanges-6a-smoke-results.json"
-          : purgeSmoke
-            ? "out/queue-purge-5c1-smoke-results.json"
-            : declarationSmoke
-              ? "out/queue-declaration-5b-smoke-results.json"
-              : "out/queues-5a-smoke-results.json",
+        exchangeDeclarationSmoke
+          ? "out/exchange-declaration-6b-smoke-results.json"
+          : exchangesSmoke
+            ? "out/exchanges-6a-smoke-results.json"
+            : purgeSmoke
+              ? "out/queue-purge-5c1-smoke-results.json"
+              : declarationSmoke
+                ? "out/queue-declaration-5b-smoke-results.json"
+                : "out/queues-5a-smoke-results.json",
         JSON.stringify(
           {
             passed: true,
@@ -368,7 +393,7 @@ async function run(
         ) + "\n",
       );
       console.log(
-        `${exchangesSmoke ? "Exchanges" : purgeSmoke ? "Purge" : declarationSmoke ? "Declaration" : "Queues"} smoke: ${checks.length} groups passed`,
+        `${exchangeDeclarationSmoke ? "Exchange declaration" : exchangesSmoke ? "Exchanges" : purgeSmoke ? "Purge" : declarationSmoke ? "Declaration" : "Queues"} smoke: ${checks.length} groups passed`,
       );
       return;
     }
@@ -712,6 +737,7 @@ if (require.main === module)
     process.argv.includes("--declare-queue"),
     process.argv.includes("--purge-queue"),
     process.argv.includes("--exchanges"),
+    process.argv.includes("--declare-exchange"),
   ).catch(error => {
     console.error(error);
     process.exitCode = 1;

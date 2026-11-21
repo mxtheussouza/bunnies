@@ -1,5 +1,7 @@
 import type { SessionRef } from "./session";
 import {
+  exchangeTypes,
+  type ExchangeDeclaration,
   bindingDirection,
   bindingIdentity,
   bindingText,
@@ -66,6 +68,12 @@ export const managementErrors = {
     "O endpoint retornou mais de 200 bindings nesta direção. A lista não foi carregada.",
   EXCHANGE_DEFAULT_BINDINGS:
     "Os bindings implícitos da exchange padrão não são consultados por esta tela.",
+  EXCHANGE_DECLARATION_CONFLICT:
+    "A exchange existente tem propriedades incompatíveis com a declaração.",
+  EXCHANGE_DECLARATION_REFUSED:
+    "O RabbitMQ recusou os parâmetros da declaração da exchange.",
+  EXCHANGE_DECLARATION_UNCERTAIN:
+    "O resultado da declaração é incerto. Consulte a exchange antes de reenviar.",
   QUEUE_DECLARATION_CONFLICT:
     "A fila existente tem propriedades incompatíveis com a declaração.",
   QUEUE_DECLARATION_UNCERTAIN:
@@ -128,8 +136,16 @@ export type ExchangeBindingsInput = ExchangeDetailInput & {
 export type QueueDeclarationInput = ManagementInput & {
   declaration: QueueDeclaration;
 };
-export type QueueDeclarationSnapshot = ManagementSnapshotHeader & {
-  kind: "queueDeclaration";
+export type ExchangeDeclarationInput = ManagementInput & {
+  declaration: ExchangeDeclaration;
+};
+export type QueueDeclarationSnapshot = DeclarationSnapshot<"queueDeclaration">;
+export type ExchangeDeclarationSnapshot =
+  DeclarationSnapshot<"exchangeDeclaration">;
+export type DeclarationSnapshot<
+  K extends "queueDeclaration" | "exchangeDeclaration",
+> = ManagementSnapshotHeader & {
+  kind: K;
   vhost: string;
   name: string;
 } & (
@@ -144,6 +160,7 @@ export type QueuePurgeSnapshot = ManagementSnapshotHeader & {
 export type ManagementResponse =
   | ManagementReadSnapshot
   | QueueDeclarationSnapshot
+  | ExchangeDeclarationSnapshot
   | QueuePurgeSnapshot
   | undefined;
 
@@ -153,6 +170,7 @@ export type ManagementRequest =
         | "getBrokerInfo"
         | "listSessionVhosts"
         | "cancelManagementRead"
+        | "cancelExchangeDeclaration"
         | "cancelQueueDeclaration"
         | "cancelQueuePurge";
       input: ManagementInput;
@@ -165,6 +183,7 @@ export type ManagementRequest =
       command: "getSessionQueue" | "purgeSessionQueue";
       input: QueueDetailInput;
     }
+  | { command: "declareSessionExchange"; input: ExchangeDeclarationInput }
   | { command: "declareSessionQueue"; input: QueueDeclarationInput };
 export interface ManagementApi {
   getBrokerInfo(
@@ -188,6 +207,12 @@ export interface ManagementApi {
   listSessionExchangeBindings(
     input: ExchangeBindingsInput,
   ): Promise<ManagementResult<ExchangeSnapshot<ExchangeBindings>>>;
+  declareSessionExchange(
+    input: ExchangeDeclarationInput,
+  ): Promise<ManagementResult<ExchangeDeclarationSnapshot>>;
+  cancelExchangeDeclaration(
+    input: ManagementInput,
+  ): Promise<ManagementResult<undefined>>;
   declareSessionQueue(
     input: QueueDeclarationInput,
   ): Promise<ManagementResult<QueueDeclarationSnapshot>>;
@@ -318,13 +343,36 @@ export function isQueueDeclarationInput(
   );
 }
 
+export function isExchangeDeclarationInput(
+  value: unknown,
+): value is ExchangeDeclarationInput {
+  return (
+    closedObject(value, [...inputKeys, "declaration"]) &&
+    isManagementRef(value) &&
+    isExchangeDeclaration(value.declaration)
+  );
+}
+
+export function isExchangeDeclarationSnapshot(
+  value: unknown,
+): value is ExchangeDeclarationSnapshot {
+  return declarationSnapshot(value, "exchangeDeclaration");
+}
+
 export function isQueueDeclarationSnapshot(
   value: unknown,
 ): value is QueueDeclarationSnapshot {
+  return declarationSnapshot(value, "queueDeclaration");
+}
+
+function declarationSnapshot(
+  value: unknown,
+  kind: "queueDeclaration" | "exchangeDeclaration",
+) {
   const keys = [...snapshotKeys, "name", "vhost", "status"];
   if (
     !closedObject(value, keys, ["reason"]) ||
-    value.kind !== "queueDeclaration" ||
+    value.kind !== kind ||
     !isSnapshotHeader(value) ||
     !boundedManagementText(value.name, 255) ||
     queueSegmentUnsupported(value.name) ||
@@ -364,6 +412,20 @@ export function isQueuePurgeSnapshot(
     value.status === "uncertain" &&
     typeof value.reason === "string" &&
     Object.hasOwn(managementErrors, value.reason)
+  );
+}
+
+export function isExchangeDeclaration(
+  value: unknown,
+): value is ExchangeDeclaration {
+  return (
+    closedObject(value, ["name", "type", "durable", "autoDelete"]) &&
+    boundedManagementText(value.name, 255) &&
+    !exchangeSegmentUnsupported(value.name) &&
+    !value.name.startsWith("amq.") &&
+    exchangeTypes.some(type => type === value.type) &&
+    typeof value.durable === "boolean" &&
+    typeof value.autoDelete === "boolean"
   );
 }
 

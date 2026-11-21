@@ -5,12 +5,12 @@ Atualizado em: 2026-11-20.
 ## Estado atual
 
 - Branch: `main`.
-- Última entrega aprovada: **6A — leitura de exchanges e bindings no vhost ativo**.
-- Aprovação mais recente: “Aprovo” aceitou a conclusão e o commit local em 2026-11-20.
-- Última entrega registrada: `feat(exchanges): add scoped exchange and binding reads` em `main`, com pai `013c899`.
-- Task atual: **6A concluída e aprovada**.
+- Última entrega aprovada: **6B — declaração de exchanges no vhost ativo**.
+- Aprovação mais recente: “Aprovo” aceitou a conclusão e o commit local da 6B em 2026-11-20.
+- Última entrega registrada: `feat(exchanges): add verified exchange declarations` em `main`, com pai `80ad6f2`.
+- Task atual: **6B — concluída e aprovada**.
 - Próxima ação: aguardar solicitação para preparar o próximo contrato.
-  [Evidências da 6A](docs/07-testing/exchanges-6a.md).
+  [Evidências da 6B](docs/07-testing/exchange-declaration-6b.md).
 
 ## Tarefas concluídas
 
@@ -34,6 +34,7 @@ Atualizado em: 2026-11-20.
 | 5B | Declaração de filas classic e quorum e conferência das propriedades | Concluída, aprovada e registrada em 2026-11-20 |
 | 5C.1 | Purge de filas classic/quorum com confirmação nativa e revalidação | Concluída, aprovada e registrada em 2026-11-20 |
 | 6A | Listagem, detalhe de exchanges e bindings por direção no vhost ativo | Concluída, aprovada e registrada em 2026-11-20 |
+| 6B | Declaração e conferência dos quatro tipos básicos de exchange | Concluída, aprovada e registrada em 2026-11-20 |
 
 ## Entrega DOC.1 aprovada
 
@@ -98,6 +99,66 @@ Guia/Ajuda sincronizados e artefato final revisado; conclusão/commit aprovados.
 [Evidências finais](docs/07-testing/sessions-4a2c.md).
 
 ## Histórico de atividades
+
+### 2026-11-20 — T-6B-CONCLUSAO
+
+- “Aprovo” aceitou a conclusão e o commit local
+  `feat(exchanges): add verified exchange declarations`. Retomada em `main`, base `80ad6f2`.
+- Os hashes dos 35 arquivos e do ASAR conferiram com a versão apresentada.
+  A sincronização do aceite foi documental. No encerramento passaram
+  `npm run docs:check` e `git diff --check`. Os resultados funcionais são
+  do pacote macOS arm64 apresentado. A validação nativa dos demais alvos
+  segue pendente.
+
+### 2026-11-20 — T-6B-EXECUCAO
+
+- “Aprovo” autorizou 6B-D01–06 e 6B-01–07. Base `80ad6f2` e cinco documentos
+  da preparação. Docker 29.8.0 disponível. Primeiro validar o adapter nos
+  brokers isolados 4.4.0 e 4.3.6. Integração depende do resultado da matriz.
+
+- Gate real passou 24 verificações por versão (48 ao todo), com as 16 combinações,
+  conflitos, argumentos externos, TLS, permissão, nomes e vhosts. Relatórios
+  indicam limpeza das duas fixtures. Iniciada integração após o gate.
+- A ponte tem 37 métodos. Formulário, fluxo no main, conferência por GET,
+  Guia/Ajuda de 20 tópicos e regressões integrados. A repetição ampliada do
+  gate passou 25 grupos por versão, incluindo cancelamento antes do envio.
+- Package macOS arm64 passou. A primeira execução do smoke de declaração
+  exercitou o formulário e chegou ao encerramento em Exchanges. A rotina
+  compartilhada esperava Conexões. O harness passou a navegar de volta antes
+  de desconectar. Capturas nos dois temas a 200% revisadas. Em andamento a
+  sequência de smokes e a matriz real do executável.
+
+- Os 12 smokes passaram no pacote. A matriz inicial esperava recusa explícita
+  ao redeclarar com outro tipo o nome Unicode de teste. O executável mostrou
+  resultado incerto. O gate adicional reproduziu HTTP 500 nas duas versões.
+  A regra 6B-D04 já prevê resultado incerto nesse caso. Ajustadas as asserções
+  do harness para conferir o envio único, o resultado e o recurso preservado.
+
+- “Continue de onde parou” retomou a validação. A matriz em 4.4.0 passou
+  pela declaração e troca de vhost e parou na regressão TLS ao observar
+  a sessão anterior encerrada. A espera agora exige uma nova sessão.
+  Rodadas parciais registraram limpeza completa. No mesmo ASAR, o smoke
+  ampliado passou cinco grupos, incluindo recuperação e reload sem escrita.
+  A matriz retomada passou 40 verificações em 4.4.0. A execução em 4.3.6
+  passou 40 verificações em seguida. O gate final passou 26 grupos por versão.
+  Check com 314 testes e seis Node, package, 12 smokes sequenciais e 80
+  verificações reais no executável macOS arm64. Capturas, Guia/Ajuda de 20
+  tópicos, hash do ASAR e limpeza das fixtures conferidos. Validação nativa
+  de Windows, Linux e macOS x64 pendente. Apresentar para aceite da conclusão
+  e do commit local `feat(exchanges): add verified exchange declarations`.
+
+### 2026-11-20 — T-6B-PREPARACAO
+
+- “Continue” iniciou a preparação documental do contrato seguinte à 6A.
+  Retomada em `main` limpa em `80ad6f2`. Revisar a declaração de exchanges
+  em FR-013, o fluxo de escrita da 5B e as fontes oficiais da matriz.
+- Propostas seis decisões e sete critérios para os quatro tipos de FR-013,
+  com declaração única e conferência de propriedades. A revisão consultou
+  o handler de Management em ambas as versões e o transporte local da 5B.
+- Conferidos quatro links internos para o contrato e a numeração das decisões
+  e critérios. Passaram `npm run docs:check` e `git diff --check`.
+  As verificações desta preparação foram documentais. Próxima ação: obter
+  aceite para testar o adapter em brokers isolados e executar a 6B.
 
 ### 2026-11-20 — T-6A-CONCLUSAO
 

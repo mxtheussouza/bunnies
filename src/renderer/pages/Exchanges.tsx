@@ -17,7 +17,8 @@ import {
   type ManagementResult,
 } from "../../shared/management";
 import { queueSegmentUnsupported } from "../../shared/queues";
-import type { SessionRef } from "../../shared/session";
+import ExchangeDeclarationForm from "./ExchangeDeclarationForm";
+import type { SessionRef, SessionSnapshot } from "../../shared/session";
 import {
   managementUnavailableReason,
   useSession,
@@ -148,11 +149,14 @@ function BindingList({ data }: { data: ExchangeSnapshot<ExchangeBindings> }) {
 
 function ExchangeWorkspace({
   session,
-  vhost,
+  profile,
 }: {
   session: SessionRef;
-  vhost: string;
+  profile: NonNullable<SessionSnapshot["profile"]>;
 }) {
+  const vhost = profile.vhost;
+  const declarationButton = React.useRef<HTMLButtonElement>(null);
+  const [declarationOpen, setDeclarationOpen] = React.useState(false);
   const [draft, setDraft] = React.useState("");
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState<ExchangeSnapshot<ExchangePage>>();
@@ -322,7 +326,31 @@ function ExchangeWorkspace({
       <p className="exchange-reading">
         Vhost <bdi>{vhost}</bdi> · HTTPS Management
       </p>
+      {declarationOpen && (
+        <ExchangeDeclarationForm
+          profile={profile}
+          session={session}
+          available={true}
+          onClose={() => setDeclarationOpen(false)}
+          onPossibleWrite={() => setPage(undefined)}
+          onVerify={name => {
+            setDeclarationOpen(false);
+            if (declarationButton.current)
+              openDetail(name, declarationButton.current);
+          }}
+        />
+      )}
       <div hidden={detailOpen}>
+        <Button
+          ref={declarationButton}
+          disabled={!!running}
+          aria-haspopup="dialog"
+          onClick={() => {
+            if (!active.current) setDeclarationOpen(true);
+          }}
+        >
+          Nova exchange
+        </Button>
         <h2
           className="exchange-section-heading"
           ref={browseHeading}
@@ -488,7 +516,7 @@ export default function Exchanges() {
     <ExchangeWorkspace
       key={JSON.stringify([sessionId, generation, profile.vhost])}
       session={{ sessionId, generation }}
-      vhost={profile.vhost}
+      profile={profile}
     />
   );
 }

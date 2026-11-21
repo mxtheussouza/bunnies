@@ -225,3 +225,11 @@ Ver [evidências da 5C.1](../07-testing/queues-5c1.md) para resultados e platafo
 | NFR-017/018 | Uma operação administrativa compartilhada, com `whoami` independente. Atualização por ação manual |
 
 Ver [evidências da 6A](../07-testing/exchanges-6a.md) para resultados e plataformas.
+
+## Sublimites da declaração de exchanges — 6B
+
+Aplicam-se os limites de transporte da declaração da 5B, com até 30 s para
+a operação inteira e até 10 s do saldo para a conferência. Uma ação explícita
+autoriza um PUT e até um GET. Nome da exchange e vhost têm até 255 bytes UTF-8.
+O main limita a escrita a 2 KiB de corpo, com os limites administrativos
+de 256 KiB de resposta, 16 KiB de cabeçalhos e profundidade JSON 16.

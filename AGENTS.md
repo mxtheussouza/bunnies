@@ -106,9 +106,9 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **6A — concluída, aprovada e registrada**.
-- Última etapa concluída e aprovada: **6A — leitura de exchanges e bindings**.
-- Última entrega registrada: `feat(exchanges): add scoped exchange and binding reads` em `main`, com pai `013c899`.
+- Etapa atual: **6B — concluída, aprovada e registrada**.
+- Última etapa concluída e aprovada: **6B — declaração de exchanges**.
+- Última entrega registrada: `feat(exchanges): add verified exchange declarations` em `main`, com pai `80ad6f2`.
 - Mudança da barra macOS em `9401448` preservada.
 - Próxima ação: aguardar solicitação para preparar o próximo contrato.
 
@@ -681,3 +681,27 @@ escritas de topologia e FR-010 continuam pendentes. A conclusão e o commit
 Em 2026-11-20, “Aprovo” aceitou a conclusão da 6A e o commit local
 `feat(exchanges): add scoped exchange and binding reads`. A validação nativa em
 Windows e Linux segue pendente. As escritas do M04 exigem contrato próprio.
+
+## Preparação vigente — 6B
+
+“Continue” iniciou a preparação do [contrato 6B](docs/05-roadmap/roadmap.md#contrato-6b--declaração-de-exchanges)
+após o commit `80ad6f2`. A proposta abrange declaração e conferência de
+exchanges no vhost ativo. A execução de 6B-D01–06 e 6B-01–07 depende
+do aceite. Exclusão e escrita de bindings terão contratos próprios.
+
+## Execução aprovada — 6B
+
+“Aprovo” autorizou o contrato em 2026-11-20. Começar pelo gate do adapter.
+Uma divergência que exija alterar o catálogo ou a semântica requer decisão.
+
+## Resultado vigente — 6B pronta para revisão
+
+Gate com 52 verificações, check 314 + seis Node, package, 12 smokes e matriz
+com 80 verificações passaram em macOS arm64. A ponte tem 37 métodos e o
+Guia/Ajuda tem 20 tópicos. Conclusão e commit local aguardam aceite.
+[Evidências](docs/07-testing/exchange-declaration-6b.md).
+
+## Conclusão 6B aprovada
+
+Em 2026-11-20, “Aprovo” aceitou a conclusão da 6B e o commit local
+`feat(exchanges): add verified exchange declarations`. A validação nativa dos demais alvos continua pendente.

@@ -161,6 +161,12 @@ a escrita pode ter ocorrido. FR-010 continua pendente.
 FR-012 tem listagem paginada, busca literal e detalhe de exchanges no vhost
 ativo, incluindo a identificação da exchange padrão e de reservadas. A
 leitura de FR-014 exibe bindings de entrada e saída com routing key,
-argumentos e identidade retornada pela API. FR-013 e a escrita de FR-014
-permanecem pendentes. [M04](../04-modules/04-exchange-management.md) ·
+argumentos e identidade retornada pela API. A escrita de FR-014 permanece
+pendente. [M04](../04-modules/04-exchange-management.md) ·
 [Evidências](../07-testing/exchanges-6a.md).
+
+## Implementação 6B
+
+FR-013 permite declarar direct, topic, fanout e headers no vhost
+ativo e conferir os metadados depois do aceite. A exclusão de exchanges
+continua pendente. [Evidências](../07-testing/exchange-declaration-6b.md).

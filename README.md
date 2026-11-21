@@ -7,8 +7,8 @@ offline. Conectar mantém AMQPS e verifica HTTPS periodicamente. O painel de lei
 consulta versões informadas, lista até 200 vhosts visíveis em 256 KiB por HTTPS
 e permite trocar temporariamente o vhost da sessão. Em **Filas**, é possível
 listar e detalhar filas, declarar classic e quorum e limpar mensagens com
-confirmação. Em **Exchanges**, é possível listar, pesquisar e detalhar exchanges
-e consultar bindings de entrada e saída no vhost ativo.
+confirmação. Em **Exchanges**, é possível listar, pesquisar e detalhar exchanges,
+declarar os quatro tipos básicos e consultar bindings de entrada e saída no vhost ativo.
 
 ## Para usar o aplicativo
 

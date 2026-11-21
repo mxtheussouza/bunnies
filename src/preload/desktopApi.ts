@@ -2,6 +2,8 @@ import {
   closedObject,
   isManagementSnapshot,
   isQueueSnapshot,
+  isExchangeDeclarationSnapshot,
+  type ExchangeDeclarationSnapshot,
   isQueueDeclarationSnapshot,
   isQueuePurgeSnapshot,
   isExchangeSnapshot,
@@ -72,6 +74,7 @@ export function createDesktopApi(
         const value = result.value;
         if (
           (request.command === "cancelManagementRead" ||
+            request.command === "cancelExchangeDeclaration" ||
             request.command === "cancelQueueDeclaration" ||
             request.command === "cancelQueuePurge") &&
           value === undefined
@@ -81,6 +84,7 @@ export function createDesktopApi(
           !isQueueSnapshot(value) &&
           !isManagementSnapshot(value) &&
           !isExchangeSnapshot(value) &&
+          !isExchangeDeclarationSnapshot(value) &&
           !isQueueDeclarationSnapshot(value) &&
           !isQueuePurgeSnapshot(value)
         )
@@ -90,6 +94,11 @@ export function createDesktopApi(
           case "purgeSessionQueue":
             matches =
               value.kind === "queuePurge" && value.name === request.input.name;
+            break;
+          case "declareSessionExchange":
+            matches =
+              value.kind === "exchangeDeclaration" &&
+              value.name === request.input.declaration.name;
             break;
           case "declareSessionQueue":
             matches =
@@ -160,9 +169,11 @@ export function createDesktopApi(
       const code =
         request.command === "purgeSessionQueue"
           ? "QUEUE_PURGE_UNCERTAIN"
-          : request.command === "declareSessionQueue"
-            ? "QUEUE_DECLARATION_UNCERTAIN"
-            : "UNAVAILABLE";
+          : request.command === "declareSessionExchange"
+            ? "EXCHANGE_DECLARATION_UNCERTAIN"
+            : request.command === "declareSessionQueue"
+              ? "QUEUE_DECLARATION_UNCERTAIN"
+              : "UNAVAILABLE";
       return {
         ok: false,
         requestId: "transport",
@@ -259,6 +270,15 @@ export function createDesktopApi(
         command: "listSessionExchangeBindings",
         input,
       }) as Promise<ManagementResult<ExchangeSnapshot<ExchangeBindings>>>,
+    declareSessionExchange: input =>
+      managementCall({ command: "declareSessionExchange", input }) as Promise<
+        ManagementResult<ExchangeDeclarationSnapshot>
+      >,
+    cancelExchangeDeclaration: input =>
+      managementCall({
+        command: "cancelExchangeDeclaration",
+        input,
+      }) as Promise<ManagementResult<undefined>>,
     declareSessionQueue: input =>
       managementCall({ command: "declareSessionQueue", input }) as Promise<
         ManagementResult<QueueDeclarationSnapshot>

@@ -27,7 +27,7 @@ A 5C.1 foi concluída e aprovada após o gate, os smokes e a matriz do pacote.
 | 4B.1 | Contexto administrativo: versão, vhosts visíveis e leitura do vhost atual | Concluída/aprovada; commit `4a35424` |
 | 4B.2 | Seleção de vhost e transição de contexto | Concluída e aprovada em 2026-11-18 |
 | 5 | Filas e proteção das operações destrutivas | 5A, 5B e 5C.1 concluídas, aprovadas e registradas. Exclusão condicional aguarda solução no broker |
-| 6 | Exchanges e bindings | 6A concluída e aprovada. 6B concluída e aprovada após validação em macOS arm64. Gate 6C aprovado. Exclusão de exchanges permanece indisponível. Escritas de bindings terão contrato próprio |
+| 6 | Exchanges e bindings | 6A concluída e aprovada. 6B concluída e aprovada após validação em macOS arm64. Gate 6C aprovado. Exclusão de exchanges permanece indisponível. 6D concluída e aprovada após validação em macOS arm64 |
 | 7 | Publicação AMQP, confirmações e falhas de rede | Proposta |
 | 8 | Dashboard e monitoramento básico | Proposta |
 | 9 | Homologação integrada, segurança e compatibilidade do MVP | Proposta |
@@ -2597,3 +2597,127 @@ A recriação por nome atingiu o recurso substituto. [Evidências da 6C](../07-t
 Em 2026-11-20, “Aprovo” aceitou registrar a matriz e manter a exclusão
 indisponível até haver proteção para os bindings de entrada e a instância
 confirmada.
+
+## Contrato 6D — Criação de bindings
+
+**Execução autorizada em 2026-11-20**, com base em `d42b7da` na branch `main`.
+A proposta cobre a criação prevista em FR-014 e MVP-E01 no vhost ativo.
+A remoção de bindings terá contrato próprio com confirmação contextual.
+A decisão da 6C sobre exclusão de exchanges permanece registrada.
+
+| Campo | Proposta |
+| --- | --- |
+| Entrega | Criar binding exchange→fila ou exchange→exchange e conferir o vínculo pelo identificador retornado pelo RabbitMQ |
+| Origem | Exchange direct, topic, fanout ou headers em detalhe consultado, com contexto ativo da 6A |
+| Dependências | Leituras 5A/6A, transporte Management e guardas de sessão da 6B, brokers isolados fixados por digest |
+| Módulos | M04, adapter e serviço administrativo no main, contratos compartilhados, handler IPC, preload e tela Exchanges |
+| Riscos | Identidade ambígua, argumento convertido pelo broker, contexto antigo, reaproveitamento inseguro de Location e roteamento alterado com a escrita |
+| Aprovação solicitada | Executar 6D-D01–06 e 6D-01–07. Conclusão e commit terão aceite próprio |
+
+### Decisões propostas
+
+1. **6D-D01 — Autoridade e alvos.** O main resolve janela ativa, sessão,
+   geração, revisão, vhost AMQPS e endpoint Management HTTPS do perfil.
+   Exigir HTTPS disponível e AMQPS estabelecido no vhost vigente. O
+   formulário, aberto a partir do detalhe, identifica perfil, ambiente,
+   produção, endpoint, vhost, origem e destino. O main verifica a
+   existência e as propriedades dos dois alvos antes do POST. A permissão
+   final cabe ao broker. A habilitação candidata exclui exchange padrão,
+   reservadas `amq.*` e internas nos dois papéis, além de ciclos diretos
+   (origem igual ao destino) e filas de tipos fora de classic/quorum.
+   Usar destino por nome exato, inclusive quando a listagem de filas
+   estiver indisponível no vhost `detailed`.
+2. **6D-D02 — Campos e limites.** Preservar nomes e routing key exatos,
+   inclusive chave vazia, até 255 bytes UTF-8. Recusar controles, Unicode
+   inválido e nomes de rota vazios, `.` ou `..`. Explicar o efeito de
+   direct, topic, fanout e headers no formulário. Propor até 16 argumentos
+   com chaves únicas de até 64 bytes e valores texto de até 255 bytes,
+   booleano ou inteiro de 32 bits com sinal. Recusar estruturas aninhadas
+   e campos duplicados. Para headers, oferecer `x-match` por seletor
+   `all` ou `any`, com ao menos um critério de cabeçalho comum. O
+   formulário permite distinguir a ausência de um argumento de zero,
+   falso ou texto vazio. Variantes de argumentos exigem prova na matriz.
+3. **6D-D03 — Escrita limitada.** Por ação explícita, emitir no máximo um
+   POST a `/api/bindings/{vhost}/e/{source}/q/{destination}` ou
+   `/api/bindings/{vhost}/e/{source}/e/{destination}`, com JSON de
+   `routing_key` e `arguments`, construído no main. Codificar os
+   segmentos uma vez, preservar TLS e bloquear redirecionamentos.
+   Teto de 2 KiB no corpo enviado, 256 KiB de resposta, 16 KiB de
+   cabeçalhos e profundidade JSON 16. Uma vaga administrativa até
+   concluir, com `whoami` independente. Prazo total de 30 s e até
+   10 s por leitura dentro do saldo. Revalidar contexto imediatamente
+   antes do envio.
+4. **6D-D04 — Identidade e conferência.** Validar o status e a forma de
+   `Location` nas versões fixadas. A resposta só pode fornecer um
+   identificador opaco de até 1 KiB para o alvo exato. Validar prefixo,
+   vhost, origem, tipo de destino, destino, codificação e ausência de
+   query/fragmento. Construir o GET de item localmente. URL retornada
+   jamais define o destino da conexão. Conferir a identidade, chave e
+   argumentos tipados. Com aceite comprovado e leitura indisponível ou
+   divergente, informar essa condição. Um binding idêntico pode já
+   existir. Resposta perdida após possível envio gera resultado
+   incerto. Cancelar interrompe a espera local e o aplicativo oferece
+   consulta manual sem repetir o POST.
+5. **6D-D05 — IPC e interface.** Acrescentar `createSessionBinding` e
+   `cancelBindingCreation` ao canal administrativo (37 → 39 métodos).
+   Validar operação, dono, sessão, geração, entrada fechada e correlação
+   da resposta. A interface compartilhada usa formulário com labels,
+   foco e suporte a teclado. Invalidar no main e no renderer quando
+   houver troca de contexto ou encerramento.
+6. **6D-D06 — Ordem de execução.** Primeiro validar o adapter em
+   RabbitMQ 4.4.0 e 4.3.6 isolados. Divergências que exijam mudar o
+   escopo ou a semântica voltam para decisão antes da integração
+   dependente. Após o gate, integrar e testar IPC, interface, Guia e
+   Ajuda. Registrar os alvos de sistema e CPU efetivamente executados.
+
+### Critérios de aceitação
+
+1. **6D-01.** Nas duas versões, identificar POST e GET nos dois tipos de
+   destino. Conferir o alvo no vhost ativo, inclusive prefixo
+   Management, `/`, `detailed` e percentual literal. Preservar
+   homônimos e inventário dos demais recursos.
+2. **6D-02.** Testar chave vazia, Unicode e codificação literal. Criar
+   dois bindings com mesma chave e argumentos diferentes e comprovar
+   duas identidades. Repetir pedido idêntico e medir identidade e
+   cardinalidade. Conferir headers com all/any e os tipos de valor
+   propostos com observador.
+3. **6D-03.** Provar que a resposta fornece identidade utilizável para o
+   GET no alvo exato. Testar fixtures com `Location` externa, ambígua,
+   malformada, longa e de alvo diferente. Respostas de identidade
+   inválida devem resultar em zero GETs baseados nela.
+4. **6D-04.** Exercitar ausência dos alvos, permissão de escrita no
+   destino e leitura na origem, TLS inválido, perda de contexto,
+   cancelamento e perda da resposta. Contar POSTs e confirmar que
+   nenhuma recuperação envia alteração automática.
+5. **6D-05.** Validar teclado, foco, temas, 200%, contexto de produção e
+   mensagens de aceite, divergência e incerteza. Verificar fronteira IPC
+   e cancelamento cruzado.
+6. **6D-06.** Executar check, package, 12 smokes de regressão e o novo
+   smoke em sequência, com matriz real no mesmo executável. Registrar
+   limpeza e resultados nativos disponíveis de macOS, Windows e Linux.
+7. **6D-07.** Sincronizar Guia/Ajuda, M04, FR-014, MVP-E01, sublimites e
+   PROJECTS. Apresentar evidências e limitações para conclusão.
+
+O Management documenta os dois POSTs e o retorno de `Location` para o
+binding declarado. O formato efetivo, as permissões e a equivalência dos
+argumentos serão confrontados com a matriz.
+[Referência HTTP](https://www.rabbitmq.com/docs/http-api-reference#post-apibindingsvhosteexchangeqqueue),
+[handler 4.4.0](https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_wm_bindings.erl)
+e [handler 4.3.6](https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_wm_bindings.erl).
+
+### Revisão proposta após o gate inicial
+
+A identidade `.` devolveu a coleção do par e `..` devolveu HTTP 400 nas
+duas versões. Ambos os POSTs tiveram aceite HTTP 201. A proposta de
+revisão de 6D-D04 usa a coleção limitada do par apenas nesses casos,
+com correspondência única, sem alterar o GET de item dos demais vínculos.
+A revisão e seu gate exigem aceite antes da integração. [Evidências da 6D](../07-testing/binding-create-6d.md).
+
+
+“Aprovo e continue a proxima etapa” aceitou a revisão de 6D-D04. Para
+identidades `.` e `..`, a confirmação usa um GET local da coleção do par
+de até 200 vínculos e exige uma única correspondência de identidade e
+propriedades. O gate revisado passou 18 verificações por versão.
+
+O check, package, 13 smokes e 76 verificações no executável passaram em
+macOS arm64. O proprietário aprovou a conclusão e o commit local em 2026-11-21. [Evidências da 6D](../07-testing/binding-create-6d.md).

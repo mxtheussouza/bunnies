@@ -1,16 +1,16 @@
 # Bunnies — histórico vivo do projeto
 
-Atualizado em: 2026-11-20.
+Atualizado em: 2026-11-21.
 
 ## Estado atual
 
 - Branch: `main`.
-- Última entrega aprovada: **6C — gate e decisão de exclusão de exchanges**.
-- Aprovação mais recente: “Aprovo” aceitou o gate, o commit local e a decisão sobre exclusão em 2026-11-20.
-- Última entrega registrada: `test(exchanges): verify conditional deletion behavior` em `main`, com pai `2138fd6`.
-- Task atual: **6C — gate aprovado, exclusão de exchanges permanece indisponível**.
-- Próxima ação: aguardar solicitação para preparar o próximo contrato.
-  [Evidências da 6C](docs/07-testing/exchange-delete-6c.md).
+- Última entrega aprovada: **6D — criação e conferência de bindings**.
+- Aprovação mais recente: “Aprovo e pode seguir para proxima etapa” aceitou a conclusão e o commit local da 6D em 2026-11-21.
+- Última entrega registrada: `feat(bindings): add verified binding creation` em `main`, com pai `d42b7da`.
+- Task atual: **6D — concluída e aprovada**.
+- Próxima ação: preparar o contrato da etapa seguinte, conforme solicitado.
+  [Evidências da 6D](docs/07-testing/binding-create-6d.md).
 
 ## Tarefas concluídas
 
@@ -36,6 +36,7 @@ Atualizado em: 2026-11-20.
 | 6A | Listagem, detalhe de exchanges e bindings por direção no vhost ativo | Concluída, aprovada e registrada em 2026-11-20 |
 | 6B | Declaração e conferência dos quatro tipos básicos de exchange | Concluída, aprovada e registrada em 2026-11-20 |
 | 6C | Gate isolado e decisão de manter exclusão de exchanges indisponível | Aprovados e registrados em 2026-11-20 |
+| 6D | Criação e conferência de bindings para fila ou exchange | Aprovada e registrada em 2026-11-21 |
 
 ## Entrega DOC.1 aprovada
 
@@ -100,6 +101,66 @@ Guia/Ajuda sincronizados e artefato final revisado; conclusão/commit aprovados.
 [Evidências finais](docs/07-testing/sessions-4a2c.md).
 
 ## Histórico de atividades
+
+### 2026-11-21 — T-6D-CONCLUSAO
+
+- O proprietário aprovou a conclusão e o commit local `feat(bindings): add verified binding creation`.
+  Os hashes dos 37 caminhos e do ASAR conferiram. No encerramento,
+  passaram `npm run docs:check` e `git diff --check`. As verificações
+  funcionais referem-se ao pacote macOS arm64 apresentado.
+  O pedido de continuar abrange a preparação do próximo contrato.
+
+### 2026-11-20 — T-6D-REVISAO
+
+- “Aprovo e continue a proxima etapa” aceitou a revisão de 6D-D04 e a
+  retomada da integração já autorizada após o gate. Base `d42b7da`.
+  Usar a lista limitada do par apenas para identidades `.` e `..`.
+  O aceite desta revisão antecede os resultados de conclusão e commit.
+- Gate revisado passou 18 verificações por versão e limpeza completa,
+  com conferência individual e por coleção limitada, incluindo fixture
+  com 200/201, duplicidade, ausência e divergência. Integração concluída.
+- Formulário, 39 métodos explícitos, verificação de alvos, uma escrita por
+  ação e Guia/Ajuda integrados. Package e smoke de criação passaram. A
+  matriz inicial chegou à etapa de leitura após a criação e falhou com a
+  lista escondida pelo detalhe. O harness agora fecha o detalhe antes
+  da leitura de regressão. No mesmo ASAR, a matriz retomada passou 38
+  verificações em cada versão e registrou limpeza. Check passou 320 testes
+  e seis Node. Passaram 13 smokes em sequência no mesmo ASAR. Smoke de
+  criação repetido com espera de repaint nos dois temas. Guia/Ajuda de 21
+  tópicos, 39 métodos e inventário conferidos. Windows, Linux e macOS x64
+  seguem pendentes. Apresentar a conclusão e o commit local
+  `feat(bindings): add verified binding creation`.
+
+### 2026-11-20 — T-6D-EXECUCAO
+
+- “Aprovo” aceitou 6D-D01–06 e 6D-01–07. Retomada em `main` na base
+  `d42b7da`, com cinco documentos da proposta. Docker 29.8.0 disponível.
+  Primeiro validar o contrato do POST e da leitura por identidade.
+- A primeira rodada passou 4 grupos e falhou 13 por versão. Os formatos
+  relativos observados foram incorporados ao candidato isolado. Na segunda,
+  15 grupos passaram e dois falharam por versão. A chave `.` retornou a
+  coleção e `..` retornou HTTP 400, inclusive com ponto escapado. Os POSTs
+  retornaram 201. As duas rodadas registraram limpeza completa.
+- Proposta para aprovação: GET limitado do par apenas para identidades `.`
+  e `..`, com conferência de correspondência única. Integração dependente
+  interrompida. Mudanças de execução restritas ao harness e aos documentos.
+- A repetição final confirmou as mesmas duas falhas por versão e limpeza.
+  O lint recusou uma regex de controles no harness. A checagem passou a
+  usar códigos de caracteres. `npm run check` passou 314 testes e seis
+  testes Node, typecheck, lint, formatação e Guia/Ajuda. `git diff --check`
+  passou. Testes de falha de transporte e fronteira de produto seguem
+  pendentes no contrato.
+
+### 2026-11-20 — T-6D-PREPARACAO
+
+- “Continue” iniciou a preparação do próximo contrato após `d42b7da`.
+  A branch `main` estava limpa. Revisar criação de bindings em FR-014
+  e a identidade retornada pelo Management.
+- O contrato propõe dois tipos de destino, argumentos tipados e conferência
+  por identidade validada de Location. Preparação documental com seis
+  decisões, sete critérios e quatro links internos conferidos.
+  Passaram `npm run docs:check` e `git diff --check`. Execução e gate
+  aguardam aprovação.
 
 ### 2026-11-20 — T-6C-CONCLUSAO
 

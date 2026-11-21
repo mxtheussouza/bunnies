@@ -193,5 +193,6 @@ pendente. Ver [M03](../04-modules/03-queue-management.md).
 
 A 6A implementa a parte de leitura de MVP-E01, com exchanges, propriedades e
 bindings de entrada e saída no vhost da sessão. A 6B acrescenta a declaração
-e a conferência dos quatro tipos básicos. Exclusão e alterações de bindings
-continuam pendentes. [M04](../04-modules/04-exchange-management.md).
+e a conferência dos quatro tipos básicos. A 6D acrescenta criação de bindings com
+conferência de identidade.
+A exclusão de exchanges e a remoção de bindings continuam pendentes. [M04](../04-modules/04-exchange-management.md).

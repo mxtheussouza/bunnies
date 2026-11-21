@@ -1,3 +1,10 @@
+export type BindingCreation = {
+  source: string;
+  destinationType: "queue" | "exchange";
+  destination: string;
+  routingKey: string;
+  arguments: Record<string, string | boolean | number>;
+};
 export const exchangeTypes = ["direct", "topic", "fanout", "headers"] as const;
 export type ExchangeDeclaration = {
   name: string;

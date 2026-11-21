@@ -1,4 +1,5 @@
 import React from "react";
+import { useManagementEndpoint } from "./useManagementEndpoint";
 import {
   exchangeTypes,
   type ExchangeDeclaration,
@@ -13,27 +14,7 @@ export default function ExchangeDeclarationForm(props: DeclarationFormProps) {
   const [type, setType] = React.useState<ExchangeDeclaration["type"]>("direct");
   const [durable, setDurable] = React.useState(true);
   const [autoDelete, setAutoDelete] = React.useState(false);
-  const [endpoint, setEndpoint] = React.useState<string>();
-  React.useEffect(() => {
-    let current = true;
-    void window.bunnies
-      .listProfiles()
-      .then(result => {
-        if (current)
-          setEndpoint(
-            result.ok
-              ? (result.value.profiles.find(p => p.id === props.profile.id)
-                  ?.httpsUrl ?? "")
-              : "",
-          );
-      })
-      .catch(() => {
-        if (current) setEndpoint("");
-      });
-    return () => {
-      current = false;
-    };
-  }, [props.profile.id]);
+  const endpoint = useManagementEndpoint(props.profile.id);
   const declaration = { name, type, durable, autoDelete };
   return (
     <DeclarationDialog

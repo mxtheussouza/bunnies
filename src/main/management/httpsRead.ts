@@ -109,6 +109,7 @@ export async function readManagement(
   input: HttpsProbeInput,
   query: ManagementQuery,
   signal: AbortSignal,
+  timeout = MANAGEMENT_TIMEOUT_MS,
 ): Promise<ManagementData> {
   const route = managementPath(query);
   if (!route) throw new ManagementFailure("VALIDATION");
@@ -123,7 +124,7 @@ export async function readManagement(
     {
       method: "GET",
       route,
-      timeout: MANAGEMENT_TIMEOUT_MS,
+      timeout,
       checkResponse(status, headers) {
         if (status >= 300 && status < 400)
           throw new ManagementFailure("REDIRECT");

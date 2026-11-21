@@ -25,6 +25,7 @@ Use este guia para organizar perfis locais de RabbitMQ e entender os controles d
 - [Limpar mensagens de uma fila](#limpar-mensagens)
 - [Consultar exchanges e bindings](#consultar-exchanges)
 - [Declarar uma exchange](#declarar-exchange)
+- [Criar um binding](#criar-binding)
 - [Funções de broker ainda indisponíveis](#funcoes-de-broker)
 
 <a id="disponibilidade"></a>
@@ -365,6 +366,21 @@ Em Exchanges, Nova exchange abre o formulário para o vhost da sessão. Confira 
 | Durável | Ativado inicialmente. Uma exchange durável conserva sua declaração após reinicialização do broker. | — |
 | Exclusão automática | Desativada inicialmente. Quando ativada, o broker pode remover a exchange após a remoção do último binding de saída. | — |
 
+<a id="criar-binding"></a>
+
+## Criar um binding
+
+O binding altera o roteamento no broker. Abra uma exchange compatível e acione Novo binding. Confira perfil, ambiente, vhost, endpoint HTTPS e origem. A operação exige leitura na origem e escrita no destino.
+
+1. Acione Criar binding. Depois do aceite o aplicativo consulta a identidade e as propriedades. Um binding idêntico pode já existir.
+2. Se a conferência estiver indisponível ou o resultado for incerto, consulte os bindings de saída antes de reenviar. Cancelar interrompe a espera local.
+
+| Campo ou função | Como usar / para que serve | Exemplo fictício |
+| --- | --- | --- |
+| Tipo de destino e nome exato | Escolha Fila para classic ou quorum ou Exchange para um dos quatro tipos básicos. Use o nome do recurso no vhost atual. | — |
+| Routing key | Use a chave exata, que pode ficar vazia. Direct usa igualdade, topic aceita padrões e fanout e headers roteiam independentemente da chave. | — |
+| Argumentos | Use chaves únicas e valores texto, booleano ou inteiro de 32 bits com sinal. Para headers, escolha Todos (all) ou Qualquer um (any) e informe pelo menos um critério. | — |
+
 <a id="funcoes-de-broker"></a>
 
 ## Funções de broker ainda indisponíveis
@@ -375,6 +391,6 @@ Os itens a seguir descrevem o propósito planejado das funções, não instruç�
 | --- | --- | --- |
 | Visão geral e monitoramento | Apresentar informações e métricas do broker com estado e atualidade claros. Ainda não há métricas reais, gráficos ou histórico no aplicativo. | — |
 | Exclusão condicional de filas | A exclusão de filas permanece pendente de uma forma verificável de aplicar as condições no broker. | — |
-| Alterações em exchanges e bindings | Excluir exchanges e criar ou remover bindings depende de entregas próprias. Consulte os vínculos pela tela Exchanges. | — |
+| Alterações em exchanges e bindings | Excluir exchanges e remover bindings depende de entregas próprias. A tela Exchanges permite criar e consultar bindings. | — |
 | Publicar mensagens | Preparar payloads e propriedades para publicação com resultado explícito. Publicação, consumo e inspeção de mensagens não estão disponíveis; inspeção/consumo ficam fora do MVP aprovado. | — |
 | Administração avançada e produtividade | Usuários, permissões, policies, operações em lote, favoritos e ferramentas avançadas dependem de planejamento e entregas posteriores. Não estão disponíveis nesta versão. | — |

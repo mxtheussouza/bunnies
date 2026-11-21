@@ -72,3 +72,42 @@ it("rejects boxed or coercible enums without invoking coercion", () => {
     }),
   ).toBe(false);
 });
+
+it("accepts only closed binding fields and preserves empty, false and zero", () => {
+  const input = {
+    sessionId: "00000000-0000-4000-8000-000000000001",
+    operationId: "00000000-0000-4000-8000-000000000002",
+    generation: 1,
+    binding: {
+      source: "origin",
+      destination: "destination",
+      destinationType: "queue",
+      routingKey: "",
+      arguments: { empty: "", flag: false, count: 0 },
+    },
+  };
+  const request = { command: "createSessionBinding", input };
+  expect(parseManagementRequest(request)).toEqual(request);
+  expect(
+    parseManagementRequest({ ...request, input: { ...input, vhost: "/" } }),
+  ).toBeNull();
+  for (const fields of [
+    { source: "amq.topic" },
+    { destination: ".." },
+    { arguments: { bad: { nested: true } } },
+    { arguments: { over: 2147483648 } },
+    {
+      arguments: Object.fromEntries(
+        Array.from({ length: 17 }, (_, index) => [String(index), 0]),
+      ),
+    },
+    { destinationType: "exchange", destination: "origin" },
+  ]) {
+    expect(
+      parseManagementRequest({
+        ...request,
+        input: { ...input, binding: { ...input.binding, ...fields } },
+      }),
+    ).toBeNull();
+  }
+});

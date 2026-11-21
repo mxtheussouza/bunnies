@@ -65,6 +65,7 @@ async function run(
   purgeSmoke,
   exchangesSmoke,
   exchangeDeclarationSmoke,
+  bindingCreationSmoke,
 ) {
   const declaration = declarationSmoke
     ? require("./queue-declaration.cjs")
@@ -72,11 +73,13 @@ async function run(
   const declarations = declaration?.fixture();
   const purge = purgeSmoke ? require("./queue-purge.cjs") : undefined;
   const purgeFixture = purge?.fixture();
-  const exchanges = exchangeDeclarationSmoke
-    ? require("./exchange-declaration.cjs")
-    : exchangesSmoke
-      ? require("./exchanges.cjs")
-      : undefined;
+  const exchanges = bindingCreationSmoke
+    ? require("./binding-create.cjs")
+    : exchangeDeclarationSmoke
+      ? require("./exchange-declaration.cjs")
+      : exchangesSmoke
+        ? require("./exchanges.cjs")
+        : undefined;
   const exchangeFixture = exchanges?.fixture();
   const fixture = await createTlsFixture(),
     root = await mkdtemp(path.join(tmpdir(), "bunnies-management-smoke-"));
@@ -127,7 +130,12 @@ async function run(
           });
           return;
         }
-        if (exchangeFixture && req.url.startsWith("/api/exchanges/")) {
+        if (
+          exchangeFixture &&
+          (req.url.startsWith("/api/exchanges/") ||
+            (bindingCreationSmoke &&
+              /^\/api\/(queues|bindings)\//.test(req.url)))
+        ) {
           Promise.resolve()
             .then(() => exchangeFixture.serve(req, res))
             .catch(error => {
@@ -372,15 +380,17 @@ async function run(
       }
       checks.push("no-profile-write-credentials-renderer-network-or-reconnect");
       await writeFile(
-        exchangeDeclarationSmoke
-          ? "out/exchange-declaration-6b-smoke-results.json"
-          : exchangesSmoke
-            ? "out/exchanges-6a-smoke-results.json"
-            : purgeSmoke
-              ? "out/queue-purge-5c1-smoke-results.json"
-              : declarationSmoke
-                ? "out/queue-declaration-5b-smoke-results.json"
-                : "out/queues-5a-smoke-results.json",
+        bindingCreationSmoke
+          ? "out/binding-create-6d-smoke-results.json"
+          : exchangeDeclarationSmoke
+            ? "out/exchange-declaration-6b-smoke-results.json"
+            : exchangesSmoke
+              ? "out/exchanges-6a-smoke-results.json"
+              : purgeSmoke
+                ? "out/queue-purge-5c1-smoke-results.json"
+                : declarationSmoke
+                  ? "out/queue-declaration-5b-smoke-results.json"
+                  : "out/queues-5a-smoke-results.json",
         JSON.stringify(
           {
             passed: true,
@@ -393,7 +403,7 @@ async function run(
         ) + "\n",
       );
       console.log(
-        `${exchangeDeclarationSmoke ? "Exchange declaration" : exchangesSmoke ? "Exchanges" : purgeSmoke ? "Purge" : declarationSmoke ? "Declaration" : "Queues"} smoke: ${checks.length} groups passed`,
+        `${bindingCreationSmoke ? "Binding creation" : exchangeDeclarationSmoke ? "Exchange declaration" : exchangesSmoke ? "Exchanges" : purgeSmoke ? "Purge" : declarationSmoke ? "Declaration" : "Queues"} smoke: ${checks.length} groups passed`,
       );
       return;
     }
@@ -738,6 +748,7 @@ if (require.main === module)
     process.argv.includes("--purge-queue"),
     process.argv.includes("--exchanges"),
     process.argv.includes("--declare-exchange"),
+    process.argv.includes("--create-binding"),
   ).catch(error => {
     console.error(error);
     process.exitCode = 1;

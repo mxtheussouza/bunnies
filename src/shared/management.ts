@@ -2,6 +2,7 @@ import type { SessionRef } from "./session";
 import {
   exchangeTypes,
   type ExchangeDeclaration,
+  type BindingCreation,
   bindingDirection,
   bindingIdentity,
   bindingText,
@@ -68,6 +69,11 @@ export const managementErrors = {
     "O endpoint retornou mais de 200 bindings nesta direção. A lista não foi carregada.",
   EXCHANGE_DEFAULT_BINDINGS:
     "Os bindings implícitos da exchange padrão não são consultados por esta tela.",
+  BINDING_TARGET:
+    "A origem ou o destino informado não aceita declaração de binding neste formulário.",
+  BINDING_ARGUMENTS: "Revise os argumentos e os critérios de cabeçalho.",
+  BINDING_UNCERTAIN:
+    "O resultado da criação é incerto. Consulte os bindings antes de reenviar.",
   EXCHANGE_DECLARATION_CONFLICT:
     "A exchange existente tem propriedades incompatíveis com a declaração.",
   EXCHANGE_DECLARATION_REFUSED:
@@ -157,9 +163,23 @@ export type QueuePurgeSnapshot = ManagementSnapshotHeader & {
   vhost: string;
   name: string;
 } & ({ status: "accepted" } | { status: "uncertain"; reason: ManagementError });
+export type BindingCreationInput = ManagementInput & {
+  binding: BindingCreation;
+};
+export type BindingCreationSnapshot = ManagementSnapshotHeader & {
+  kind: "bindingCreation";
+  vhost: string;
+  exchange: string;
+  destination: string;
+  destinationType: BindingCreation["destinationType"];
+} & (
+    | { status: "confirmed" | "divergent"; identity: string }
+    | { status: "unverified" | "uncertain"; reason: ManagementError }
+  );
 export type ManagementResponse =
   | ManagementReadSnapshot
   | QueueDeclarationSnapshot
+  | BindingCreationSnapshot
   | ExchangeDeclarationSnapshot
   | QueuePurgeSnapshot
   | undefined;
@@ -171,6 +191,7 @@ export type ManagementRequest =
         | "listSessionVhosts"
         | "cancelManagementRead"
         | "cancelExchangeDeclaration"
+        | "cancelBindingCreation"
         | "cancelQueueDeclaration"
         | "cancelQueuePurge";
       input: ManagementInput;
@@ -183,6 +204,7 @@ export type ManagementRequest =
       command: "getSessionQueue" | "purgeSessionQueue";
       input: QueueDetailInput;
     }
+  | { command: "createSessionBinding"; input: BindingCreationInput }
   | { command: "declareSessionExchange"; input: ExchangeDeclarationInput }
   | { command: "declareSessionQueue"; input: QueueDeclarationInput };
 export interface ManagementApi {
@@ -207,6 +229,12 @@ export interface ManagementApi {
   listSessionExchangeBindings(
     input: ExchangeBindingsInput,
   ): Promise<ManagementResult<ExchangeSnapshot<ExchangeBindings>>>;
+  createSessionBinding(
+    input: BindingCreationInput,
+  ): Promise<ManagementResult<BindingCreationSnapshot>>;
+  cancelBindingCreation(
+    input: ManagementInput,
+  ): Promise<ManagementResult<undefined>>;
   declareSessionExchange(
     input: ExchangeDeclarationInput,
   ): Promise<ManagementResult<ExchangeDeclarationSnapshot>>;
@@ -750,4 +778,98 @@ export function isExchangeSnapshot(value: unknown): value is ExchangeSnapshot {
     default:
       return false;
   }
+}
+
+function bindingName(value: unknown): value is string {
+  return (
+    boundedManagementText(value, 255) &&
+    !queueSegmentUnsupported(value) &&
+    !value.startsWith("amq.")
+  );
+}
+export function isBindingCreation(value: unknown): value is BindingCreation {
+  if (
+    !closedObject(value, [
+      "source",
+      "destinationType",
+      "destination",
+      "routingKey",
+      "arguments",
+    ]) ||
+    !bindingName(value.source) ||
+    !bindingName(value.destination) ||
+    (value.destinationType !== "queue" &&
+      value.destinationType !== "exchange") ||
+    (value.destinationType === "exchange" &&
+      value.source === value.destination) ||
+    (value.routingKey !== "" &&
+      !boundedManagementText(value.routingKey, 255)) ||
+    !value.arguments ||
+    typeof value.arguments !== "object" ||
+    Array.isArray(value.arguments)
+  )
+    return false;
+  if (!closedObject(value.arguments, Object.keys(value.arguments)))
+    return false;
+  const args = Object.entries(value.arguments);
+  return (
+    args.length <= 16 &&
+    args.every(
+      ([key, field]) =>
+        boundedManagementText(key, 64) &&
+        (field === "" ||
+          boundedManagementText(field, 255) ||
+          typeof field === "boolean" ||
+          (typeof field === "number" &&
+            Number.isInteger(field) &&
+            field >= -2147483648 &&
+            field <= 2147483647)),
+    )
+  );
+}
+export function isBindingCreationInput(
+  value: unknown,
+): value is BindingCreationInput {
+  return (
+    closedObject(value, [...inputKeys, "binding"]) &&
+    isManagementRef(value) &&
+    isBindingCreation(value.binding)
+  );
+}
+export function isBindingCreationSnapshot(
+  value: unknown,
+): value is BindingCreationSnapshot {
+  if (
+    !closedObject(
+      value,
+      [
+        ...snapshotKeys,
+        "vhost",
+        "exchange",
+        "destination",
+        "destinationType",
+        "status",
+      ],
+      ["identity", "reason"],
+    ) ||
+    value.kind !== "bindingCreation" ||
+    !isSnapshotHeader(value) ||
+    !boundedManagementText(value.vhost, 255) ||
+    queueSegmentUnsupported(value.vhost) ||
+    !bindingName(value.exchange) ||
+    !bindingName(value.destination) ||
+    (value.destinationType !== "queue" && value.destinationType !== "exchange")
+  )
+    return false;
+  if (value.status === "confirmed" || value.status === "divergent")
+    return (
+      boundedManagementText(value.identity, MAX_BINDING_ID_BYTES) &&
+      !Object.hasOwn(value, "reason")
+    );
+  return (
+    (value.status === "unverified" || value.status === "uncertain") &&
+    !Object.hasOwn(value, "identity") &&
+    typeof value.reason === "string" &&
+    Object.hasOwn(managementErrors, value.reason)
+  );
 }

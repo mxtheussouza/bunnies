@@ -1,4 +1,6 @@
 import type {
+  BindingCreationInput,
+  BindingCreationSnapshot,
   ManagementInput,
   ManagementReadSnapshot,
   QueueDetailInput,
@@ -14,7 +16,11 @@ import {
   queueSegmentUnsupported,
 } from "../../shared/queues";
 import { declareExchange } from "./exchangeDeclaration";
-import { isExchangeDeclaration } from "../../shared/management";
+import { bindingBody, createBinding } from "./bindingCreate";
+import {
+  isBindingCreation,
+  isExchangeDeclaration,
+} from "../../shared/management";
 import { declareQueue, type DeclarationPhase } from "./queueDeclaration";
 import {
   inspectPurgeQueue,
@@ -48,7 +54,12 @@ type Active = {
   owner: number;
   input: ManagementInput;
   requireAmqps: boolean;
-  kind: "read" | "declaration" | "exchangeDeclaration" | "purge";
+  kind:
+    | "read"
+    | "declaration"
+    | "exchangeDeclaration"
+    | "bindingCreation"
+    | "purge";
   controller: AbortController;
   confirmation?: Promise<boolean>;
 };
@@ -75,6 +86,7 @@ export class ManagementService {
     private readonly inspectPurge = inspectPurgeQueue,
     private readonly purge = purgeQueue,
     private readonly exchangeDeclare = declareExchange,
+    private readonly bindingCreate = createBinding,
   ) {
     this.unsubscribe = sessions.onChange(() => {
       this.catalog.validateCurrent(
@@ -249,15 +261,8 @@ export class ManagementService {
             context.revision,
           );
           const { signal } = active.controller;
-          const assertContext = async () => {
-            signal.throwIfAborted();
-            if (!trusted()) throw new ManagementFailure("FORBIDDEN");
-            this.context(active);
-            await this.profiles.assertRevision(context.revision);
-            signal.throwIfAborted();
-            if (!trusted()) throw new ManagementFailure("FORBIDDEN");
-            this.context(active);
-          };
+          const assertContext = () =>
+            this.assertWriteContext(active, context.revision, trusted);
           const status = await declare(
             profile,
             context.vhost,
@@ -288,6 +293,85 @@ export class ManagementService {
         return { ...snapshot(), status: "uncertain", reason };
       throw error;
     }
+  }
+
+  async createBinding(
+    owner: number,
+    input: BindingCreationInput,
+    trusted: () => boolean,
+  ): Promise<BindingCreationSnapshot> {
+    if (!isBindingCreation(input.binding))
+      throw new ManagementFailure("VALIDATION");
+    const progress = { phase: "unsent" as DeclarationPhase, vhost: "" };
+    const since = performance.now();
+    const snapshot = () => ({
+      kind: "bindingCreation" as const,
+      sessionId: input.sessionId,
+      generation: input.generation,
+      operationId: input.operationId,
+      source: "https-management" as const,
+      checkedAt: new Date().toISOString(),
+      vhost: progress.vhost,
+      exchange: input.binding.source,
+      destination: input.binding.destination,
+      destinationType: input.binding.destinationType,
+    });
+    try {
+      return await this.run(
+        owner,
+        input,
+        "bindingCreation",
+        true,
+        async active => {
+          const context = this.context(active);
+          progress.vhost = context.vhost;
+          const target = { ...input.binding, vhost: context.vhost };
+          const body = bindingBody(target);
+          const profile = await this.profiles.connectionSnapshot(
+            context.profileId,
+            context.revision,
+          );
+          const assertContext = () =>
+            this.assertWriteContext(active, context.revision, trusted);
+          const result = await this.bindingCreate(
+            profile,
+            target,
+            body,
+            active.controller.signal,
+            assertContext,
+            phase => {
+              progress.phase = phase;
+            },
+            () => QUEUE_DECLARATION_TIMEOUT_MS - (performance.now() - since),
+          );
+          await assertContext();
+          return { ...snapshot(), ...result };
+        },
+      );
+    } catch (error) {
+      const reason =
+        error instanceof ManagementFailure ? error.code : "INTERNAL";
+      if (progress.phase === "accepted")
+        return { ...snapshot(), status: "unverified", reason };
+      if (progress.phase === "sent" && reason !== "DENIED")
+        return { ...snapshot(), status: "uncertain", reason };
+      throw error;
+    }
+  }
+
+  private async assertWriteContext(
+    active: Active,
+    revision: string,
+    trusted: () => boolean,
+  ) {
+    const { signal } = active.controller;
+    signal.throwIfAborted();
+    if (!trusted()) throw new ManagementFailure("FORBIDDEN");
+    this.context(active);
+    await this.profiles.assertRevision(revision);
+    signal.throwIfAborted();
+    if (!trusted()) throw new ManagementFailure("FORBIDDEN");
+    this.context(active);
   }
 
   async purgeQueue(
@@ -422,7 +506,9 @@ export class ManagementService {
       );
     };
     setDeadline(
-      kind === "declaration" || kind === "exchangeDeclaration"
+      kind === "declaration" ||
+        kind === "exchangeDeclaration" ||
+        kind === "bindingCreation"
         ? QUEUE_DECLARATION_TIMEOUT_MS
         : MANAGEMENT_TIMEOUT_MS,
     );

@@ -1232,3 +1232,29 @@ A decisão sobre bindings de entrada e identidade por nome está pendente.
 “Aprovo” aceitou manter a exclusão de exchanges indisponível e autorizou
 o commit local `test(exchanges): verify conditional deletion behavior`.
 [Evidências](../07-testing/exchange-delete-6c.md).
+
+## 2026-11-20 — Contrato 6D proposto
+
+Após `d42b7da`, “Continue” iniciou a preparação da criação de bindings.
+O [contrato 6D](roadmap.md#contrato-6d--criação-de-bindings) propõe um POST por ação e conferência
+por identidade no mesmo vhost. O gate e a implementação aguardam aceite.
+
+## 2026-11-20 — Execução autorizada e gate inicial da 6D reprovado
+
+“Aprovo” aceitou executar o contrato. A segunda rodada passou 15 grupos e
+falhou dois por versão. As identidades pontuais impediram a conferência
+individual após HTTP 201. O gate terminou com limpeza completa e a
+integração aguarda decisão sobre a revisão de 6D-D04. [Evidências da 6D](../07-testing/binding-create-6d.md).
+
+## 2026-11-20 — 6D pronta para revisão
+
+A revisão de 6D-D04 foi aceita e o gate passou 18 grupos por versão.
+O formulário cria bindings e confere a identidade. Check 320 + seis
+Node, package, 13 smokes e 76 verificações reais passaram no mesmo pacote
+macOS arm64. Conclusão e commit aguardam aceite. [Evidências da 6D](../07-testing/binding-create-6d.md).
+
+## 2026-11-21 — Conclusão da 6D aprovada
+
+O proprietário aprovou a entrega e o commit local `feat(bindings): add verified binding creation`.
+Os 37 caminhos e o pacote conferiram com a revisão apresentada.
+[Evidências](../07-testing/binding-create-6d.md).

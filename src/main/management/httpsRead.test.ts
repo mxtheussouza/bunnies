@@ -395,3 +395,73 @@ describe("scoped exchange reads", () => {
     );
   });
 });
+
+describe("binding write transport", () => {
+  const target = {
+    vhost: "/",
+    source: "source",
+    destination: "destination",
+    destinationType: "exchange" as const,
+    routingKey: ".",
+    arguments: { enabled: false },
+  };
+  it("blocks an untrusted TLS endpoint before receiving any HTTP requests", async () => {
+    const { bindingBody, createBinding } = await import("./bindingCreate");
+    const methods: string[] = [];
+    const profile = await server((req, res) => {
+      methods.push(req.method ?? "");
+      res.end();
+    });
+    await expect(
+      createBinding(
+        { ...profile, trust: { mode: "default" } },
+        target,
+        bindingBody(target),
+        signal(),
+        async () => undefined,
+        () => undefined,
+        () => 10000,
+      ),
+    ).rejects.toMatchObject({ code: "TLS" });
+    expect(methods).toEqual([]);
+  });
+  it("cancels on send authorization without transmitting the POST", async () => {
+    const { bindingBody, createBinding } = await import("./bindingCreate");
+    const methods: string[] = [];
+    const profile = await server((req, res) => {
+      methods.push(req.method ?? "");
+      const name = req.url?.includes("/source?") ? "source" : "destination";
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          name,
+          vhost: "/",
+          type: "direct",
+          internal: false,
+          durable: true,
+          auto_delete: false,
+          arguments: {},
+        }),
+      );
+    });
+    const abort = new AbortController();
+    let authorizations = 0;
+    const phases: string[] = [];
+    await expect(
+      createBinding(
+        profile,
+        target,
+        bindingBody(target),
+        abort.signal,
+        async () => {
+          if (++authorizations === 4) abort.abort();
+        },
+        phase => phases.push(phase),
+        () => 10000,
+      ),
+    ).rejects.toMatchObject({ code: "CANCELLED" });
+    expect(authorizations).toBe(4);
+    expect(methods).toEqual(["GET", "GET"]);
+    expect(phases).toEqual([]);
+  });
+});

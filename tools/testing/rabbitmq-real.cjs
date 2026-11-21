@@ -27,13 +27,17 @@ const managementGateA = process.argv.includes("--management-gate-a");
 const revisedVhostGate = process.argv.includes("--vhost-gate-revised");
 const vhostGate = process.argv.includes("--vhost-gate") || revisedVhostGate;
 const queuesGate = process.argv.includes("--queues-gate");
+const bindingCreateMatrix = process.argv.includes("--binding-create-matrix");
+const bindingCreateGate = process.argv.includes("--binding-create-gate");
 const exchangeDeleteGate = process.argv.includes("--exchange-delete-gate");
 const exchangesGate = process.argv.includes("--exchanges-gate");
 const exchangeDeclarationMatrix = process.argv.includes(
   "--exchange-declaration-matrix",
 );
 const exchangesMatrix =
-  exchangeDeclarationMatrix || process.argv.includes("--exchanges-matrix");
+  bindingCreateMatrix ||
+  exchangeDeclarationMatrix ||
+  process.argv.includes("--exchanges-matrix");
 const purgeGate = process.argv.includes("--purge-gate");
 const purgeMatrix = process.argv.includes("--purge-matrix");
 const exchangeDeclarationGate = process.argv.includes(
@@ -56,6 +60,8 @@ assert.ok(
           "--queues-gate",
           "--exchange-declaration-matrix",
           "--exchange-declaration-gate",
+          "--binding-create-matrix",
+          "--binding-create-gate",
           "--exchange-delete-gate",
           "--exchanges-gate",
           "--exchanges-matrix",
@@ -68,37 +74,41 @@ assert.ok(
       ),
 );
 const managementFixture = managementGate || managementGateA || vhostGate;
-const reportPrefix = exchangeDeleteGate
-  ? "exchange-delete-gate-6c"
-  : exchangeDeclarationMatrix
-    ? "rabbitmq-real-6b"
-    : exchangeDeclarationGate
-      ? "exchange-declaration-gate-6b"
-      : exchangesGate
-        ? "exchanges-gate-6a"
-        : exchangesMatrix
-          ? "rabbitmq-real-6a"
-          : purgeMatrix
-            ? "rabbitmq-real-5c1"
-            : purgeGate
-              ? "queues-purge-gate-5c1"
-              : declarationGate
-                ? "queues-declaration-gate-5b"
-                : queuesGate
-                  ? "queues-gate-revised-5a"
-                  : vhostGate
-                    ? revisedVhostGate
-                      ? "vhost-gate-revised-4b2"
-                      : "vhost-gate-4b2"
-                    : managementGateA
-                      ? "management-gate-A-4b1"
-                      : managementGate
-                        ? "management-gate-4b1"
-                        : declarationMatrix
-                          ? "rabbitmq-real-5b"
-                          : queuesMatrix
-                            ? "rabbitmq-real-5a"
-                            : "rabbitmq-real-4b2";
+const reportPrefix = bindingCreateMatrix
+  ? "rabbitmq-real-6d"
+  : bindingCreateGate
+    ? "binding-create-gate-6d"
+    : exchangeDeleteGate
+      ? "exchange-delete-gate-6c"
+      : exchangeDeclarationMatrix
+        ? "rabbitmq-real-6b"
+        : exchangeDeclarationGate
+          ? "exchange-declaration-gate-6b"
+          : exchangesGate
+            ? "exchanges-gate-6a"
+            : exchangesMatrix
+              ? "rabbitmq-real-6a"
+              : purgeMatrix
+                ? "rabbitmq-real-5c1"
+                : purgeGate
+                  ? "queues-purge-gate-5c1"
+                  : declarationGate
+                    ? "queues-declaration-gate-5b"
+                    : queuesGate
+                      ? "queues-gate-revised-5a"
+                      : vhostGate
+                        ? revisedVhostGate
+                          ? "vhost-gate-revised-4b2"
+                          : "vhost-gate-4b2"
+                        : managementGateA
+                          ? "management-gate-A-4b1"
+                          : managementGate
+                            ? "management-gate-4b1"
+                            : declarationMatrix
+                              ? "rabbitmq-real-5b"
+                              : queuesMatrix
+                                ? "rabbitmq-real-5a"
+                                : "rabbitmq-real-4b2";
 let managementAdapter;
 let amqpsAdapter;
 let switchAdapter;
@@ -130,13 +140,18 @@ async function runVersion({ version, digest }) {
     : undefined;
   const purgeFixture =
     purgeGate || purgeMatrix ? require("./queue-purge-gate.cjs") : undefined;
-  const exchangeFixture = exchangeDeleteGate
-    ? require("./exchange-delete-gate.cjs")
-    : exchangeDeclarationGate
-      ? require("./exchange-declaration-gate.cjs")
-      : exchangesGate || exchangesMatrix
-        ? require("./exchanges-gate.cjs")
-        : undefined;
+  const exchangeFixture = bindingCreateGate
+    ? require("./binding-create-gate.cjs")
+    : exchangeDeleteGate
+      ? require("./exchange-delete-gate.cjs")
+      : exchangeDeclarationGate
+        ? require("./exchange-declaration-gate.cjs")
+        : exchangesGate || exchangesMatrix
+          ? require("./exchanges-gate.cjs")
+          : undefined;
+  const bindingFixture = bindingCreateMatrix
+    ? require("./binding-create-gate.cjs")
+    : undefined;
   const managementPrefix =
     queueFixture || declarationFixture || purgeFixture || exchangeFixture
       ? "/bunnies-test"
@@ -297,12 +312,20 @@ async function runVersion({ version, digest }) {
                   exchangeDeclarationMatrix
                 ? "^bunnies-new-"
                 : "^$",
-            write: exchangeDeleteGate ? "^bunnies-delete-" : "^$",
-            read: exchangeDeleteGate
-              ? "^bunnies-delete-"
-              : purgeFixture
-                ? "^bunnies-purge-"
-                : "^$",
+            write:
+              bindingCreateGate || bindingCreateMatrix
+                ? "^bunnies-bind-destination"
+                : exchangeDeleteGate
+                  ? "^bunnies-delete-"
+                  : "^$",
+            read:
+              bindingCreateGate || bindingCreateMatrix
+                ? "^bunnies-bind-source"
+                : exchangeDeleteGate
+                  ? "^bunnies-delete-"
+                  : purgeFixture
+                    ? "^bunnies-purge-"
+                    : "^$",
           }))
           .concat(
             managementFixture || queueFixture
@@ -347,6 +370,18 @@ async function runVersion({ version, digest }) {
           : {}),
         ...(queueFixture ? { queues: queueFixture.queues } : {}),
         ...exchangeFixture?.definitions,
+        ...(bindingFixture
+          ? {
+              exchanges: [
+                ...exchangeFixture.definitions.exchanges,
+                ...bindingFixture.definitions.exchanges,
+              ],
+              queues: [
+                ...exchangeFixture.definitions.queues,
+                ...bindingFixture.definitions.queues,
+              ],
+            }
+          : {}),
       }),
       { mode: 0o644 },
     );
@@ -457,7 +492,12 @@ async function runVersion({ version, digest }) {
     console.log(`RabbitMQ ${version}: TLS ready (${inspection.Architecture})`);
     checks.push("exact-broker-version-and-TLS-readiness");
     await noConnections();
-    if (exchangesGate || exchangeDeclarationGate || exchangeDeleteGate) {
+    if (
+      exchangesGate ||
+      exchangeDeclarationGate ||
+      exchangeDeleteGate ||
+      bindingCreateGate
+    ) {
       report.failures = await exchangeFixture.run({
         observations: (report.exchangeObservations = []),
         adapter: managementAdapter,
@@ -845,16 +885,25 @@ async function runVersion({ version, digest }) {
     }
     const initialQueues = await queueIdentity();
     const declaredExchanges = [];
+    const createdBindings = [];
     const exchangeTopology = async () => {
       const definitions = await api("definitions");
       return ["exchanges", "bindings"].map(key =>
         definitions[key]
-          .filter(
-            row =>
-              key !== "exchanges" ||
-              !declaredExchanges.some(
-                ([vhost, name]) => row.name === name && row.vhost === vhost,
-              ),
+          .filter(row =>
+            key === "bindings"
+              ? !createdBindings.some(
+                  ([vhost, type, key]) =>
+                    row.vhost === vhost &&
+                    row.destination_type === type &&
+                    row.routing_key === key &&
+                    row.source === require("./binding-create.cjs").origin &&
+                    row.destination ===
+                      require("./binding-create.cjs").destination,
+                )
+              : !declaredExchanges.some(
+                  ([vhost, name]) => row.name === name && row.vhost === vhost,
+                ),
           )
           .map(row => JSON.stringify(row))
           .sort(),
@@ -1141,6 +1190,17 @@ async function runVersion({ version, digest }) {
                 vhost,
               })),
             );
+          }
+          if (bindingCreateMatrix) {
+            createdBindings.push(
+              ...(await require("./binding-create.cjs").verifyReal({
+                page,
+                session: await sessionState(),
+                vhost,
+                api,
+              })),
+            );
+            checks.push("real-binding-create-and-confirm-in-" + vhost);
           }
           await verifyReal(page, {
             name: exchangeFixture.exchangeName,
@@ -1846,6 +1906,11 @@ async function runVersion({ version, digest }) {
 }
 async function run() {
   try {
+    if (bindingCreateGate)
+      managementAdapter =
+        await require("./management-gate.cjs").prepareGateAdapter(
+          "src/main/management/bindingIdentity.ts",
+        );
     if (exchangeDeclarationGate)
       managementAdapter =
         await require("./management-gate.cjs").prepareGateAdapter(

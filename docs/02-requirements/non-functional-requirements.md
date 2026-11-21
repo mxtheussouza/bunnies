@@ -233,3 +233,13 @@ a operação inteira e até 10 s do saldo para a conferência. Uma ação explí
 autoriza um PUT e até um GET. Nome da exchange e vhost têm até 255 bytes UTF-8.
 O main limita a escrita a 2 KiB de corpo, com os limites administrativos
 de 256 KiB de resposta, 16 KiB de cabeçalhos e profundidade JSON 16.
+
+## Sublimites da criação de bindings — 6D
+
+Até 30 s totais, com até 10 s por leitura dentro do saldo. A operação usa
+um POST, até duas leituras preparatórias e até uma leitura de conferência.
+O POST tem até 2 KiB de JSON. Os limites administrativos de corpo,
+cabeçalhos, profundidade e nomes da 6A se aplicam. A conferência de `.`
+e `..` lê até 200 itens do mesmo par. O formulário admite 16 argumentos,
+com chave de até 64 bytes UTF-8, texto de até 255 bytes UTF-8 ou valor
+booleano ou inteiro de 32 bits com sinal.

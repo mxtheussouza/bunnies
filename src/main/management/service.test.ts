@@ -46,6 +46,7 @@ function fixture() {
   const purge = vi.fn<typeof import("./queuePurge").purgeQueue>();
   const exchangeDeclare =
     vi.fn<typeof import("./exchangeDeclaration").declareExchange>();
+  const bindingCreate = vi.fn<typeof import("./bindingCreate").createBinding>();
   const service = new ManagementService(
     session as unknown as SessionService,
     profiles as unknown as ProfileService,
@@ -54,10 +55,12 @@ function fixture() {
     inspectPurge,
     purge,
     exchangeDeclare,
+    bindingCreate,
   );
   return {
     service,
     exchangeDeclare,
+    bindingCreate,
     session,
     profiles,
     read,
@@ -575,4 +578,69 @@ describe("exchange declaration authority", () => {
       expect(f.exchangeDeclare).toHaveBeenCalledOnce();
     },
   );
+});
+
+it("keeps one binding write in flight and ignores cancellation from another owner", async () => {
+  const f = fixture(),
+    ref = input();
+  const request = {
+    ...ref,
+    binding: {
+      source: "origem",
+      destination: "destino",
+      destinationType: "queue" as const,
+      routingKey: ".",
+      arguments: {},
+    },
+  };
+  f.bindingCreate.mockImplementation(
+    async (_profile, _target, _body, _signal, assertContext, progress) => {
+      await assertContext();
+      progress("sent");
+      return new Promise(() => undefined);
+    },
+  );
+  const result = f.service.createBinding(1, request, () => true);
+  await vi.waitFor(() => expect(f.bindingCreate).toHaveBeenCalledOnce());
+  await expect(
+    f.service.createBinding(1, request, () => true),
+  ).rejects.toMatchObject({ code: "BUSY" });
+  f.service.cancel(2, ref, "bindingCreation");
+  f.service.cancel(1, ref, "exchangeDeclaration");
+  f.service.cancel(1, { ...ref, generation: 2 }, "bindingCreation");
+  expect(f.bindingCreate.mock.calls[0][3].aborted).toBe(false);
+  f.service.cancel(1, ref, "bindingCreation");
+  await expect(result).resolves.toMatchObject({
+    kind: "bindingCreation",
+    status: "uncertain",
+    reason: "CANCELLED",
+  });
+  expect(f.bindingCreate).toHaveBeenCalledOnce();
+  f.service.dispose();
+});
+
+it("rejects an old binding session before reading credentials", async () => {
+  const f = fixture();
+  f.session.managementContext.mockImplementation(() => {
+    throw new ProfileFailure("CONFLICT");
+  });
+  await expect(
+    f.service.createBinding(
+      1,
+      {
+        ...input(),
+        binding: {
+          source: "origem",
+          destination: "destino",
+          destinationType: "exchange",
+          routingKey: "",
+          arguments: {},
+        },
+      },
+      () => true,
+    ),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  expect(f.profiles.connectionSnapshot).not.toHaveBeenCalled();
+  expect(f.bindingCreate).not.toHaveBeenCalled();
+  f.service.dispose();
 });

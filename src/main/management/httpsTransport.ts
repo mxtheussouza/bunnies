@@ -62,7 +62,7 @@ type RequestOptions = {
   checkResponse(status: number, headers: IncomingHttpHeaders): void;
 } & (
   | { method: "GET" }
-  | (({ method: "PUT"; body: Buffer } | { method: "DELETE" }) & {
+  | (({ method: "PUT" | "POST"; body: Buffer } | { method: "DELETE" }) & {
       authorizeSend(): Promise<void>;
       onSend(): void;
     })
@@ -72,7 +72,7 @@ export async function requestManagement(
   input: HttpsProbeInput,
   options: RequestOptions,
   signal: AbortSignal,
-): Promise<{ status: number; bytes: Buffer }> {
+): Promise<{ status: number; bytes: Buffer; location?: string }> {
   if (
     input.username.includes(":") ||
     [input.username, input.password].some(
@@ -157,7 +157,7 @@ export async function requestManagement(
                 input.username + ":" + input.password,
                 "utf8",
               ).toString("base64"),
-            ...(options.method === "PUT"
+            ...(options.method !== "GET" && options.method !== "DELETE"
               ? {
                   "Content-Type": "application/json",
                   "Content-Length": options.body.length,
@@ -201,7 +201,13 @@ export async function requestManagement(
           incoming.on("error", () => fail(new ManagementFailure("NETWORK")));
           incoming.on("end", () => {
             if (clean())
-              resolve({ status, bytes: Buffer.concat(chunks, size) });
+              resolve({
+                status,
+                bytes: Buffer.concat(chunks, size),
+                ...(options.method === "POST"
+                  ? { location: incoming.headers.location }
+                  : {}),
+              });
           });
         },
       );
@@ -218,8 +224,8 @@ export async function requestManagement(
               .then(() => {
                 if (done || signal.aborted) return;
                 options.onSend();
-                if (options.method === "PUT") req.end(options.body);
-                else req.end();
+                if (options.method === "DELETE") req.end();
+                else req.end(options.body);
               })
               .catch(error =>
                 fail(

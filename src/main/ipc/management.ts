@@ -6,6 +6,7 @@ import {
   type ManagementResult,
   isQueueSnapshot,
   isQueueDeclarationSnapshot,
+  isBindingCreationSnapshot,
   isExchangeDeclarationSnapshot,
   isQueuePurgeSnapshot,
   isExchangeSnapshot,
@@ -84,6 +85,9 @@ export function registerManagementIpc(
           case "cancelManagementRead":
             service.cancel(owner, request.input);
             break;
+          case "cancelBindingCreation":
+            service.cancel(owner, request.input, "bindingCreation");
+            break;
           case "cancelExchangeDeclaration":
             service.cancel(owner, request.input, "exchangeDeclaration");
             break;
@@ -117,6 +121,11 @@ export function registerManagementIpc(
               throw new ManagementFailure("QUEUE_PURGE_UNCERTAIN");
             break;
           }
+          case "createSessionBinding":
+            value = await service.createBinding(owner, request.input, trusted);
+            if (!isBindingCreationSnapshot(value))
+              throw new ManagementFailure("BINDING_UNCERTAIN");
+            break;
           case "declareSessionExchange":
             value = await service.declareExchange(
               owner,

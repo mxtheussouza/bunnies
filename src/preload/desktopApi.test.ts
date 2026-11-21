@@ -70,6 +70,8 @@ describe("preload API", () => {
         "cancelQueueDeclaration",
         "declareSessionExchange",
         "cancelExchangeDeclaration",
+        "createSessionBinding",
+        "cancelBindingCreation",
         "purgeSessionQueue",
         "cancelQueuePurge",
         "selectSessionVhost",
@@ -460,4 +462,70 @@ it("refuses binding data for another direction, target or operation", async () =
     });
     expect((await api.listSessionExchangeBindings(input)).ok).toBe(false);
   }
+});
+
+it("correlates binding writes to all requested identities and treats a wrong reply as uncertain", async () => {
+  const call = vi.fn();
+  const management = vi.fn();
+  const api = createDesktopApi(
+    call,
+    call,
+    call,
+    undefined,
+    undefined,
+    management,
+  );
+  const ref = {
+    sessionId: "00000000-0000-4000-8000-000000000001",
+    operationId: "00000000-0000-4000-8000-000000000002",
+    generation: 1,
+  };
+  const binding = {
+    source: "source",
+    destination: "destination",
+    destinationType: "queue" as const,
+    routingKey: ".",
+    arguments: {},
+  };
+  const snapshot = {
+    ...ref,
+    kind: "bindingCreation",
+    source: "https-management",
+    exchange: "source",
+    destination: "destination",
+    destinationType: "queue",
+    vhost: "/",
+    status: "confirmed",
+    identity: ".",
+    checkedAt: "2026-11-20T12:00:00.000Z",
+  };
+  for (const change of [
+    { exchange: "another" },
+    { destination: "elsewhere" },
+    { destinationType: "exchange" },
+    { operationId: ref.sessionId },
+    { generation: 2 },
+    { identity: "" },
+    { headers: "unexpected" },
+  ]) {
+    management.mockResolvedValueOnce({
+      ok: true,
+      requestId: ref.operationId,
+      value: { ...snapshot, ...change },
+    });
+    await expect(
+      api.createSessionBinding({ ...ref, binding }),
+    ).resolves.toMatchObject({
+      ok: false,
+      error: { code: "BINDING_UNCERTAIN" },
+    });
+  }
+  management.mockResolvedValueOnce({
+    ok: true,
+    requestId: ref.operationId,
+    value: snapshot,
+  });
+  await expect(
+    api.createSessionBinding({ ...ref, binding }),
+  ).resolves.toMatchObject({ ok: true, value: { identity: "." } });
 });

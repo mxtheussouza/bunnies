@@ -2,6 +2,8 @@ import {
   closedObject,
   isManagementSnapshot,
   isQueueSnapshot,
+  isBindingCreationSnapshot,
+  type BindingCreationSnapshot,
   isExchangeDeclarationSnapshot,
   type ExchangeDeclarationSnapshot,
   isQueueDeclarationSnapshot,
@@ -74,6 +76,7 @@ export function createDesktopApi(
         const value = result.value;
         if (
           (request.command === "cancelManagementRead" ||
+            request.command === "cancelBindingCreation" ||
             request.command === "cancelExchangeDeclaration" ||
             request.command === "cancelQueueDeclaration" ||
             request.command === "cancelQueuePurge") &&
@@ -84,6 +87,7 @@ export function createDesktopApi(
           !isQueueSnapshot(value) &&
           !isManagementSnapshot(value) &&
           !isExchangeSnapshot(value) &&
+          !isBindingCreationSnapshot(value) &&
           !isExchangeDeclarationSnapshot(value) &&
           !isQueueDeclarationSnapshot(value) &&
           !isQueuePurgeSnapshot(value)
@@ -94,6 +98,13 @@ export function createDesktopApi(
           case "purgeSessionQueue":
             matches =
               value.kind === "queuePurge" && value.name === request.input.name;
+            break;
+          case "createSessionBinding":
+            matches =
+              value.kind === "bindingCreation" &&
+              value.exchange === request.input.binding.source &&
+              value.destination === request.input.binding.destination &&
+              value.destinationType === request.input.binding.destinationType;
             break;
           case "declareSessionExchange":
             matches =
@@ -169,11 +180,13 @@ export function createDesktopApi(
       const code =
         request.command === "purgeSessionQueue"
           ? "QUEUE_PURGE_UNCERTAIN"
-          : request.command === "declareSessionExchange"
-            ? "EXCHANGE_DECLARATION_UNCERTAIN"
-            : request.command === "declareSessionQueue"
-              ? "QUEUE_DECLARATION_UNCERTAIN"
-              : "UNAVAILABLE";
+          : request.command === "createSessionBinding"
+            ? "BINDING_UNCERTAIN"
+            : request.command === "declareSessionExchange"
+              ? "EXCHANGE_DECLARATION_UNCERTAIN"
+              : request.command === "declareSessionQueue"
+                ? "QUEUE_DECLARATION_UNCERTAIN"
+                : "UNAVAILABLE";
       return {
         ok: false,
         requestId: "transport",
@@ -270,6 +283,14 @@ export function createDesktopApi(
         command: "listSessionExchangeBindings",
         input,
       }) as Promise<ManagementResult<ExchangeSnapshot<ExchangeBindings>>>,
+    createSessionBinding: input =>
+      managementCall({ command: "createSessionBinding", input }) as Promise<
+        ManagementResult<BindingCreationSnapshot>
+      >,
+    cancelBindingCreation: input =>
+      managementCall({ command: "cancelBindingCreation", input }) as Promise<
+        ManagementResult<undefined>
+      >,
     declareSessionExchange: input =>
       managementCall({ command: "declareSessionExchange", input }) as Promise<
         ManagementResult<ExchangeDeclarationSnapshot>

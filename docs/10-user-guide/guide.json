@@ -420,6 +420,31 @@
       ]
     },
     {
+      "id": "criar-binding",
+      "title": "Criar um binding",
+      "paragraphs": [
+        "O binding altera o roteamento no broker. Abra uma exchange compatível e acione Novo binding. Confira perfil, ambiente, vhost, endpoint HTTPS e origem. A operação exige leitura na origem e escrita no destino."
+      ],
+      "fields": [
+        {
+          "name": "Tipo de destino e nome exato",
+          "description": "Escolha Fila para classic ou quorum ou Exchange para um dos quatro tipos básicos. Use o nome do recurso no vhost atual."
+        },
+        {
+          "name": "Routing key",
+          "description": "Use a chave exata, que pode ficar vazia. Direct usa igualdade, topic aceita padrões e fanout e headers roteiam independentemente da chave."
+        },
+        {
+          "name": "Argumentos",
+          "description": "Use chaves únicas e valores texto, booleano ou inteiro de 32 bits com sinal. Para headers, escolha Todos (all) ou Qualquer um (any) e informe pelo menos um critério."
+        }
+      ],
+      "steps": [
+        "Acione Criar binding. Depois do aceite o aplicativo consulta a identidade e as propriedades. Um binding idêntico pode já existir.",
+        "Se a conferência estiver indisponível ou o resultado for incerto, consulte os bindings de saída antes de reenviar. Cancelar interrompe a espera local."
+      ]
+    },
+    {
       "id": "funcoes-de-broker",
       "title": "Funções de broker ainda indisponíveis",
       "paragraphs": [
@@ -436,7 +461,7 @@
         },
         {
           "name": "Alterações em exchanges e bindings",
-          "description": "Excluir exchanges e criar ou remover bindings depende de entregas próprias. Consulte os vínculos pela tela Exchanges."
+          "description": "Excluir exchanges e remover bindings depende de entregas próprias. A tela Exchanges permite criar e consultar bindings."
         },
         {
           "name": "Publicar mensagens",

@@ -8,7 +8,8 @@ consulta versões informadas, lista até 200 vhosts visíveis em 256 KiB por HTT
 e permite trocar temporariamente o vhost da sessão. Em **Filas**, é possível
 listar e detalhar filas, declarar classic e quorum e limpar mensagens com
 confirmação. Em **Exchanges**, é possível listar, pesquisar e detalhar exchanges,
-declarar os quatro tipos básicos e consultar bindings de entrada e saída no vhost ativo.
+declarar os quatro tipos básicos, consultar bindings de entrada e saída e criar
+bindings para filas ou exchanges no vhost ativo.
 
 ## Para usar o aplicativo
 

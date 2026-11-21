@@ -1,6 +1,7 @@
 import React from "react";
 import {
   bindingIdentity,
+  exchangeTypes,
   exchangeSegmentUnsupported,
   type BindingDirection,
   type ExchangeDetail,
@@ -17,6 +18,7 @@ import {
   type ManagementResult,
 } from "../../shared/management";
 import { queueSegmentUnsupported } from "../../shared/queues";
+import BindingCreationForm from "./BindingCreationForm";
 import ExchangeDeclarationForm from "./ExchangeDeclarationForm";
 import type { SessionRef, SessionSnapshot } from "../../shared/session";
 import {
@@ -175,6 +177,14 @@ function ExchangeWorkspace({
   const focusResults = React.useRef(false);
   const invalidDraft = draft !== "" && !boundedManagementText(draft, 255);
   const detailOpen = selected !== undefined;
+  const [bindingOpen, setBindingOpen] = React.useState(false);
+  const detailSource = detail?.exchange;
+  const canCreateBinding =
+    detailSource &&
+    detailSource.name !== "" &&
+    !detailSource.name.startsWith("amq.") &&
+    !detailSource.internal &&
+    exchangeTypes.some(type => type === detailSource.type);
 
   const invalidate = React.useCallback(() => {
     const input = active.current;
@@ -463,6 +473,30 @@ function ExchangeWorkspace({
           {detail && (
             <>
               <ExchangeProperties data={detail} />
+              {canCreateBinding && (
+                <Button
+                  aria-haspopup="dialog"
+                  disabled={!!running}
+                  onClick={() => {
+                    if (!active.current) setBindingOpen(true);
+                  }}
+                >
+                  Novo binding
+                </Button>
+              )}
+              {bindingOpen && detailSource && (
+                <BindingCreationForm
+                  session={session}
+                  profile={profile}
+                  source={detailSource}
+                  onClose={() => setBindingOpen(false)}
+                  onVerify={() => {
+                    setBindingOpen(false);
+                    loadBindings("outgoing");
+                  }}
+                />
+              )}
+
               {selected === "" ? (
                 <p>
                   O RabbitMQ vincula cada fila do vhost à exchange padrão

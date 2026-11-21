@@ -2,6 +2,7 @@ import {
   closedObject,
   isManagementInput,
   isQueueDetailInput,
+  isBindingCreationInput,
   isExchangeDeclarationInput,
   isQueueDeclarationInput,
   isQueueListInput,
@@ -34,6 +35,10 @@ export function parseManagementRequest(v: unknown): ManagementRequest | null {
       return isQueueDetailInput(v.input)
         ? { command: v.command, input: v.input }
         : null;
+    case "createSessionBinding":
+      return isBindingCreationInput(v.input)
+        ? { command: v.command, input: v.input }
+        : null;
     case "declareSessionExchange":
       return isExchangeDeclarationInput(v.input)
         ? { command: v.command, input: v.input }
@@ -45,6 +50,7 @@ export function parseManagementRequest(v: unknown): ManagementRequest | null {
     case "getBrokerInfo":
     case "listSessionVhosts":
     case "cancelManagementRead":
+    case "cancelBindingCreation":
     case "cancelExchangeDeclaration":
     case "cancelQueueDeclaration":
     case "cancelQueuePurge":

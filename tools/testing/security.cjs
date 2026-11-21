@@ -61,6 +61,8 @@ module.exports = async function verifySecurity(application, page) {
       "cancelQueueDeclaration",
       "declareSessionExchange",
       "cancelExchangeDeclaration",
+      "createSessionBinding",
+      "cancelBindingCreation",
       "purgeSessionQueue",
       "cancelQueuePurge",
       "selectSessionVhost",

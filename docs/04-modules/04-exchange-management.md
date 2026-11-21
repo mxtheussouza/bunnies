@@ -41,7 +41,7 @@ A ponte expõe `listSessionExchanges`, `getSessionExchange` e
 `cancelManagementRead`. Os DTOs passam por validação na origem e no preload.
 O renderer usa o mesmo componente e transporte lógico nos três sistemas.
 
-FR-012 e a leitura de FR-014 compõem a 6A. A exclusão de exchanges, as escritas de bindings e
+FR-012 e a leitura de FR-014 compõem a 6A. A exclusão de exchanges, a remoção de bindings e
 o restante de MVP-E01 dependem de contratos próprios. As evidências registram
 as plataformas executadas e as limitações de validação.
 
@@ -59,3 +59,14 @@ inclui conferência de tipo, durabilidade, auto-delete, internal falso e
 argumentos vazios. O cancelamento distingue as fases anterior ao envio,
 possível envio e aceite do pedido. A tela oferece consulta manual do alvo.
 [Guia](../10-user-guide/README.md#declarar-exchange).
+
+
+## Criação de bindings
+
+A 6D verifica os dois alvos e envia um POST no Management HTTPS. A
+identidade opaca retornada no cabeçalho Location permite construir uma
+consulta no mesmo par. Para os identificadores `.` e `..`, a conferência
+inspeciona até 200 vínculos do par. A confirmação exige identidade e
+propriedades exatas. A operação compartilha a vaga administrativa e
+o main mantém a autoridade da sessão. A ponte expõe `createSessionBinding`
+e `cancelBindingCreation`. [Guia](../10-user-guide/README.md#criar-binding).

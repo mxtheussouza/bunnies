@@ -106,11 +106,11 @@ sem autorizar a execução da 3A.
 
 ## Estado e retomada
 
-- Etapa atual: **6C — gate concluído, aprovado e registrado**.
-- Última etapa concluída e aprovada: **6C — gate de exclusão de exchanges**.
-- Última entrega registrada: `test(exchanges): verify conditional deletion behavior` em `main`, com pai `2138fd6`.
+- Etapa atual: **6D — concluída, aprovada e registrada**.
+- Última etapa concluída e aprovada: **6D — criação de bindings**.
+- Última entrega registrada: `feat(bindings): add verified binding creation` em `main`, com pai `d42b7da`.
 - Mudança da barra macOS em `9401448` preservada.
-- Próxima ação: aguardar solicitação para preparar o próximo contrato.
+- Próxima ação: preparar o próximo contrato, conforme solicitado.
 
 Ao retomar, ler este arquivo, [PROJECTS_STATUS.md](PROJECTS_STATUS.md), a avaliação tecnológica, o
 [roadmap](docs/05-roadmap/roadmap.md), o [estado atual](docs/05-roadmap/current-stage.md)
@@ -729,3 +729,40 @@ Em 2026-11-20, “Aprovo” aceitou manter a exclusão indisponível e registrar
 o gate e o relatório no commit local `test(exchanges): verify conditional deletion behavior`. Uma futura operação de
 exclusão depende de proteção para bindings de entrada e para a instância
 confirmada. Escritas de bindings terão contrato próprio.
+
+## Preparação vigente — 6D
+
+“Continue” iniciou a preparação após `d42b7da`. O
+[contrato 6D](docs/05-roadmap/roadmap.md#contrato-6d--criação-de-bindings) propõe criar bindings
+exchange→fila e exchange→exchange, com conferência por identidade do broker.
+A execução depende do aceite de 6D-D01–06 e 6D-01–07.
+
+## Resultado vigente — gate inicial 6D reprovado
+
+“Aprovo” autorizou 6D-D01–06 e 6D-01–07. Em 4.4.0 e 4.3.6, o
+GET individual de identidade `.` retornou a coleção do par, e o de `..`
+retornou HTTP 400. O restante da rodada passou 15 grupos por versão.
+A revisão proposta usa GET limitado do par apenas nesses dois casos.
+Aguardar decisão antes do gate revisado e da integração dependente.
+[Evidências](docs/07-testing/binding-create-6d.md).
+
+
+## Revisão aceita — 6D
+
+“Aprovo e continue a proxima etapa” aprovou a conferência limitada do par
+para as identidades `.` e `..`. O gate revisado passou 18 verificações
+por versão. A ponte da implementação tem 39 métodos específicos. A
+conclusão e o commit próprios dependem dos resultados e do aceite.
+
+## Resultado vigente — 6D pronta para revisão
+
+Gate revisado com 36 verificações, check 320 mais seis Node, package,
+13 smokes e matriz real de 76 verificações passaram no macOS arm64. O
+Guia/Ajuda tem 21 tópicos. Conclusão e commit aguardam aceite.
+[Evidências](docs/07-testing/binding-create-6d.md).
+
+## Conclusão 6D aprovada
+
+Em 2026-11-21, “Aprovo e pode seguir para proxima etapa” aceitou a
+conclusão da 6D e o commit local `feat(bindings): add verified binding creation`. O pedido seguinte autoriza
+preparar o próximo contrato. A validação por plataforma segue nas evidências.
